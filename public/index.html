@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tree Visualization App</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.21.0/cytoscape.min.js"></script>
+</head>
+<body>
+  <h1>Tree App</h1>
+  <div id="cy" style="width: 800px; height: 600px; border: 1px solid black;"></div>
+ 
+
+  <script>
+
+    var cy = cytoscape({
+      container: document.getElementById('cy'),
+      elements: [], 
+      style: [
+        {
+          selector: 'node',
+          style: {
+            'background-color': '#666',
+            'label': 'data(name)',
+            'text-valign': 'center',
+            'color': '#fff'
+          }
+        },
+        {
+          selector: 'edge',
+          style: {
+            'width': 2,
+            'line-color': '#ccc',
+            'target-arrow-color': '#ccc',
+            'target-arrow-shape': 'triangle'
+          }
+        }
+      ],
+      layout: {
+        name: 'breadthfirst',
+        directed: true,
+        padding: 10
+      }
+    });
+
+    function loadTree() {
+      fetch('/get-tree')
+        .then(response => response.json())
+        .then(data => {
+          cy.elements().remove();  
+          addTreeToCytoscape(data, null); 
+          cy.layout({ name: 'breadthfirst', directed: true }).run();
+        });
+    }
+
+    function addTreeToCytoscape(node, parentId) {
+      cy.add({
+        data: { id: node.id, name: node.name }
+      });
+      if (parentId) {
+        cy.add({
+          data: { source: parentId, target: node.id }
+        });
+      }
+      node.children.forEach(child => addTreeToCytoscape(child, node.id));
+    }
+
+  
+    function addNode(parentId) {
+      const nodeName = prompt("Enter node name:");
+      if (!nodeName) return;
+
+      fetch('/add-node', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ parentId, name: nodeName })
+      })
+      .then(response => response.json())
+      .then(data => loadTree()); 
+    }
+
+    function deleteNode(nodeId) {
+      if (!confirm('Are you sure you want to delete this node and all its children?')) return;
+
+      fetch('/delete-node', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nodeId })
+      })
+      .then(response => response.json())
+      .then(data => loadTree());  
+    }
+
+  
+    function viewNodeDetails(node) {
+      alert(`Node Details:\nID: ${node.id()}\nName: ${node.data('name')}`);
+    }
+
+    cy.on('tap', 'node', function(evt) {
+      var node = evt.target;
+
+      const action = prompt(`Choose an action for node '${node.data('name')}':\n1. Add Child\n2. View Details\n3. Delete Node`);
+
+      if (action === '1') {
+        addNode(node.id());  
+      } else if (action === '2') {
+        viewNodeDetails(node); 
+      } else if (action === '3') {
+        deleteNode(node.id());  
+      }
+    });
+
+    
+    loadTree();
+  </script>
+</body>
+</html>
