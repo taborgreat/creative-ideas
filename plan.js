@@ -1,5 +1,12 @@
 Every node/creative idea must be quantifiable that can be set to a goal to be completed based on inherited values, or must be able to say yes or no if it’s done as a whole.
 
+only unquatifiable ones are the root, and the main branches off of it: wealth, self (body/mind), others (people, art, materials)
+these serve more as organisers for the children below, and act as "trade" hubs to debt values from branches if needed
+ex: self->body->2400 calories/day->requires $20 to buy food, which is debted off the wealth branch.
+from the hub of the main branches you can see what "weeds" are feeding for values from other endeavors
+or in others->branches->car->you need to pay insurance you could debt wealth branch,
+showing you are losing value from wealth branch to support value on other branch
+	
 If a quantifiable goal is repetitive and progressive (like weights in a lifting branch) then the branch prestoges each time it is satisfied, with a new goal set 
 
 
