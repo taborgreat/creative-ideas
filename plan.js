@@ -1,13 +1,21 @@
+the root node is active and is primarily used to track time spent, and make time goals
+time is the root value of the tree, meaning all other values depend on its credit which is why
+all branches originate from it. you only get so many hours a day to spend through your root
+so having the optimized value exchanges throughout will help grow other values with same amount of time
+its all about finding how to use your time to get the most value back by managing your value trades
+and creative planning structure, trimming off frictionous or completely offcourse strategies for time
 
-seap debt credit
 Every node/creative idea must be quantifiable that can be set to a goal to be completed based on inherited values, or must be able to say yes or no if it’s done as a whole.
 
-only unquatifiable ones are the root, and the main branches off of it: wealth, self (body/mind), others (people, art, materials)
+only unquatifiable ones are the banks/exchanges: the main branches: wealth, self (body/mind), others (people, art, materials)
 (the fundamental qyantifuable creativevideas coming out of these should relate to the core idea as much as possible, even if
 it starts to require values from other parent branches. this allows you to see the root motivations of your endeavors, and not get lost in the sauce
 as they entangle and interconnect. )
 	
-these unwuaitifable serve more as organisers for the children below, and act as "trade" hubs to debt values from branches if needed
+these unquaitifable serve more as organisers for the children below, and act as "trade" hubs to debt values from branches if needed, and clearly see value exchange.
+like a bank, they manage the values for all their users(children), and control  "prices" for value swaps depending
+on the value the other bank has or is going for so you can see clearly if trades are fair
+
 ex: self->body->2400 calories/day->requires $20 to buy food, which is debted off the wealth branch.
 	youd to be careful not to have your $20 for food coming from wealth branch and debting into the body branch as time for wrking out
         as that would throw off the root value of why youre making $20 and create "floating" branches
@@ -21,17 +29,6 @@ or in others->branches->car->you need to pay insurance you could debt wealth bra
 showing you are losing value from wealth branch to support value on other branch
 
 
-	1.	Wealth Branch:
-	•	Goal: Earn $500 this week.
-	•	debt goal: Allocate $20 for healthy food.
-	2.	Body Branch:
-	•	Goal: Consume 2400 calories/day. *creates debt branch to wealth for $20 food)
-	•
-		
-	3.	Wealth Debts Body (with Purpose):
-	•	$20 is spent on food (debited from the wealth branch).
-	•	The body branch benefits by having the calories necessary for workouts.
-	•	There’s no floating goal here; the wealth expenditure is directly tied to body health progress.
 	
 If a quantifiable goal is repetitive and progressive (like weights in a lifting branch) then the branch prestoges each time it is satisfied, with a new goal set 
 
