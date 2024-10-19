@@ -9,6 +9,8 @@ as they entangle and interconnect. )
 	
 these unwuaitifable serve more as organisers for the children below, and act as "trade" hubs to debt values from branches if needed
 ex: self->body->2400 calories/day->requires $20 to buy food, which is debted off the wealth branch.
+	youd to be careful not to have your $20 for food coming from wealth branch and debting into the body branch as time for wrking out
+        as that would throw off the root value of why youre making $20 and create "floating" branches
 from the hub of the main branches you can see what "weeds" are feeding for values from other endeavors
 or in others->branches->car->you need to pay insurance you could debt wealth branch,
 showing you are losing value from wealth branch to support value on other branch
