@@ -40,22 +40,25 @@ function generateId() {
 // Helper function to recursively update the parent's values based on children's values
 function updateParentValues(node) {
   const sums = {};
+
   node.children.forEach(child => {
-    for (const [key, value] of Object.entries(child.values)) {
-      sums[key] = (sums[key] || 0) + (value || 0); // Sum up values
+    // Only consider active nodes for value calculation
+    if (child.status === 'active') {
+      for (const [key, value] of Object.entries(child.values)) {
+        sums[key] = (sums[key] || 0) + (value || 0); // Sum values, defaulting to 0
+      }
     }
+    updateParentValues(child); // Recursively update for each child
   });
-  // Update parent's values
+
+  // Update parent's values based on the summed children's values
   node.values = { ...node.values, ...sums };
-  
-  // Recursively update for each child
-  node.children.forEach(child => updateParentValues(child));
 }
 
-// Helper function to set a custom value for a node and its children
+// Helper function to set a custom value for a node and propagate it to parent
 function setValueForNode(node, key, value) {
   node.values[key] = value; // Set the custom value for this node
-  updateParentValues(node); // Update parent's values
+  updateParentValues(tree); // Update parent's values based on the change
 }
 
 // GET /get-tree - Returns the current tree structure
@@ -71,9 +74,16 @@ app.post('/add-node', (req, res) => {
     const newNode = {
       id: generateId(),
       name: name,
-      values: { ...parentNode.values }, // Inherit values from parent
-      children: []
+      values: {}, // Initialize values as empty for the new child
+      children: [],
+      status: 'active' // Set default status to active
     };
+
+    // Propagate default values for the new child to be 0
+    for (const key in parentNode.values) {
+      newNode.values[key] = 0; // Set inherited value to 0 for children
+    }
+
     parentNode.children.push(newNode);
     res.json({ success: true, newNode });
   } else {
@@ -86,7 +96,7 @@ app.post('/add-value', (req, res) => {
   const { parentId, key, value } = req.body; // Expecting key and value
   const parentNode = findNodeById(tree, parentId);
   if (parentNode) {
-    setValueForNode(parentNode, key, value);
+    setValueForNode(parentNode, key, value); // Set the value and propagate
     res.json({ success: true, tree }); // Return the updated tree
   } else {
     res.status(404).json({ success: false, message: 'Node not found' });
@@ -99,21 +109,36 @@ app.post('/edit-value', (req, res) => {
   const node = findNodeById(tree, nodeId);
   if (node) {
     node.values[key] = value; // Update the value
-    updateParentValues(node); // Ensure parent's values are updated
+    updateParentValues(tree); // Ensure parent's values are updated
     res.json({ success: true, tree }); // Return the updated tree
   } else {
     res.status(404).json({ success: false, message: 'Node not found' });
   }
 });
 
-// POST /delete-node - Deletes a node and all its children
+// POST /edit-status - Edits the status of a node and updates parent's values
+app.post('/edit-status', (req, res) => {
+  const { nodeId, status } = req.body; // Expecting nodeId and status
+  const node = findNodeById(tree, nodeId);
+  if (node) {
+    node.status = status; // Update the status
+    updateParentValues(tree); // Ensure parent's values are updated
+    res.json({ success: true, tree }); // Return the updated tree
+  } else {
+    res.status(404).json({ success: false, message: 'Node not found' });
+  }
+});
+
+// POST /delete-node - Marks a node as trimmed instead of deleting it
 app.post('/delete-node', (req, res) => {
   const { nodeId } = req.body;
-  if (tree.id === nodeId) {
-    res.status(400).json({ success: false, message: 'Cannot delete the root node' });
+  const node = findNodeById(tree, nodeId);
+  if (node) {
+    node.status = 'trimmed'; // Mark as trimmed
+    updateParentValues(tree); // Update parent's values after trimming
+    res.json({ success: true, message: 'Node trimmed', tree });
   } else {
-    deleteNodeById(tree, nodeId);
-    res.json({ success: true });
+    res.status(404).json({ success: false, message: 'Node not found' });
   }
 });
 

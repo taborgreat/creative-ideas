@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tree Visualization App</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.21.0/cytoscape.min.js"></script>
 </head>
+
 <body>
   <h1>Tree App</h1>
   <div id="cy" style="width: 800px; height: 600px; border: 1px solid black;"></div>
@@ -18,7 +20,7 @@
         {
           selector: 'node',
           style: {
-            'background-color': '#666',
+            'background-color': '#666', // Default color
             'label': 'data(name)',
             'text-valign': 'center',
             'color': '#fff'
@@ -54,12 +56,31 @@
 
     // Recursively add nodes and edges to Cytoscape
     function addTreeToCytoscape(node, parentId) {
+      // Determine the background color based on the node's status
+      let bgColor;
+      switch (node.status) {
+        case 'active':
+          bgColor = 'yellow';
+          break;
+        case 'trimmed':
+          bgColor = 'red';
+          break;
+        case 'completed':
+          bgColor = 'green';
+          break;
+        default:
+          bgColor = '#666'; // Default color for any unspecified status
+      }
+
       // Add node with the value shown in the label
       cy.add({
-        data: { 
-          id: node.id, 
+        data: {
+          id: node.id,
           name: `${node.name} `,
           values: node.values // Include values for later retrieval
+        },
+        style: {
+          'background-color': bgColor // Set the background color
         }
       });
       if (parentId) {
@@ -80,8 +101,14 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ parentId, name: nodeName })
       })
-      .then(response => response.json())
-      .then(data => loadTree()); // Reload the tree after adding the node
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            loadTree(); // Reload the tree after adding the node
+          } else {
+            alert(data.message);
+          }
+        });
     }
 
     // Add custom values to a node and its children
@@ -97,8 +124,14 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ parentId, key, value: Number(value) }) // Send the key and value
       })
-      .then(response => response.json())
-      .then(data => loadTree()); // Reload the tree to show the updated values
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            loadTree(); // Reload the tree to show the updated values
+          } else {
+            alert(data.message);
+          }
+        });
     }
 
     // Delete a node and its children
@@ -110,8 +143,14 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nodeId })
       })
-      .then(response => response.json())
-      .then(data => loadTree()); // Reload the tree after deletion
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            loadTree(); // Reload the tree after deletion
+          } else {
+            alert(data.message);
+          }
+        });
     }
 
     // View node details
@@ -124,36 +163,60 @@
       alert(`Node Details:\nID: ${node.id()}\nName: ${node.data('name')}\nValues:\n${details}`);
     }
 
-    // Handle node click events
-    cy.on('tap', 'node', function(evt) {
-  var node = evt.target;
+   cy.on('tap', 'node', function (evt) {
+      var node = evt.target;
 
-  const action = prompt(`Choose an action for node '${node.data('name')}':\n1. Add Child\n2. View Details\n3. Delete Node\n4. Add Value\n5. Edit Value`);
+      const action = prompt(`Choose an action for node '${node.data('name')}':\n1. Add Child\n2. View Details\n3. Delete Node\n4. Add Value\n5. Edit Value\n6. Edit Status`);
 
-  if (action === '1') {
-    addNode(node.id());
-  } else if (action === '2') {
-    viewNodeDetails(node);
-  } else if (action === '3') {
-    deleteNode(node.id());
-  } else if (action === '4') {
-    addValue(node.id());
-  } else if (action === '5') {
-    const key = prompt("Enter the value key (e.g., time, money):");
-    const value = prompt(`Enter the new value for ${key}:`);
-    if (key && value !== null) {
-      fetch('/edit-value', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nodeId: node.id(), key, value: Number(value) })
-      })
-      .then(response => response.json())
-      .then(data => loadTree()); // Reload the tree after editing the value
-    }
-  }
-});
+      if (action === '1') {
+        addNode(node.id());
+      } else if (action === '2') {
+        viewNodeDetails(node);
+      } else if (action === '3') {
+        deleteNode(node.id());
+      } else if (action === '4') {
+        addValue(node.id());
+      } else if (action === '5') {
+        const key = prompt("Enter the value key (e.g., time, money):");
+        const value = prompt(`Enter the new value for ${key}:`);
+        if (key && value !== null) {
+          fetch('/edit-value', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nodeId: node.id(), key, value: Number(value) })
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                loadTree(); // Reload the tree after editing the value
+              } else {
+                alert(data.message);
+              }
+            });
+        }
+      } else if (action === '6') {
+        const newStatus = prompt("Enter new status (active, trimmed, completed):");
+        if (newStatus) {
+          fetch('/edit-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nodeId: node.id(), status: newStatus })
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                loadTree(); // Reload the tree after editing the status
+              } else {
+                alert(data.message);
+              }
+            });
+        }
+      }
+    });
+
     // Initial tree load
     loadTree();
   </script>
 </body>
+
 </html>
