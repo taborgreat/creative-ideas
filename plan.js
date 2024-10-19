@@ -4,7 +4,7 @@ Every node/creative idea must be quantifiable that can be set to a goal to be co
 
 only unquatifiable ones are the root, and the main branches off of it: wealth, self (body/mind), others (people, art, materials)
 the fundamental qyantifuable creativevideas coming out of these should relate to the core idea as much as possible, even if
-it veers off into other branches. this allows you to see the root motivations of your endeavors, and not get lost in the sauce
+it starts to require values from other parent branches. this allows you to see the root motivations of your endeavors, and not get lost in the sauce
 as they entangle and interconnect. 
 	
 these serve more as organisers for the children below, and act as "trade" hubs to debt values from branches if needed
