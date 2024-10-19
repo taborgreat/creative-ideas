@@ -10,9 +10,72 @@ app.use(express.static('public'));
 let tree = {
   id: 'root',
   name: 'Root',
-  status: 'active',
-  values: {}, // Initialize as an empty object
-  children: []
+  status: 'exchange',
+  values: {
+    hours: 0,
+  },
+  children: [
+    {
+      id: generateId(),
+      name: 'Wealth',
+      status: 'exchange', // Set as exchange node
+      values: {
+        dollars: 0,
+      },
+      children: []
+    },
+    {
+      id: generateId(),
+      name: 'Self Focused',
+      status: 'exchange', // Set as exchange node
+      values: {},
+      children: [
+        {
+      id: generateId(),
+      name: 'Body',
+      status: 'exchange', // Set as exchange node
+      values: {},
+      children: []
+    },
+    {
+      id: generateId(),
+      name: 'Mind',
+      status: 'exchange', // Set as exchange node
+      values: {},
+      children: []
+    }
+      ]
+    },
+    {
+      id: generateId(),
+      name: 'Other Focused',
+      status: 'exchange', // Set as exchange node
+      values: {},
+      children: [
+        {
+      id: generateId(),
+      name: 'People',
+      status: 'exchange', // Set as exchange node
+      values: {},
+      children: []
+    },
+    {
+      id: generateId(),
+      name: 'Possesions',
+      status: 'exchange', // Set as exchange node
+      values: {},
+      children: []
+    },
+    {
+      id: generateId(),
+      name: 'Expression',
+      status: 'exchange', // Set as exchange node
+      values: {},
+      children: []
+    }
+      ]
+    }
+  ]
 };
 
 // Helper function to find a node by its ID (recursively)
@@ -43,23 +106,21 @@ function updateParentValues(node) {
   const sums = {};
 
   node.children.forEach(child => {
-    // Only consider active nodes for value calculation
     if (child.status === 'active') {
       for (const [key, value] of Object.entries(child.values)) {
-        sums[key] = (sums[key] || 0) + (value || 0); // Sum values, defaulting to 0
+        sums[key] = (sums[key] || 0) + (value || 0);
       }
     }
-    updateParentValues(child); // Recursively update for each child
+    updateParentValues(child);
   });
 
-  // Update parent's values based on the summed children's values
   node.values = { ...node.values, ...sums };
 }
 
 // Helper function to set a custom value for a node and propagate it to parent
 function setValueForNode(node, key, value) {
-  node.values[key] = value; // Set the custom value for this node
-  updateParentValues(tree); // Update parent's values based on the change
+  node.values[key] = value;
+  updateParentValues(tree);
 }
 
 // GET /get-tree - Returns the current tree structure
@@ -75,12 +136,11 @@ app.post('/add-node', (req, res) => {
     const newNode = {
       id: generateId(),
       name: name,
-      values: {}, // Initialize values as empty for the new child
+      values: {},
       children: [],
       status: 'active' // Set default status to active
     };
 
-    // Propagate default values for the new child to be 0
     for (const key in parentNode.values) {
       newNode.values[key] = 0; // Set inherited value to 0 for children
     }
@@ -94,11 +154,11 @@ app.post('/add-node', (req, res) => {
 
 // POST /add-value - Sets a custom value for a node and updates parent's values
 app.post('/add-value', (req, res) => {
-  const { parentId, key, value } = req.body; // Expecting key and value
+  const { parentId, key, value } = req.body;
   const parentNode = findNodeById(tree, parentId);
   if (parentNode) {
-    setValueForNode(parentNode, key, value); // Set the value and propagate
-    res.json({ success: true, tree }); // Return the updated tree
+    setValueForNode(parentNode, key, value);
+    res.json({ success: true, tree });
   } else {
     res.status(404).json({ success: false, message: 'Node not found' });
   }
@@ -106,12 +166,12 @@ app.post('/add-value', (req, res) => {
 
 // POST /edit-value - Edits a specific value for a node and updates parent's values
 app.post('/edit-value', (req, res) => {
-  const { nodeId, key, value } = req.body; // Expecting nodeId, key, and value
+  const { nodeId, key, value } = req.body;
   const node = findNodeById(tree, nodeId);
   if (node) {
-    node.values[key] = value; // Update the value
-    updateParentValues(tree); // Ensure parent's values are updated
-    res.json({ success: true, tree }); // Return the updated tree
+    node.values[key] = value;
+    updateParentValues(tree);
+    res.json({ success: true, tree });
   } else {
     res.status(404).json({ success: false, message: 'Node not found' });
   }
@@ -120,28 +180,26 @@ app.post('/edit-value', (req, res) => {
 // Helper function to recursively update the children's statuses based on parent's status
 function updateChildrenStatus(node, newStatus) {
   node.children.forEach(child => {
-    child.status = newStatus; // Update the child's status
-    updateChildrenStatus(child, newStatus); // Recursively update for each child
+    child.status = newStatus;
+    updateChildrenStatus(child, newStatus);
   });
 }
 
 // POST /edit-status - Edits the status of a node and updates parent's values
 app.post('/edit-status', (req, res) => {
-  const { nodeId, status } = req.body; // Expecting nodeId and status
+  const { nodeId, status } = req.body;
   const node = findNodeById(tree, nodeId);
   if (node) {
-    node.status = status; // Update the status of the current node
-    
-    // If the new status is "trimmed," also trim all children
+    node.status = status;
+
     if (status === 'trimmed') {
       updateChildrenStatus(node, 'trimmed');
     } else {
-      // For other statuses, update all children to match the parent's new status
       updateChildrenStatus(node, status);
     }
 
-    updateParentValues(tree); // Ensure parent's values are updated
-    res.json({ success: true, tree }); // Return the updated tree
+    updateParentValues(tree);
+    res.json({ success: true, tree });
   } else {
     res.status(404).json({ success: false, message: 'Node not found' });
   }
@@ -152,8 +210,8 @@ app.post('/delete-node', (req, res) => {
   const { nodeId } = req.body;
   const node = findNodeById(tree, nodeId);
   if (node) {
-    node.status = 'trimmed'; // Mark as trimmed
-    updateParentValues(tree); // Update parent's values after trimming
+    node.status = 'trimmed';
+    updateParentValues(tree);
     res.json({ success: true, message: 'Node trimmed', tree });
   } else {
     res.status(404).json({ success: false, message: 'Node not found' });
