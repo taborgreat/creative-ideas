@@ -1,4 +1,4 @@
-Every goal must be quantifiable that can be set to a goal to be completed, or must be able to say yes or no if it’s done.
+Every goal must be quantifiable that can be set to a goal to be completed based on inherited values, or must be able to say yes or no if it’s done as a whole.
 
 If a quantifiable goal is repetitive and progressive (like weights in a lifting branch) then the branch prestoges each time it is satisfied, with a new goal set 
 
