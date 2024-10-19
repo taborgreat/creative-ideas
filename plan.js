@@ -3,11 +3,11 @@
 Every node/creative idea must be quantifiable that can be set to a goal to be completed based on inherited values, or must be able to say yes or no if it’s done as a whole.
 
 only unquatifiable ones are the root, and the main branches off of it: wealth, self (body/mind), others (people, art, materials)
-the fundamental qyantifuable creativevideas coming out of these should relate to the core idea as much as possible, even if
+(the fundamental qyantifuable creativevideas coming out of these should relate to the core idea as much as possible, even if
 it starts to require values from other parent branches. this allows you to see the root motivations of your endeavors, and not get lost in the sauce
-as they entangle and interconnect. 
+as they entangle and interconnect. )
 	
-these serve more as organisers for the children below, and act as "trade" hubs to debt values from branches if needed
+these unwuaitifable serve more as organisers for the children below, and act as "trade" hubs to debt values from branches if needed
 ex: self->body->2400 calories/day->requires $20 to buy food, which is debted off the wealth branch.
 from the hub of the main branches you can see what "weeds" are feeding for values from other endeavors
 or in others->branches->car->you need to pay insurance you could debt wealth branch,
