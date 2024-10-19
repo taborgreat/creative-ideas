@@ -1,3 +1,45 @@
+
+seap debt credit
+Every node/creative idea must be quantifiable that can be set to a goal to be completed based on inherited values, or must be able to say yes or no if it’s done as a whole.
+
+only unquatifiable ones are the root, and the main branches off of it: wealth, self (body/mind), others (people, art, materials)
+(the fundamental qyantifuable creativevideas coming out of these should relate to the core idea as much as possible, even if
+it starts to require values from other parent branches. this allows you to see the root motivations of your endeavors, and not get lost in the sauce
+as they entangle and interconnect. )
+	
+these unwuaitifable serve more as organisers for the children below, and act as "trade" hubs to debt values from branches if needed
+ex: self->body->2400 calories/day->requires $20 to buy food, which is debted off the wealth branch.
+	youd to be careful not to have your $20 for food coming from wealth branch and debting into the body branch as time for wrking out
+        as that would throw off the root value of why youre making $20 and create "floating" branches
+
+
+
+
+
+from the hub of the main branches you can see what "weeds" are feeding for values from other endeavors
+or in others->branches->car->you need to pay insurance you could debt wealth branch,
+showing you are losing value from wealth branch to support value on other branch
+
+
+	1.	Wealth Branch:
+	•	Goal: Earn $500 this week.
+	•	debt goal: Allocate $20 for healthy food.
+	2.	Body Branch:
+	•	Goal: Consume 2400 calories/day. *creates debt branch to wealth for $20 food)
+	•
+		
+	3.	Wealth Debts Body (with Purpose):
+	•	$20 is spent on food (debited from the wealth branch).
+	•	The body branch benefits by having the calories necessary for workouts.
+	•	There’s no floating goal here; the wealth expenditure is directly tied to body health progress.
+	
+If a quantifiable goal is repetitive and progressive (like weights in a lifting branch) then the branch prestoges each time it is satisfied, with a new goal set 
+
+lets say in the other->material branch i write a main goal (quite stupidly) get a lamborghini
+this idea would cross into othr branches instantly, as a major step could be acquire $1000000
+this would have to creste a linked idea in the wealth branch, that needs to be satisfied for the
+other branch to move forward. weeds/linked ideas are much the same, and can be connected by ref id and treated like a child
+of the needy branch while using the values of the giving branch to value exchange.
 //create cycle: idea -> (plan -> work -> learn -> work -> reflect) 
 //inside of () = creating, or when time should be tracked
 
