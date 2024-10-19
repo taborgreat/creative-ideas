@@ -1,3 +1,5 @@
+
+
 Every node/creative idea must be quantifiable that can be set to a goal to be completed based on inherited values, or must be able to say yes or no if it’s done as a whole.
 
 only unquatifiable ones are the root, and the main branches off of it: wealth, self (body/mind), others (people, art, materials)
@@ -9,7 +11,11 @@ showing you are losing value from wealth branch to support value on other branch
 	
 If a quantifiable goal is repetitive and progressive (like weights in a lifting branch) then the branch prestoges each time it is satisfied, with a new goal set 
 
-
+lets say in the other->material branch i write a main goal (quite stupidly) get a lamborghini
+this idea would cross into othr branches instantly, as a major step could be acquire $1000000
+this would have to creste a linked idea in the wealth branch, that needs to be satisfied for the
+other branch to move forward. weeds/linked ideas are much the same, and can be connected by ref id and treated like a child
+of the needy branch while using the values of the giving branch to value exchange.
 //create cycle: idea -> (plan -> work -> learn -> work -> reflect) 
 //inside of () = creating, or when time should be tracked
 
