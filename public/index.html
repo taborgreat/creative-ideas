@@ -9,13 +9,11 @@
 <body>
   <h1>Tree App</h1>
   <div id="cy" style="width: 800px; height: 600px; border: 1px solid black;"></div>
- 
 
   <script>
-
     var cy = cytoscape({
       container: document.getElementById('cy'),
-      elements: [], 
+      elements: [],
       style: [
         {
           selector: 'node',
@@ -43,19 +41,26 @@
       }
     });
 
+    // Load and display the tree from the server
     function loadTree() {
       fetch('/get-tree')
         .then(response => response.json())
         .then(data => {
-          cy.elements().remove();  
-          addTreeToCytoscape(data, null); 
-          cy.layout({ name: 'breadthfirst', directed: true }).run();
+          cy.elements().remove(); // Clear the current elements
+          addTreeToCytoscape(data, null); // Recursively add the tree to Cytoscape
+          cy.layout({ name: 'breadthfirst', directed: true }).run(); // Apply layout
         });
     }
 
+    // Recursively add nodes and edges to Cytoscape
     function addTreeToCytoscape(node, parentId) {
+      // Add node with the value shown in the label
       cy.add({
-        data: { id: node.id, name: node.name }
+        data: { 
+          id: node.id, 
+          name: `${node.name} `,
+          values: node.values // Include values for later retrieval
+        }
       });
       if (parentId) {
         cy.add({
@@ -65,7 +70,7 @@
       node.children.forEach(child => addTreeToCytoscape(child, node.id));
     }
 
-  
+    // Add a new child node
     function addNode(parentId) {
       const nodeName = prompt("Enter node name:");
       if (!nodeName) return;
@@ -76,9 +81,27 @@
         body: JSON.stringify({ parentId, name: nodeName })
       })
       .then(response => response.json())
-      .then(data => loadTree()); 
+      .then(data => loadTree()); // Reload the tree after adding the node
     }
 
+    // Add custom values to a node and its children
+    function addValue(parentId) {
+      const key = prompt("Enter value key (e.g., time, money):");
+      if (!key) return;
+
+      const value = prompt(`Enter value for ${key}:`);
+      if (value === null) return; // Allow cancel without proceeding
+
+      fetch('/add-value', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ parentId, key, value: Number(value) }) // Send the key and value
+      })
+      .then(response => response.json())
+      .then(data => loadTree()); // Reload the tree to show the updated values
+    }
+
+    // Delete a node and its children
     function deleteNode(nodeId) {
       if (!confirm('Are you sure you want to delete this node and all its children?')) return;
 
@@ -88,29 +111,48 @@
         body: JSON.stringify({ nodeId })
       })
       .then(response => response.json())
-      .then(data => loadTree());  
+      .then(data => loadTree()); // Reload the tree after deletion
     }
 
-  
+    // View node details
     function viewNodeDetails(node) {
-      alert(`Node Details:\nID: ${node.id()}\nName: ${node.data('name')}`);
+      const values = node.data('values'); // Get values
+      const details = Object.entries(values)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join('\n'); // Format the details
+
+      alert(`Node Details:\nID: ${node.id()}\nName: ${node.data('name')}\nValues:\n${details}`);
     }
 
+    // Handle node click events
     cy.on('tap', 'node', function(evt) {
-      var node = evt.target;
+  var node = evt.target;
 
-      const action = prompt(`Choose an action for node '${node.data('name')}':\n1. Add Child\n2. View Details\n3. Delete Node`);
+  const action = prompt(`Choose an action for node '${node.data('name')}':\n1. Add Child\n2. View Details\n3. Delete Node\n4. Add Value\n5. Edit Value`);
 
-      if (action === '1') {
-        addNode(node.id());  
-      } else if (action === '2') {
-        viewNodeDetails(node); 
-      } else if (action === '3') {
-        deleteNode(node.id());  
-      }
-    });
-
-    
+  if (action === '1') {
+    addNode(node.id());
+  } else if (action === '2') {
+    viewNodeDetails(node);
+  } else if (action === '3') {
+    deleteNode(node.id());
+  } else if (action === '4') {
+    addValue(node.id());
+  } else if (action === '5') {
+    const key = prompt("Enter the value key (e.g., time, money):");
+    const value = prompt(`Enter the new value for ${key}:`);
+    if (key && value !== null) {
+      fetch('/edit-value', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nodeId: node.id(), key, value: Number(value) })
+      })
+      .then(response => response.json())
+      .then(data => loadTree()); // Reload the tree after editing the value
+    }
+  }
+});
+    // Initial tree load
     loadTree();
   </script>
 </body>
