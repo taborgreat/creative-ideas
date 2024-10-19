@@ -60,13 +60,13 @@
       let bgColor;
       switch (node.status) {
         case 'active':
-          bgColor = 'yellow';
+          bgColor = 'green';
           break;
         case 'trimmed':
           bgColor = 'red';
           break;
         case 'completed':
-          bgColor = 'green';
+          bgColor = '#666';
           break;
         default:
           bgColor = '#666'; // Default color for any unspecified status
@@ -136,7 +136,7 @@
 
     // Delete a node and its children
     function deleteNode(nodeId) {
-      if (!confirm('Are you sure you want to delete this node and all its children?')) return;
+      if (!confirm('Are you sure you want to trim this node and all its children?')) return;
 
       fetch('/delete-node', {
         method: 'POST',
@@ -160,13 +160,13 @@
         .map(([key, value]) => `${key}: ${value}`)
         .join('\n'); // Format the details
 
-      alert(`Node Details:\nID: ${node.id()}\nName: ${node.data('name')}\nValues:\n${details}`);
+      alert(`Node Details:\nID: ${node.id()}\nName: ${node.data('name')}\nValues:\n${details}\nStatus: ${node.data('status') }`);
     }
 
    cy.on('tap', 'node', function (evt) {
       var node = evt.target;
 
-      const action = prompt(`Choose an action for node '${node.data('name')}':\n1. Add Child\n2. View Details\n3. Delete Node\n4. Add Value\n5. Edit Value\n6. Edit Status`);
+      const action = prompt(`Choose an action for node '${node.data('name')}':\n1. Add Child\n2. View Details\n3. Trim Node\n4. Add Value\n5. Edit Value\n6. Edit Status`);
 
       if (action === '1') {
         addNode(node.id());

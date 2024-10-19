@@ -10,6 +10,7 @@ app.use(express.static('public'));
 let tree = {
   id: 'root',
   name: 'Root',
+  status: 'active',
   values: {}, // Initialize as an empty object
   children: []
 };
@@ -116,12 +117,29 @@ app.post('/edit-value', (req, res) => {
   }
 });
 
+// Helper function to recursively update the children's statuses based on parent's status
+function updateChildrenStatus(node, newStatus) {
+  node.children.forEach(child => {
+    child.status = newStatus; // Update the child's status
+    updateChildrenStatus(child, newStatus); // Recursively update for each child
+  });
+}
+
 // POST /edit-status - Edits the status of a node and updates parent's values
 app.post('/edit-status', (req, res) => {
   const { nodeId, status } = req.body; // Expecting nodeId and status
   const node = findNodeById(tree, nodeId);
   if (node) {
-    node.status = status; // Update the status
+    node.status = status; // Update the status of the current node
+    
+    // If the new status is "trimmed," also trim all children
+    if (status === 'trimmed') {
+      updateChildrenStatus(node, 'trimmed');
+    } else {
+      // For other statuses, update all children to match the parent's new status
+      updateChildrenStatus(node, status);
+    }
+
     updateParentValues(tree); // Ensure parent's values are updated
     res.json({ success: true, tree }); // Return the updated tree
   } else {
