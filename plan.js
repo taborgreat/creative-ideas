@@ -1,3 +1,32 @@
+if you make  a debt value, it pulls from the parent where the value was created
+
+objects will only have versioning system if labeled as recurrent, and everytime you prestige
+you are marking it completed this cycle,
+filling in the values needed (hrs, money, calories, weight in workout, etc)
+adding a reflection, and a new goal for next week that ideally is a little harder
+(maybe not time wise but value wise in other area showing better efficiency w time)
+
+when you prestige, you will also be asked to reflect. whether you do or not, a dashed line like this
+with the most recent notes at the top
+
+
+
+Notes:
+
+=========================================================== PRESTIGE 5
+
+Reflection: blah balah bah
+notes: blah balh blah 
+
+========================================================== PRESTIGE 4
+
+Reflection: blah blah blah
+notes < ------old notes
+
+=========================================================== PRESTIGE 3
+
+for exmaple will be inserted into the note object to help organize
+
 the root node is active and is primarily used to track time spent, and make time goals
 time is the root value of the tree, meaning all other values depend on its credit which is why
 all branches originate from it. you only get so many hours a day to spend through your root
