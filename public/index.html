@@ -98,7 +98,7 @@
       // Recursively add nodes and edges to Cytoscape
       function addTreeToCytoscape(node, parentId) {
         let bgColor;
-        switch (node.status) {
+        switch (node.versions[node.prestige].status) {
           case "active":
             bgColor = "green";
             break;
@@ -143,10 +143,46 @@
         const nodeName = prompt("Enter node name:");
         if (!nodeName) return;
 
+        // Ask if the node is scheduled
+        const isScheduled = prompt(
+          "Is this node scheduled? (true/false)"
+        ).toLowerCase();
+
+        let schedule = null;
+        let reeffectTime = 0;
+
+        if (isScheduled === "true") {
+          // Use a date input for better usability
+          const scheduleInput = prompt("Enter schedule date (YYYY-MM-DD):");
+          const timeInput = prompt(
+            "Enter schedule time (HH:MM, 24-hour format):"
+          );
+
+          if (scheduleInput && timeInput) {
+            // Combine date and time
+            const combinedDateTime = new Date(
+              `${scheduleInput}T${timeInput}:00Z`
+            ).toISOString();
+            schedule = combinedDateTime;
+          }
+
+          // Ask for reeffect time
+          const reeffectTimeInput = prompt(
+            "Time for reschedule upon prestige (hrs):"
+          );
+          reeffectTime = reeffectTimeInput ? Number(reeffectTimeInput) : 0; // Convert to number or default to 0
+        }
+
+        // Send data to the server
         fetch("/add-node", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ parentId, name: nodeName }),
+          body: JSON.stringify({
+            parentId,
+            name: nodeName,
+            schedule,
+            reeffectTime,
+          }),
         })
           .then((response) => response.json())
           .then((data) => {
@@ -226,15 +262,32 @@
           .join("\n");
 
         // Format version history
+
+        function formatDate(dateString) {
+          const date = new Date(dateString);
+          const month = String(date.getMonth() + 1).padStart(2, "0"); // Month (01-12)
+          const day = String(date.getDate()).padStart(2, "0"); // Day (01-31)
+          const year = date.getFullYear(); // Year (YYYY)
+          const hours = String(date.getHours()).padStart(2, "0"); // Hours (00-23)
+          const minutes = String(date.getMinutes()).padStart(2, "0"); // Minutes (00-59)
+
+          return `${month}/${day}/${year} ${hours}:${minutes}`; // Formatted date
+        }
+
         const versionHistory = versions
           .map(
             (version, index) =>
-              `Version ${index + 1} (Prestige: ${
-                version.prestige
-              }): ${JSON.stringify(version.values)}`
+              `Version ${index + 1} (Prestige: ${version.prestige}, ` +
+              `Date Created: ${formatDate(version.dateCreated)}, ` + // Use the formatting function
+              `Status: ${version.status}, ` +
+              `Schedule: ${
+                version.schedule ? formatDate(version.schedule) : "None"
+              }, ` + // Format schedule
+              `Reeffect Time: ${version.reeffectTime} hours): ${JSON.stringify(
+                version.values
+              )}`
           )
           .join("\n");
-
         alert(`Node Details:
       ID: ${node.id()}
       Name: ${node.data("name")}
@@ -265,6 +318,23 @@
           });
       }
 
+      // Function to increase prestige
+      function completeNode(nodeId) {
+        fetch("/complete-node", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nodeId }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              loadTree(); // Reload the tree after increasing prestige
+            } else {
+              alert(data.message);
+            }
+          });
+      }
+
       // Event listener for node tap to view details
       cy.on("tap", "node", function (evt) {
         var node = evt.target;
@@ -275,7 +345,8 @@
       2. View Details
       3. Add/Edit Value
       4. Edit Status
-      5. Prestige`);
+      5. Prestige
+      6. Complete`);
 
         switch (action) {
           case "1":
@@ -313,6 +384,10 @@
 
           case "5":
             increasePrestige(node.id()); // Call the function to increase prestige
+            break;
+
+          case "6":
+            completeNode(node.id()); // Call the function to increase prestige
             break;
 
           default:

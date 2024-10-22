@@ -6,7 +6,6 @@ const port = 3000;
 app.use(bodyParser.json());
 app.use(express.static("public"));
 
-// In-memory tree data structure
 let tree = {
   id: "Root",
   name: "Root",
@@ -16,8 +15,11 @@ let tree = {
   versions: [
     {
       prestige: 0,
-      values: { hours: 0 }, // Each version has its own values
-      status: "exchange",
+      values: {}, // Each version has its own values
+      status: "active",
+      dateCreated: new Date().toISOString(), // When the node was created
+      schedule: null, // null means floating, can be a set date
+      reeffectTime: 0, // In hours, decides how schedule resets upon prestige
     },
   ],
   children: [
@@ -32,6 +34,9 @@ let tree = {
           prestige: 0,
           values: { dollars: 0 },
           status: "exchange",
+          dateCreated: new Date().toISOString(),
+          schedule: null,
+          reeffectTime: 0,
         },
       ],
       children: [],
@@ -47,6 +52,9 @@ let tree = {
           prestige: 0,
           values: {},
           status: "exchange",
+          dateCreated: new Date().toISOString(),
+          schedule: null,
+          reeffectTime: 0,
         },
       ],
       children: [
@@ -61,6 +69,9 @@ let tree = {
               prestige: 0,
               values: {},
               status: "exchange",
+              dateCreated: new Date().toISOString(),
+              schedule: null,
+              reeffectTime: 0,
             },
           ],
           children: [],
@@ -76,6 +87,9 @@ let tree = {
               prestige: 0,
               values: {},
               status: "exchange",
+              dateCreated: new Date().toISOString(),
+              schedule: null,
+              reeffectTime: 0,
             },
           ],
           children: [],
@@ -93,6 +107,9 @@ let tree = {
           prestige: 0,
           values: {},
           status: "exchange",
+          dateCreated: new Date().toISOString(),
+          schedule: null,
+          reeffectTime: 0,
         },
       ],
       children: [
@@ -107,6 +124,9 @@ let tree = {
               prestige: 0,
               values: {},
               status: "exchange",
+              dateCreated: new Date().toISOString(),
+              schedule: null,
+              reeffectTime: 0,
             },
           ],
           children: [],
@@ -122,6 +142,9 @@ let tree = {
               prestige: 0,
               values: {},
               status: "exchange",
+              dateCreated: new Date().toISOString(),
+              schedule: null,
+              reeffectTime: 0,
             },
           ],
           children: [],
@@ -137,6 +160,9 @@ let tree = {
               prestige: 0,
               values: {},
               status: "exchange",
+              dateCreated: new Date().toISOString(),
+              schedule: null,
+              reeffectTime: 0,
             },
           ],
           children: [],
@@ -249,26 +275,35 @@ app.get("/get-tree", (req, res) => {
   res.json(tree);
 });
 
+// Function to create a new node with required properties
+function createNewNode(name, schedule, reeffectTime) {
+  return {
+    id: generateId(),
+    name: name,
+    status: "exchange",
+    prestige: 0,
+    globalValues: {}, // Track total values across all versions
+    versions: [
+      {
+        prestige: 0,
+        values: {}, // Each version has its own values
+        status: "active",
+        dateCreated: new Date().toISOString(), // When the node was created
+        schedule: schedule ? new Date(schedule).toISOString() : null, // Parse the schedule date
+        reeffectTime: reeffectTime || 0, // Default to 0 if not provided
+      },
+    ],
+    children: [],
+  };
+}
+
 // POST /add-node - Adds a new node under a parent node
 app.post("/add-node", (req, res) => {
-  const { parentId, name } = req.body;
+  const { parentId, name, schedule, reeffectTime } = req.body;
+  console.log(req.body); // Get schedule and reeffectTime from request
   const parentNode = findNodeById(tree, parentId);
   if (parentNode) {
-    const newNode = {
-      id: generateId(),
-      name: name,
-      children: [],
-      prestige: 0,
-      globalValues: { hours: 0 }, // Track total values across all versions
-      versions: [
-        {
-          prestige: 0,
-          values: { hours: 0 }, // Each version has its own values
-          status: "active",
-        },
-      ],
-    };
-
+    const newNode = createNewNode(name, schedule, reeffectTime); // Pass schedule and reeffectTime
     parentNode.children.push(newNode);
     res.json({ success: true, newNode });
   } else {
@@ -339,13 +374,93 @@ app.post("/delete-node", (req, res) => {
   }
 });
 
-// POST /add-prestige - Adds a new prestige level and updates global values
+function handleSchedule(nodeVersion) {
+  // Check if the node is floating or has a set date
+  if (nodeVersion.schedule === null) {
+    // Floating schedule, no change needed
+    return nodeVersion.schedule;
+  } else {
+    // If schedule is set, update it with the reeffect time in hours
+    const currentSchedule = new Date(nodeVersion.schedule);
+    const updatedSchedule = new Date(
+      currentSchedule.getTime() + nodeVersion.reeffectTime * 60 * 60 * 1000
+    );
+    return updatedSchedule.toISOString();
+  }
+}
+
+function addPrestige(node) {
+  const currentVersion = node.versions.find(
+    (v) => v.prestige === node.prestige
+  );
+
+  if (!currentVersion) {
+    console.error("No version found for the current prestige level.");
+    return;
+  }
+
+  currentVersion.status = "completed";
+
+  const newValues = {};
+  for (const [key, value] of Object.entries(currentVersion.values)) {
+    node.globalValues[key] = (node.globalValues[key] || 0) + value;
+    newValues[key] = 0;
+  }
+
+  const newVersion = {
+    prestige: node.prestige + 1,
+    values: newValues,
+    status: "active",
+    dateCreated: new Date().toISOString(),
+    schedule: handleSchedule(currentVersion), // Update schedule or keep floating
+    reeffectTime: currentVersion.reeffectTime, // Inherit from previous version
+  };
+
+  node.prestige++;
+  node.versions.push(newVersion);
+  node.values = { ...newValues };
+}
+
 app.post("/add-prestige", (req, res) => {
-  const { nodeId } = req.body; // No need to pass values anymore
+  const { nodeId } = req.body;
+  const node = findNodeById(tree, nodeId);
+  if (node) {
+    addPrestige(node);
+    res.json({ success: true, tree });
+  } else {
+    res.status(404).json({ success: false, message: "Node not found" });
+  }
+});
+
+function completeNode(node) {
+  // Find the current version that matches the node's prestige level
+  const currentVersion = node.versions.find(
+    (v) => v.prestige === node.prestige
+  );
+
+  if (!currentVersion) {
+    console.error("No version found for the current prestige level.");
+    return;
+  }
+
+  // Update global values by adding the current version's values to globalValues
+  for (const [key, value] of Object.entries(currentVersion.values)) {
+    // Add the current values to globalValues
+    node.globalValues[key] = (node.globalValues[key] || 0) + value;
+  }
+
+  // Reset the current version's values to zero (or any other reset logic)
+  currentVersion.values = {};
+  // Mark the current version as "completed"
+  currentVersion.status = "completed";
+}
+
+app.post("/complete-node", (req, res) => {
+  const { nodeId } = req.body;
   const node = findNodeById(tree, nodeId);
 
   if (node) {
-    addPrestige(node); // Automatically handles values and prestige
+    completeNode(node);
     res.json({ success: true, tree });
   } else {
     res.status(404).json({ success: false, message: "Node not found" });
