@@ -9,14 +9,13 @@ app.use(express.static("public"));
 let tree = {
   id: "Root",
   name: "Root",
-  status: "exchange",
   prestige: 0,
   globalValues: { hours: 0 }, // Track total values across all versions
   versions: [
     {
       prestige: 0,
       values: {}, // Each version has its own values
-      status: "active",
+      status: "exchange",
       dateCreated: new Date().toISOString(), // When the node was created
       schedule: null, // null means floating, can be a set date
       reeffectTime: 0, // In hours, decides how schedule resets upon prestige
@@ -26,7 +25,6 @@ let tree = {
     {
       id: generateId(),
       name: "Wealth",
-      status: "exchange",
       prestige: 0,
       globalValues: { dollars: 0 }, // Track total values across all versions
       versions: [
@@ -44,7 +42,6 @@ let tree = {
     {
       id: generateId(),
       name: "Self Focused",
-      status: "exchange",
       prestige: 0,
       globalValues: {},
       versions: [
@@ -61,7 +58,6 @@ let tree = {
         {
           id: generateId(),
           name: "Body",
-          status: "exchange",
           prestige: 0,
           globalValues: {},
           versions: [
@@ -79,7 +75,6 @@ let tree = {
         {
           id: generateId(),
           name: "Mind",
-          status: "exchange",
           prestige: 0,
           globalValues: {},
           versions: [
@@ -99,7 +94,6 @@ let tree = {
     {
       id: generateId(),
       name: "Other Focused",
-      status: "exchange",
       prestige: 0,
       globalValues: {},
       versions: [
@@ -116,7 +110,6 @@ let tree = {
         {
           id: generateId(),
           name: "People",
-          status: "exchange",
           prestige: 0,
           globalValues: {},
           versions: [
@@ -134,7 +127,6 @@ let tree = {
         {
           id: generateId(),
           name: "Possessions",
-          status: "exchange",
           prestige: 0,
           globalValues: {},
           versions: [
@@ -152,7 +144,6 @@ let tree = {
         {
           id: generateId(),
           name: "Expression",
-          status: "exchange",
           prestige: 0,
           globalValues: {},
           versions: [
