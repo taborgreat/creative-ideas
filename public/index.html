@@ -1,294 +1,292 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tree Visualization App</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.21.0/cytoscape.min.js"></script>
-    <style>
-      #globalTreeValueDisplay {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background-color: white;
-        padding: 10px;
-        border: 1px solid black;
-        z-index: 10; /* Ensure it's on top of the Cytoscape canvas */
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tree Visualization App</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.21.0/cytoscape.min.js"></script>
+  <style>
+    #globalTreeValueDisplay {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: white;
+      padding: 10px;
+      border: 1px solid black;
+      z-index: 10;
+      /* Ensure it's on top of the Cytoscape canvas */
+    }
+  </style>
+</head>
+
+<body style="background-color: #000000">
+  <h1>Tree App</h1>
+  <div id="cy" style="width: 800px; height: 600px; border: 1px solid black"></div>
+
+  <!-- Global Tree Values Display -->
+  <div id="globalTreeValueDisplay">Global Tree Values will appear here</div>
+
+  <script>
+    var cy = cytoscape({
+      container: document.getElementById("cy"),
+      elements: [],
+      style: [
+        {
+          selector: "node",
+          style: {
+            "background-color": "#666", // Default color
+            label: "data(name)",
+            "text-valign": "center",
+            color: "black",
+          },
+        },
+        {
+          selector: "edge",
+          style: {
+            width: 2,
+            "line-color": "#ccc",
+            "target-arrow-color": "#ccc",
+            "target-arrow-shape": "triangle",
+          },
+        },
+        {
+          selector: 'node[status="exchange"]',
+          style: {
+            "background-color": "purple", // Color for exchange nodes
+          },
+        },
+        {
+          selector: 'node[status="active"]',
+          style: {
+            "background-color": "green", // Color for active nodes
+          },
+        },
+        {
+          selector: 'node[status="trimmed"]',
+          style: {
+            "background-color": "red", // Color for trimmed nodes
+          },
+        },
+        {
+          selector: 'node[status="completed"]',
+          style: {
+            "background-color": "#666", // Color for completed nodes
+          },
+        },
+      ],
+      layout: {
+        name: "breadthfirst",
+        directed: true,
+        padding: 10,
+      },
+    });
+
+    // Load and display the tree from the server
+    function loadTree() {
+      fetch("/get-tree")
+        .then((response) => response.json())
+        .then((data) => {
+          cy.elements().remove(); // Clear the current elements
+          addTreeToCytoscape(data, null); // Recursively add the tree to Cytoscape
+          cy.layout({name: "breadthfirst", directed: true}).run(); // Apply layout
+        });
+      updateGlobalTreeValuesDisplay();
+    }
+
+    // Recursively add nodes and edges to Cytoscape
+    function addTreeToCytoscape(node, parentId) {
+      let bgColor;
+      switch (node.versions[node.prestige].status) {
+        case "active":
+          bgColor = "green";
+          break;
+        case "trimmed":
+          bgColor = "red";
+          break;
+        case "completed":
+          bgColor = "#666";
+          break;
+        case "exchange":
+          bgColor = "gold"; // Set background for exchange nodes
+          break;
+        default:
+          bgColor = "#666"; // Default color for any unspecified status
       }
-    </style>
-  </head>
 
-  <body>
-    <h1>Tree App</h1>
-    <div
-      id="cy"
-      style="width: 800px; height: 600px; border: 1px solid black"
-    ></div>
-
-    <!-- Global Tree Values Display -->
-    <div id="globalTreeValueDisplay">Global Tree Values will appear here</div>
-
-    <script>
-      var cy = cytoscape({
-        container: document.getElementById("cy"),
-        elements: [],
-        style: [
-          {
-            selector: "node",
-            style: {
-              "background-color": "#666", // Default color
-              label: "data(name)",
-              "text-valign": "center",
-              color: "black",
-            },
-          },
-          {
-            selector: "edge",
-            style: {
-              width: 2,
-              "line-color": "#ccc",
-              "target-arrow-color": "#ccc",
-              "target-arrow-shape": "triangle",
-            },
-          },
-          {
-            selector: 'node[status="exchange"]',
-            style: {
-              "background-color": "purple", // Color for exchange nodes
-            },
-          },
-          {
-            selector: 'node[status="active"]',
-            style: {
-              "background-color": "green", // Color for active nodes
-            },
-          },
-          {
-            selector: 'node[status="trimmed"]',
-            style: {
-              "background-color": "red", // Color for trimmed nodes
-            },
-          },
-          {
-            selector: 'node[status="completed"]',
-            style: {
-              "background-color": "#666", // Color for completed nodes
-            },
-          },
-        ],
-        layout: {
-          name: "breadthfirst",
-          directed: true,
-          padding: 10,
+      cy.add({
+        data: {
+          id: node.id,
+          name: `${node.name} `,
+          values: node.globalValues,
+          status: node.versions[node.prestige].status,
+          prestige: node.prestige,
+          versions: node.versions,
+          // Store versions for displaying later
+        },
+        style: {
+          "background-color": bgColor,
         },
       });
 
-      // Load and display the tree from the server
-      function loadTree() {
-        fetch("/get-tree")
-          .then((response) => response.json())
-          .then((data) => {
-            cy.elements().remove(); // Clear the current elements
-            addTreeToCytoscape(data, null); // Recursively add the tree to Cytoscape
-            cy.layout({ name: "breadthfirst", directed: true }).run(); // Apply layout
-          });
-        updateGlobalTreeValuesDisplay();
-      }
-
-      // Recursively add nodes and edges to Cytoscape
-      function addTreeToCytoscape(node, parentId) {
-        let bgColor;
-        switch (node.versions[node.prestige].status) {
-          case "active":
-            bgColor = "green";
-            break;
-          case "trimmed":
-            bgColor = "red";
-            break;
-          case "completed":
-            bgColor = "#666";
-            break;
-          case "exchange":
-            bgColor = "gold"; // Set background for exchange nodes
-            break;
-          default:
-            bgColor = "#666"; // Default color for any unspecified status
-        }
-
+      if (parentId) {
         cy.add({
-          data: {
-            id: node.id,
-            name: `${node.name} `,
-            values: node.globalValues,
-            status: node.versions[node.prestige].status,
-            prestige: node.prestige,
-            versions: node.versions,
-            // Store versions for displaying later
-          },
-          style: {
-            "background-color": bgColor,
-          },
+          data: {source: parentId, target: node.id},
         });
-
-        if (parentId) {
-          cy.add({
-            data: { source: parentId, target: node.id },
-          });
-        }
-
-        node.children.forEach((child) => addTreeToCytoscape(child, node.id));
       }
 
-      function addNode(parentId) {
-        const nodeName = prompt("Enter node name:");
-        if (!nodeName) return;
+      node.children.forEach((child) => addTreeToCytoscape(child, node.id));
+    }
 
-        // Ask if the node is scheduled
-        const isScheduled = prompt(
-          "Is this node scheduled? (true/false)"
-        ).toLowerCase();
+    function addNode(parentId) {
+      const nodeName = prompt("Enter node name:");
+      if (!nodeName) return;
 
-        let schedule = null;
-        let reeffectTime = 0;
+      // Ask if the node is scheduled
+      const isScheduled = prompt(
+        "Is this node scheduled? (true/false)"
+      ).toLowerCase();
 
-        if (isScheduled === "true") {
-          // Use a date input for better usability
-          const scheduleInput = prompt("Enter schedule date (YYYY-MM-DD):");
-          const timeInput = prompt(
-            "Enter schedule time (HH:MM, 24-hour format):"
-          );
+      let schedule = null;
+      let reeffectTime = 0;
 
-          if (scheduleInput && timeInput) {
-            // Combine date and time
-            const combinedDateTime = new Date(
-              `${scheduleInput}T${timeInput}:00Z`
-            ).toISOString();
-            schedule = combinedDateTime;
-          }
+      if (isScheduled === "true") {
+        // Use a date input for better usability
+        const scheduleInput = prompt("Enter schedule date (YYYY-MM-DD):");
+        const timeInput = prompt(
+          "Enter schedule time (HH:MM, 24-hour format):"
+        );
 
-          // Ask for reeffect time
-          const reeffectTimeInput = prompt(
-            "Time for reschedule upon prestige (hrs):"
-          );
-          reeffectTime = reeffectTimeInput ? Number(reeffectTimeInput) : 0; // Convert to number or default to 0
+        if (scheduleInput && timeInput) {
+          // Combine date and time
+          const combinedDateTime = new Date(
+            `${scheduleInput}T${timeInput}:00Z`
+          ).toISOString();
+          schedule = combinedDateTime;
         }
 
-        // Send data to the server
-        fetch("/add-node", {
+        // Ask for reeffect time
+        const reeffectTimeInput = prompt(
+          "Time for reschedule upon prestige (hrs):"
+        );
+        reeffectTime = reeffectTimeInput ? Number(reeffectTimeInput) : 0; // Convert to number or default to 0
+      }
+
+      // Send data to the server
+      fetch("/add-node", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          parentId,
+          name: nodeName,
+          schedule,
+          reeffectTime,
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            loadTree(); // Reload the tree after adding the node
+          } else {
+            alert(data.message);
+          }
+        });
+    }
+
+    function calculateGlobalValues() {
+      const nodes = cy.nodes();
+      const globalValues = {};
+
+      nodes.forEach((node) => {
+        const values = node.data("values") || {}; // Ensure values is an object
+        for (let [key, value] of Object.entries(values)) {
+          if (globalValues[key] == null) {
+            globalValues[key] = 0;
+          }
+          globalValues[key] += value;
+        }
+      });
+
+      return globalValues;
+    }
+    function addValue(nodeId) {
+      const key = prompt("Enter the value key (e.g., time, money):");
+      const value = prompt(`Enter the new value for ${key}:`);
+      if (key && value !== null) {
+        fetch("/edit-value", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {"Content-Type": "application/json"},
           body: JSON.stringify({
-            parentId,
-            name: nodeName,
-            schedule,
-            reeffectTime,
+            nodeId: nodeId,
+            key: key,
+            value: Number(value),
           }),
         })
           .then((response) => response.json())
           .then((data) => {
             if (data.success) {
-              loadTree(); // Reload the tree after adding the node
+              loadTree(); // Reload the tree after editing the value
             } else {
               alert(data.message);
             }
           });
       }
+    }
 
-      function calculateGlobalValues() {
-        const nodes = cy.nodes();
-        const globalValues = {};
+    // Function to update the global tree values display in the top-right corner
+    function updateGlobalTreeValuesDisplay() {
+      const globalValues = calculateGlobalValues();
+      const globalTreeDetails = Object.entries(globalValues)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join("<br>");
 
-        nodes.forEach((node) => {
-          const values = node.data("values") || {}; // Ensure values is an object
-          for (let [key, value] of Object.entries(values)) {
-            if (globalValues[key] == null) {
-              globalValues[key] = 0;
-            }
-            globalValues[key] += value;
-          }
-        });
-
-        return globalValues;
-      }
-      function addValue(nodeId) {
-        const key = prompt("Enter the value key (e.g., time, money):");
-        const value = prompt(`Enter the new value for ${key}:`);
-        if (key && value !== null) {
-          fetch("/edit-value", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              nodeId: nodeId,
-              key: key,
-              value: Number(value),
-            }),
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              if (data.success) {
-                loadTree(); // Reload the tree after editing the value
-              } else {
-                alert(data.message);
-              }
-            });
-        }
-      }
-
-      // Function to update the global tree values display in the top-right corner
-      function updateGlobalTreeValuesDisplay() {
-        const globalValues = calculateGlobalValues();
-        const globalTreeDetails = Object.entries(globalValues)
-          .map(([key, value]) => `${key}: ${value}`)
-          .join("<br>");
-
-        document.getElementById("globalTreeValueDisplay").innerHTML = `
+      document.getElementById("globalTreeValueDisplay").innerHTML = `
           <strong>Global Tree Values:</strong><br>
           ${globalTreeDetails}`;
+    }
+    // View node details including local and global values
+    function viewNodeDetails(node) {
+      const globalNodeValue = node.data("values") || {}; // Get local values
+      const globalTreeValue = calculateGlobalValues(); // Calculate global values
+      const versions = node.data("versions") || []; // Get versions
+
+      // Format globalNodeValue
+      const globalNodeDetails = Object.entries(globalNodeValue)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join("\n");
+
+      // Format global values
+      const globalTreeDetails = Object.entries(globalTreeValue)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join("\n");
+
+      // Format version history
+
+      function formatDate(dateString) {
+        const date = new Date(dateString);
+        const month = String(date.getMonth() + 1).padStart(2, "0"); // Month (01-12)
+        const day = String(date.getDate()).padStart(2, "0"); // Day (01-31)
+        const year = date.getFullYear(); // Year (YYYY)
+        const hours = String(date.getHours()).padStart(2, "0"); // Hours (00-23)
+        const minutes = String(date.getMinutes()).padStart(2, "0"); // Minutes (00-59)
+
+        return `${month}/${day}/${year} ${hours}:${minutes}`; // Formatted date
       }
-      // View node details including local and global values
-      function viewNodeDetails(node) {
-        const globalNodeValue = node.data("values") || {}; // Get local values
-        const globalTreeValue = calculateGlobalValues(); // Calculate global values
-        const versions = node.data("versions") || []; // Get versions
 
-        // Format globalNodeValue
-        const globalNodeDetails = Object.entries(globalNodeValue)
-          .map(([key, value]) => `${key}: ${value}`)
-          .join("\n");
-
-        // Format global values
-        const globalTreeDetails = Object.entries(globalTreeValue)
-          .map(([key, value]) => `${key}: ${value}`)
-          .join("\n");
-
-        // Format version history
-
-        function formatDate(dateString) {
-          const date = new Date(dateString);
-          const month = String(date.getMonth() + 1).padStart(2, "0"); // Month (01-12)
-          const day = String(date.getDate()).padStart(2, "0"); // Day (01-31)
-          const year = date.getFullYear(); // Year (YYYY)
-          const hours = String(date.getHours()).padStart(2, "0"); // Hours (00-23)
-          const minutes = String(date.getMinutes()).padStart(2, "0"); // Minutes (00-59)
-
-          return `${month}/${day}/${year} ${hours}:${minutes}`; // Formatted date
-        }
-
-        const versionHistory = versions
-          .map(
-            (version, index) =>
-              `Version ${index + 1} (Prestige: ${version.prestige}, ` +
-              `Date Created: ${formatDate(version.dateCreated)}, ` + // Use the formatting function
-              `Status: ${version.status}, ` +
-              `Schedule: ${
-                version.schedule ? formatDate(version.schedule) : "None"
-              }, ` + // Format schedule
-              `Reeffect Time: ${version.reeffectTime} hours): ${JSON.stringify(
-                version.values
-              )}`
-          )
-          .join("\n");
-        alert(`Node Details:
+      const versionHistory = versions
+        .map(
+          (version, index) =>
+            `Version ${index + 1} (Prestige: ${version.prestige}, ` +
+            `Date Created: ${formatDate(version.dateCreated)}, ` + // Use the formatting function
+            `Status: ${version.status}, ` +
+            `Schedule: ${version.schedule ? formatDate(version.schedule) : "None"
+            }, ` + // Format schedule
+            `Reeffect Time: ${version.reeffectTime} hours): ${JSON.stringify(
+              version.values
+            )}`
+        )
+        .join("\n");
+      alert(`Node Details:
       ID: ${node.id()}
       Name: ${node.data("name")}
       Status: "this is glitched"${node.data("status")}
@@ -299,48 +297,48 @@
 
       Version History:
       ${versionHistory}`);
-      }
+    }
 
-      // Function to increase prestige
-      function increasePrestige(nodeId) {
-        fetch("/add-prestige", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nodeId }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.success) {
-              loadTree(); // Reload the tree after increasing prestige
-            } else {
-              alert(data.message);
-            }
-          });
-      }
+    // Function to increase prestige
+    function increasePrestige(nodeId) {
+      fetch("/add-prestige", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({nodeId}),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            loadTree(); // Reload the tree after increasing prestige
+          } else {
+            alert(data.message);
+          }
+        });
+    }
 
-      // Function to increase prestige
-      function completeNode(nodeId) {
-        fetch("/complete-node", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nodeId }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.success) {
-              loadTree(); // Reload the tree after increasing prestige
-            } else {
-              alert(data.message);
-            }
-          });
-      }
+    // Function to increase prestige
+    function completeNode(nodeId) {
+      fetch("/complete-node", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({nodeId}),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            loadTree(); // Reload the tree after increasing prestige
+          } else {
+            alert(data.message);
+          }
+        });
+    }
 
-      // Event listener for node tap to view details
-      cy.on("tap", "node", function (evt) {
-        var node = evt.target;
-        const action = prompt(`Choose an actiosn for node '${node.data(
-          "name"
-        )}':
+    // Event listener for node tap to view details
+    cy.on("tap", "node", function (evt) {
+      var node = evt.target;
+      const action = prompt(`Choose an actiosn for node '${node.data(
+        "name"
+      )}':
       1. Add Child
       2. View Details
       3. Add/Edit Value
@@ -348,55 +346,56 @@
       5. Prestige
       6. Complete`);
 
-        switch (action) {
-          case "1":
-            addNode(node.id());
-            break;
+      switch (action) {
+        case "1":
+          addNode(node.id());
+          break;
 
-          case "2":
-            viewNodeDetails(node); // View details, including global values and version history
-            break;
+        case "2":
+          viewNodeDetails(node); // View details, including global values and version history
+          break;
 
-          case "3":
-            addValue(node.id());
-            break;
+        case "3":
+          addValue(node.id());
+          break;
 
-          case "4":
-            const newStatus = prompt(
-              "Enter new status (active, trimmed, completed):"
-            );
-            if (newStatus) {
-              fetch("/edit-status", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nodeId: node.id(), status: newStatus }),
-              })
-                .then((response) => response.json())
-                .then((data) => {
-                  if (data.success) {
-                    loadTree(); // Reload the tree after editing the status
-                  } else {
-                    alert(data.message);
-                  }
-                });
-            }
-            break;
+        case "4":
+          const newStatus = prompt(
+            "Enter new status (active, trimmed, completed):"
+          );
+          if (newStatus) {
+            fetch("/edit-status", {
+              method: "POST",
+              headers: {"Content-Type": "application/json"},
+              body: JSON.stringify({nodeId: node.id(), status: newStatus}),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.success) {
+                  loadTree(); // Reload the tree after editing the status
+                } else {
+                  alert(data.message);
+                }
+              });
+          }
+          break;
 
-          case "5":
-            increasePrestige(node.id()); // Call the function to increase prestige
-            break;
+        case "5":
+          increasePrestige(node.id()); // Call the function to increase prestige
+          break;
 
-          case "6":
-            completeNode(node.id()); // Call the function to increase prestige
-            break;
+        case "6":
+          completeNode(node.id()); // Call the function to increase prestige
+          break;
 
-          default:
-            console.error("Invalid action");
-        }
-      });
+        default:
+          console.error("Invalid action");
+      }
+    });
 
-      // Initial tree load
-      loadTree();
-    </script>
-  </body>
+    // Initial tree load
+    loadTree();
+  </script>
+</body>
+
 </html>
