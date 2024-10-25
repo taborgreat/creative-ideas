@@ -271,7 +271,6 @@ function createNewNode(name, schedule, reeffectTime) {
   return {
     id: generateId(),
     name: name,
-    status: "exchange",
     prestige: 0,
     globalValues: {}, // Track total values across all versions
     versions: [
