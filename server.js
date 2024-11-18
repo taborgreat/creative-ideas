@@ -1,166 +1,38 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const fs = require("fs");
+const path = require("path");
+
 const app = express();
 const port = 3000;
 
 app.use(bodyParser.json());
 app.use(express.static("public"));
 
+// Ensure the "notes" folder exists
+const notesFolder = path.join(__dirname, "notes");
+if (!fs.existsSync(notesFolder)) {
+  fs.mkdirSync(notesFolder);
+}
+
+// Initial tree structure
 let tree = {
   id: "Root",
   name: "Root",
   prestige: 0,
-  globalValues: { hours: 0 }, // Track total values across all versions
+  notes: "root_notes.md", // Root notes file
+  globalValues: { hours: 0 },
   versions: [
     {
       prestige: 0,
-      values: {}, // Each version has its own values
+      values: {},
       status: "exchange",
-      dateCreated: new Date().toISOString(), // When the node was created
-      schedule: null, // null means floating, can be a set date
-      reeffectTime: 0, // In hours, decides how schedule resets upon prestige
+      dateCreated: new Date().toISOString(),
+      schedule: null,
+      reeffectTime: 0,
     },
   ],
-  children: [
-    {
-      id: generateId(),
-      name: "Wealth",
-      prestige: 0,
-      globalValues: { dollars: 0 }, // Track total values across all versions
-      versions: [
-        {
-          prestige: 0,
-          values: { dollars: 0 },
-          status: "exchange",
-          dateCreated: new Date().toISOString(),
-          schedule: null,
-          reeffectTime: 0,
-        },
-      ],
-      children: [],
-    },
-    {
-      id: generateId(),
-      name: "Self Focused",
-      prestige: 0,
-      globalValues: {},
-      versions: [
-        {
-          prestige: 0,
-          values: {},
-          status: "exchange",
-          dateCreated: new Date().toISOString(),
-          schedule: null,
-          reeffectTime: 0,
-        },
-      ],
-      children: [
-        {
-          id: generateId(),
-          name: "Body",
-          prestige: 0,
-          globalValues: {},
-          versions: [
-            {
-              prestige: 0,
-              values: {},
-              status: "exchange",
-              dateCreated: new Date().toISOString(),
-              schedule: null,
-              reeffectTime: 0,
-            },
-          ],
-          children: [],
-        },
-        {
-          id: generateId(),
-          name: "Mind",
-          prestige: 0,
-          globalValues: {},
-          versions: [
-            {
-              prestige: 0,
-              values: {},
-              status: "exchange",
-              dateCreated: new Date().toISOString(),
-              schedule: null,
-              reeffectTime: 0,
-            },
-          ],
-          children: [],
-        },
-      ],
-    },
-    {
-      id: generateId(),
-      name: "Other Focused",
-      prestige: 0,
-      globalValues: {},
-      versions: [
-        {
-          prestige: 0,
-          values: {},
-          status: "exchange",
-          dateCreated: new Date().toISOString(),
-          schedule: null,
-          reeffectTime: 0,
-        },
-      ],
-      children: [
-        {
-          id: generateId(),
-          name: "People",
-          prestige: 0,
-          globalValues: {},
-          versions: [
-            {
-              prestige: 0,
-              values: {},
-              status: "exchange",
-              dateCreated: new Date().toISOString(),
-              schedule: null,
-              reeffectTime: 0,
-            },
-          ],
-          children: [],
-        },
-        {
-          id: generateId(),
-          name: "Possessions",
-          prestige: 0,
-          globalValues: {},
-          versions: [
-            {
-              prestige: 0,
-              values: {},
-              status: "exchange",
-              dateCreated: new Date().toISOString(),
-              schedule: null,
-              reeffectTime: 0,
-            },
-          ],
-          children: [],
-        },
-        {
-          id: generateId(),
-          name: "Expression",
-          prestige: 0,
-          globalValues: {},
-          versions: [
-            {
-              prestige: 0,
-              values: {},
-              status: "exchange",
-              dateCreated: new Date().toISOString(),
-              schedule: null,
-              reeffectTime: 0,
-            },
-          ],
-          children: [],
-        },
-      ],
-    },
-  ],
+  children: [],
 };
 
 // Helper function to find a node by its ID (recursively)
@@ -266,21 +138,59 @@ app.get("/get-tree", (req, res) => {
   res.json(tree);
 });
 
-// Function to create a new node with required properties
+// Create a new notes file
+function createNotesFile(id) {
+  const fileName = `${id}.md`;
+  const filePath = path.join(notesFolder, fileName);
+  fs.writeFileSync(filePath, `# Notes for node ${id}\n\n`, { flag: "w" });
+  return fileName;
+}
+
+app.get("/get-note/:noteName", (req, res) => {
+  const noteName = req.params.noteName;
+  const notePath = path.join(notesFolder, noteName);
+
+  if (fs.existsSync(notePath)) {
+    res.sendFile(notePath);
+  } else {
+    res.status(404).send("Note not found");
+  }
+});
+
+app.post("/save-note/:noteName", (req, res) => {
+  const noteName = req.params.noteName;
+  const noteContent = req.body.content;
+
+  // Save the content to the .md file
+  fs.writeFile(`notes/${noteName}.md`, noteContent, (err) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Error saving note." });
+    }
+    res.json({ success: true });
+  });
+});
+
+// Create a new node with required properties
 function createNewNode(name, schedule, reeffectTime) {
+  const id = generateId();
+  const notesFileName = createNotesFile(id); // Generate a notes file for the node
+
   return {
-    id: generateId(),
+    id: id,
     name: name,
     prestige: 0,
-    globalValues: {}, // Track total values across all versions
+    notes: notesFileName, // Link the notes file to the node
+    globalValues: {},
     versions: [
       {
         prestige: 0,
-        values: {}, // Each version has its own values
+        values: {},
         status: "active",
-        dateCreated: new Date().toISOString(), // When the node was created
-        schedule: schedule ? new Date(schedule).toISOString() : null, // Parse the schedule date
-        reeffectTime: reeffectTime || 0, // Default to 0 if not provided
+        dateCreated: new Date().toISOString(),
+        schedule: schedule ? new Date(schedule).toISOString() : null,
+        reeffectTime: reeffectTime || 0,
       },
     ],
     children: [],
@@ -290,10 +200,9 @@ function createNewNode(name, schedule, reeffectTime) {
 // POST /add-node - Adds a new node under a parent node
 app.post("/add-node", (req, res) => {
   const { parentId, name, schedule, reeffectTime } = req.body;
-  console.log(req.body); // Get schedule and reeffectTime from request
   const parentNode = findNodeById(tree, parentId);
   if (parentNode) {
-    const newNode = createNewNode(name, schedule, reeffectTime); // Pass schedule and reeffectTime
+    const newNode = createNewNode(name, schedule, reeffectTime);
     parentNode.children.push(newNode);
     res.json({ success: true, newNode });
   } else {
