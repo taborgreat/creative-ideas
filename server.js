@@ -17,7 +17,7 @@ if (!fs.existsSync(notesFolder)) {
 
 // Initial tree structure
 let tree = {
-  id: "Root",
+  id: "root_notes",
   name: "Root",
   prestige: 0,
   notes: "root_notes.md", // Root notes file

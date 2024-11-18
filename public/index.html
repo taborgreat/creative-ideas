@@ -287,6 +287,12 @@
 
         const noteName = node.data("notes"); // Assuming 'notes' holds the .md filename
 
+
+        document.getElementById("noteTitle").innerText = noteName ? noteName : "No Notes Available";
+        
+
+
+        
        
 
               
@@ -383,6 +389,7 @@
       // Event listener for node tap to view details
       cy.on("tap", "node", function (evt) {
         node = evt.target;
+      
 
         const noteName = node.data("notes");
 
@@ -398,7 +405,7 @@
 
               // Convert the markdown content to HTML
               const renderedHTML = markdown; // Use marked.js to render markdown to HTML
-              noteViewer.innerHTML = renderedHTML;
+              noteViewer.value = renderedHTML;
             })
             .catch((error) => {
               document.getElementById("noteContent").innerText =
@@ -466,6 +473,8 @@
           default:
             console.error("Invalid action");
         }
+
+        viewNodeDetails(node);
       });
 
       // Initial tree load
@@ -608,10 +617,50 @@
         padding: 10px;
       "
     >
-     <div id="noteViewer">
     <div id="noteTitle">Node Name</div>
     <textarea id="noteContent"></textarea>
     <button id="saveButton">Save</button>
   </div>
+  <script>
+    // Add event listener to the save button for note saving
+    document.getElementById("saveButton").addEventListener("click", () => {
+      // Get the selected node ID (assuming you have a way to get the current node ID)
+      const selectedNodeId = cy.$(":selected").id(); // Example: gets the ID of the selected node
+  
+      if (!selectedNodeId) {
+        alert("Please select a node to save notes for.");
+        return;
+      }
+  
+      // Get the note content
+      const noteContent = document.getElementById("noteContent").value;
+  
+      if (!noteContent.trim()) {
+        alert("Please enter some notes before saving.");
+        return;
+      }
+  
+      // Send the POST request
+      fetch(`/save-note/${selectedNodeId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ content: noteContent }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            alert("Note saved successfully!");
+          } else {
+            alert(`Error saving note: ${data.message}`);
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("An unexpected error occurred while saving the note.");
+        });
+    });
+    </script>
   </body>
 </html>
