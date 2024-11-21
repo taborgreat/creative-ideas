@@ -483,7 +483,7 @@
       //schedule js
 
       async function loadNodes() {
-        const parentId = document.getElementById("parentId").value || "Root";
+        const parentId = document.getElementById("parentId").value || "root_notes";
         const statusFilter = document.getElementById("statusFilter").value;
 
         try {
@@ -586,7 +586,7 @@
       <h1>Schedule</h1>
       <div class="input-group">
         <label for="parentId">Enter Parent ID:</label>
-        <input type="text" id="parentId" placeholder="Root" value="Root" />
+        <input type="text" id="parentId" placeholder="Root" value="root_notes" />
         <button onclick="loadNodes()">Load Nodes</button>
       </div>
       <div class="filter-group">
