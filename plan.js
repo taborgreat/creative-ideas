@@ -1,3 +1,27 @@
+
+
+//plan
+rework server endpoints to receive json, whether it be single node or a whole branch
+clean up all backend code that is unneeded/ SIMPLIFY from creation phase
+insert and pull node data from mongo db 
+make it so when you prestige it adds ================== in mark up with prestige data and a reflection field (reflection prompt pops up when prestiging, or you can add later)
+Add goal properties attached to values and way to track (whether they be quanitifable or yes/no)
+determine an efficient system to value inherit- thinking all values get summed into the root exchange node, or if created from a diff type node get summed to it
+rework front end into react and components- ALL FRONT END NOW IS PLAY AND SHIT
+add ability to send tree to llm with new task and receive branch back from parent id (variable complexity) that you can append to the parent
+add ability to send tree to llm and ask questions about it, receiving new perspectives and correlation detection
+
+//done
+notes/editing notes
+
+
+
+
+
+//mum
+
+
+
 if you make  a debt value, it pulls from the parent where the value was created
 
 objects will only have versioning system if labeled as recurrent, and everytime you prestige
