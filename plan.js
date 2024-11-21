@@ -2,8 +2,9 @@
 
 //plan
 rework server endpoints to receive json, whether it be single node or a whole branch
-clean up all backend code that is unneeded/ SIMPLIFY from creation phase
 insert and pull node data from mongo db 
+clean up all backend code that is unneeded/ SIMPLIFY from creation phase
+
 make it so when you prestige it adds ================== in mark up with prestige data and a reflection field (reflection prompt pops up when prestiging, or you can add later)
 Add goal properties attached to values and way to track (whether they be quanitifable or yes/no)
 determine an efficient system to value inherit- thinking all values get summed into the root exchange node, or if created from a diff type node get summed to it
