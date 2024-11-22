@@ -19,8 +19,19 @@ notes/editing notes
 
 
 
-//mum
+//mumble
 
+
+custom predefined branxh systems with widgets
+ex: self-mind-emotions : track values (happiness, fatigue, etc)
+then build custom widgets in react to view the data
+like an emotional task manager for this
+
+or a brancg that tracks sleep with a sleep graph 
+
+also fubdamental wbility to view node which different
+chart types and scale axis (hrs, date) to examine
+data
 
 
 if you make  a debt value, it pulls from the parent where the value was created
