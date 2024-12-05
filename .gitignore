@@ -1,3 +1,4 @@
 /node_modules
 /notes/*
 !/notes/root_notes.md
+.env

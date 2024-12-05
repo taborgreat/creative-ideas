@@ -146,7 +146,7 @@
 
         cy.add({
           data: {
-            id: node.id,
+            id: node._id,
             name: `${node.name} `,
             notes: node.notes || null,
             values: node.globalValues,
@@ -162,11 +162,11 @@
 
         if (parentId) {
           cy.add({
-            data: { source: parentId, target: node.id },
+            data: { source: parentId, target: node._id },
           });
         }
 
-        node.children.forEach((child) => addTreeToCytoscape(child, node.id));
+        node.children.forEach((child) => addTreeToCytoscape(child, node._id));
       }
 
       function addNode(parentId) {
@@ -389,7 +389,9 @@
       // Event listener for node tap to view details
       cy.on("tap", "node", function (evt) {
         node = evt.target;
-      
+        const nodeId = node.data('id')
+        console.log(nodeId);
+        
 
         const noteName = node.data("notes");
 
@@ -430,7 +432,7 @@
 
         switch (action) {
           case "1":
-            addNode(node.id());
+            addNode(nodeId);
             break;
 
           case "2":
@@ -438,7 +440,7 @@
             break;
 
           case "3":
-            addValue(node.id());
+            addValue(nodeId);
             break;
 
           case "4":
@@ -449,7 +451,7 @@
               fetch("/edit-status", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nodeId: node.id(), status: newStatus }),
+                body: JSON.stringify({ nodeId: node.id, status: newStatus }),
               })
                 .then((response) => response.json())
                 .then((data) => {
@@ -463,11 +465,11 @@
             break;
 
           case "5":
-            increasePrestige(node.id()); // Call the function to increase prestige
+            increasePrestige(nodeId); // Call the function to increase prestige
             break;
 
           case "6":
-            completeNode(node.id()); // Call the function to increase prestige
+            completeNode(nodeId); // Call the function to increase prestige
             break;
 
           default:
@@ -483,7 +485,7 @@
       //schedule js
 
       async function loadNodes() {
-        const parentId = document.getElementById("parentId").value || "root_notes";
+        const parentId = document.getElementById("parent").value || "root_notes";
         const statusFilter = document.getElementById("statusFilter").value;
 
         try {
@@ -586,7 +588,8 @@
       <h1>Schedule</h1>
       <div class="input-group">
         <label for="parentId">Enter Parent ID:</label>
-        <input type="text" id="parentId" placeholder="Root" value="root_notes" />
+        <input type="text" id="parentId" placeholder="0256f1ad-5c39-4a53-8c82-aa594b217fc0
+        " value="root_notes" />
         <button onclick="loadNodes()">Load Nodes</button>
       </div>
       <div class="filter-group">
