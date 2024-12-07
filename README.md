@@ -1,4 +1,4 @@
-# Root Goal-Based Creating System - Treefiency
+# Root Goal-Based Creating System - Treeffiency
 
 ![Project Logo](https://github.com/user-attachments/assets/16816540-88a3-40af-9072-11bc94f0dc5a)
 
