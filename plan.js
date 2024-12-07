@@ -10,7 +10,7 @@ manage kinks with value endpoints
 manage kinks with status endpoint- make sure children inherit status. combine set status and complete endpoints
 
 FINISHED make it so when you prestige it adds ================== in mark up with prestige data and a reflection field (reflection prompt pops up when prestiging, or you can add later)
-Add goal properties attached to values and way to track (whether they be quanitifable or yes/no)
+FINISHED Add goal properties attached to values and way to track (whether they be quanitifable or yes/no)
 determine an efficient system to value inherit- thinking all values get summed into the root exchange node, or if created from a diff type node get summed to it
 rework front end into react and components- ALL FRONT END NOW IS PLAY AND SHIT
 add ability to send tree to llm with new task and receive branch back from parent id (variable complexity) that you can append to the parent
