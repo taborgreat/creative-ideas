@@ -140,7 +140,7 @@ app.post("/edit-value", async (req, res) => {
   const { nodeId, key, value } = req.body;
   try {
    
-      setValueForNode(nodeId, key, value);
+      await setValueForNode(nodeId, key, value);
     
   } catch {
     console.log("sorry bitch")
@@ -216,7 +216,7 @@ app.post("/save-note/:noteName", (req, res) => {
   const noteContent = req.body.content;
 
   // Save the content to the .md file
-  fs.writeFile(`notes/${noteName}.md`, noteContent, (err) => {
+  fs.writeFile(`notes/${noteName}`, noteContent, (err) => {
     if (err) {
       return res
         .status(500)
@@ -272,6 +272,54 @@ app.post("/add-node", async (req, res) => {
     res.json({ success: true, newNode });
   } catch (err) {
     res.status(500).json({ success: false, message: "Error adding node", error: err });
+  }
+});
+
+
+
+app.post("/add-nodes-tree", async (req, res) => {
+  const { parentId, nodeTree } = req.body;
+
+  if (!parentId || !nodeTree) {
+    return res.status(400).json({ success: false, message: "Invalid request data" });
+  }
+
+  try {
+    // Ensure the parent node exists
+    const parentNode = await findNodeById(parentId);
+    if (!parentNode) {
+      return res.status(404).json({ success: false, message: "Parent node not found" });
+    }
+
+    // Recursive function to create nodes and collect their IDs
+    async function createNodesRecursive(nodeData, parentId) {
+      const { name, schedule, reeffectTime, children = [] } = nodeData;
+
+      // Create a new node
+      const newNode = await createNewNode(name, schedule, reeffectTime, parentId);
+
+      // Process children recursively and update their IDs in the new node
+      for (const childData of children) {
+        const childId = await createNodesRecursive(childData, newNode._id);
+        newNode.children.push(childId); // Update the children array of the current node
+      }
+
+      await newNode.save(); // Save the node with its updated children
+
+      return newNode._id; // Return the new node's ID
+    }
+
+    // Create the tree starting from the provided parent ID
+    const newChildId = await createNodesRecursive(nodeTree, parentId);
+
+    // Update the parent node with the new child reference
+    parentNode.children.push(newChildId);
+    await parentNode.save();
+
+    res.json({ success: true, message: "Nodes added successfully" });
+  } catch (err) {
+    console.error("Error adding nodes tree:", err);
+    res.status(500).json({ success: false, message: "Error adding nodes tree", error: err.message });
   }
 });
 
@@ -356,6 +404,17 @@ async function addPrestige(node) {
     schedule: handleSchedule(currentVersion), // Update schedule or keep floating
     reeffectTime: currentVersion.reeffectTime, // Inherit from previous version
   };
+
+  // Add the "===================" in the notes file
+  const noteFilePath = path.join(notesFolder, node.notes);
+  const prestigeData = `\n\nPrestige: ${node.prestige}\nDate: ${new Date().toISOString()}\n=================================\n\n`;
+  
+  try {
+    fs.appendFileSync(noteFilePath, prestigeData, 'utf8');
+    console.log("Prestige data added to notes.");
+  } catch (error) {
+    console.error("Error appending to notes file:", error);
+  }
 
   node.prestige++;
   node.versions.push(newVersion);

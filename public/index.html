@@ -628,7 +628,7 @@
     // Add event listener to the save button for note saving
     document.getElementById("saveButton").addEventListener("click", () => {
       // Get the selected node ID (assuming you have a way to get the current node ID)
-      const selectedNodeId = cy.$(":selected").id(); // Example: gets the ID of the selected node
+      const selectedNodeId = cy.$(":selected").data('notes'); // Example: gets the ID of the selected node
   
       if (!selectedNodeId) {
         alert("Please select a node to save notes for.");

@@ -2,6 +2,12 @@
 const mongoose = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
 
+const GoalSchema = new mongoose.Schema({
+  value: { type: String, required: false }, // The value being tracked
+  reached: { type: Boolean, required: true }, // Whether the goal is reached
+  quantifiableGoal: { type: Number, required: false }, // Optional numeric goal
+});
+
 const NodeSchema = new mongoose.Schema({
   _id: {
     type: String, // Change to String to store UUID
@@ -19,6 +25,7 @@ const NodeSchema = new mongoose.Schema({
       dateCreated: { type: Date, default: Date.now },
       schedule: { type: Date, default: null },
       reeffectTime: { type: Number, default: 0 },
+      goals: [GoalSchema],
     },
   ],
   children: [{ type: String, ref: "Node" }],  // Use String for children references
