@@ -45,6 +45,7 @@ async function ensureRootNode() {
           values: {},
           status: "exchange",
           dateCreated: new Date(),
+          goals: [],
         },
       ],
       children: [],
@@ -127,6 +128,7 @@ async function setValueForNode(nodeId, key, value) {
     }
 
     // Optionally save the node after modification if your system supports persistence
+    
     node.save(); 
     return currentVersion;
   
@@ -242,6 +244,7 @@ async function createNewNode(name, schedule, reeffectTime, parentNodeID) {
         dateCreated: new Date(),
         schedule: schedule ? new Date(schedule) : null,
         reeffectTime: reeffectTime || 0,
+        goals: [],
       },
     ],
     children: [],
@@ -251,7 +254,7 @@ async function createNewNode(name, schedule, reeffectTime, parentNodeID) {
   return newNode;
 }
 app.post("/add-node", async (req, res) => {
-  const { parentId, name, schedule, reeffectTime } = req.body;
+  const { parentId, name, schedule, reeffectTime } = req.body; //make it so just send in object and get values from that so you can have values and goals
   console.log(parentId)
   try {
     // Fetch the parent node
