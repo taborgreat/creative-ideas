@@ -3,7 +3,7 @@ const bodyParser = require("body-parser");
 const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
-require('dotenv').config();
+require("dotenv").config();
 
 const mongooseUri = process.env.MONGODB_URI;
 
@@ -20,7 +20,6 @@ const port = 3000;
 app.use(bodyParser.json());
 app.use(express.static("public"));
 
-
 // Ensure the "notes" folder exists
 const notesFolder = path.join(__dirname, "notes");
 if (!fs.existsSync(notesFolder)) {
@@ -28,7 +27,6 @@ if (!fs.existsSync(notesFolder)) {
 }
 
 // Initial tree structure
-
 
 // Ensure root node exists
 async function ensureRootNode() {
@@ -38,7 +36,7 @@ async function ensureRootNode() {
       name: "Root",
       prestige: 0,
       notes: "root_notes.md",
-      globalValues: { hours: 0 },
+      globalValues: { hrs: 0 },
       versions: [
         {
           prestige: 0,
@@ -66,10 +64,9 @@ async function findNodeById(nodeId) {
     return node;
   } catch (error) {
     console.error("Error finding node by UUID:", error);
-    throw error;  // Re-throw the error to handle it in the calling function
+    throw error; // Re-throw the error to handle it in the calling function
   }
 }
-
 
 // Generate a unique ID
 function generateId() {
@@ -100,13 +97,11 @@ async function updateParentValues(nodeId) {
   node.values = { ...sums }; // Replace current values with the summed ones
 } */
 
-
-
 async function setValueForNode(nodeId, key, value) {
   try {
     const node = await findNodeById(nodeId);
     if (!node) {
-      throw new Error('Node not found');
+      throw new Error("Node not found");
     }
 
     // Find the current version of the node based on the prestige
@@ -115,7 +110,7 @@ async function setValueForNode(nodeId, key, value) {
     );
 
     if (!currentVersion) {
-      throw new Error('No current version found');
+      throw new Error("No current version found");
     }
 
     // Ensure that the 'values' map is updated properly
@@ -128,70 +123,62 @@ async function setValueForNode(nodeId, key, value) {
     }
 
     // Optionally save the node after modification if your system supports persistence
-    
-    node.save(); 
+
+    node.save();
     return currentVersion;
-  
   } catch (error) {
-    console.error('Error setting value for node:', error);
+    console.error("Error setting value for node:", error);
   }
 }
-
 
 app.post("/edit-value", async (req, res) => {
   const { nodeId, key, value } = req.body;
   try {
-   
-      await setValueForNode(nodeId, key, value);
-    
+    await setValueForNode(nodeId, key, value);
   } catch {
-    console.log("sorry bitch")
+    console.log("sorry bitch");
   }
-
-
- 
 });
-
 
 // GET /get-tree - Returns the entire tree starting from the root (parent: null)
-app.get('/get-tree', async (req, res) => {
+app.get("/get-tree", async (req, res) => {
   try {
-      // Find the root node (parent: null)
-      const rootNode = await Node.findOne({ parent: null })
-          .populate('children') // Populate direct children of the root
-          .exec();
+    // Find the root node (parent: null)
+    const rootNode = await Node.findOne({ parent: null })
+      .populate("children") // Populate direct children of the root
+      .exec();
 
-      // If no root node exists
-      if (!rootNode) {
-          return res.status(404).json({ message: 'Root node not found' });
+    // If no root node exists
+    if (!rootNode) {
+      return res.status(404).json({ message: "Root node not found" });
+    }
+
+    // Recursively populate all children of each node
+    const populateChildrenRecursive = async (node) => {
+      if (node.children && node.children.length > 0) {
+        // Recursively populate the children of each child
+        node.children = await Node.populate(node.children, {
+          path: "children",
+        });
+
+        // Recursively populate each of the child nodes
+        for (const child of node.children) {
+          await populateChildrenRecursive(child);
+        }
       }
+    };
 
-      // Recursively populate all children of each node
-      const populateChildrenRecursive = async (node) => {
-          if (node.children && node.children.length > 0) {
-              // Recursively populate the children of each child
-              node.children = await Node.populate(node.children, { path: 'children' });
+    // Start with the root node and populate recursively
+    await populateChildrenRecursive(rootNode);
 
-              // Recursively populate each of the child nodes
-              for (const child of node.children) {
-                  await populateChildrenRecursive(child);
-              }
-          }
-      };
-
-      // Start with the root node and populate recursively
-      await populateChildrenRecursive(rootNode);
-
-      // Send the complete tree back as a JSON response
-      res.json(rootNode);
-      console.log(rootNode);
+    // Send the complete tree back as a JSON response
+    res.json(rootNode);
+  
   } catch (error) {
-      console.error("Error fetching tree:", error);
-      res.status(500).json({ message: 'Server error' });
+    console.error("Error fetching tree:", error);
+    res.status(500).json({ message: "Server error" });
   }
-
 });
-
 
 // Create a new notes file
 function createNotesFile() {
@@ -255,43 +242,49 @@ async function createNewNode(name, schedule, reeffectTime, parentNodeID) {
 }
 app.post("/add-node", async (req, res) => {
   const { parentId, name, schedule, reeffectTime } = req.body; //make it so just send in object and get values from that so you can have values and goals
-  console.log(parentId)
+  console.log(parentId);
   try {
     // Fetch the parent node
     const parentNode = await findNodeById(parentId);
     if (!parentNode) {
-      return res.status(404).json({ success: false, message: "Parent node not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Parent node not found" });
     }
-   
+
     // Create the new node
     const newNode = await createNewNode(name, schedule, reeffectTime, parentId);
     // Add the new node's ID to the parent's children array
     parentNode.children.push(newNode._id);
-    
+
     // Save the updated parent node
     await parentNode.save();
 
     // Return the newly created node as a response
     res.json({ success: true, newNode });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Error adding node", error: err });
+    res
+      .status(500)
+      .json({ success: false, message: "Error adding node", error: err });
   }
 });
-
-
 
 app.post("/add-nodes-tree", async (req, res) => {
   const { parentId, nodeTree } = req.body;
 
   if (!parentId || !nodeTree) {
-    return res.status(400).json({ success: false, message: "Invalid request data" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid request data" });
   }
 
   try {
     // Ensure the parent node exists
     const parentNode = await findNodeById(parentId);
     if (!parentNode) {
-      return res.status(404).json({ success: false, message: "Parent node not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Parent node not found" });
     }
 
     // Recursive function to create nodes and collect their IDs
@@ -299,7 +292,12 @@ app.post("/add-nodes-tree", async (req, res) => {
       const { name, schedule, reeffectTime, children = [] } = nodeData;
 
       // Create a new node
-      const newNode = await createNewNode(name, schedule, reeffectTime, parentId);
+      const newNode = await createNewNode(
+        name,
+        schedule,
+        reeffectTime,
+        parentId
+      );
 
       // Process children recursively and update their IDs in the new node
       for (const childData of children) {
@@ -322,11 +320,13 @@ app.post("/add-nodes-tree", async (req, res) => {
     res.json({ success: true, message: "Nodes added successfully" });
   } catch (err) {
     console.error("Error adding nodes tree:", err);
-    res.status(500).json({ success: false, message: "Error adding nodes tree", error: err.message });
+    res.status(500).json({
+      success: false,
+      message: "Error adding nodes tree",
+      error: err.message,
+    });
   }
 });
-
-
 
 /*
 
@@ -338,7 +338,7 @@ function updateChildrenStatus(node, newStatus) {
   });
 } */
 
-  /*
+/*
 // POST /edit-status - Edits the status of a node and updates parent's values
 app.post("/edit-status", (req, res) => {
   const { nodeId, status } = req.body;
@@ -376,7 +376,7 @@ function handleSchedule(nodeVersion) {
   }
 }
 
-async function addPrestige(node) { 
+async function addPrestige(node) {
   const currentVersion = node.versions.find(
     (v) => v.prestige === node.prestige
   );
@@ -389,19 +389,22 @@ async function addPrestige(node) {
   currentVersion.status = "completed";
 
   // Ensure currentVersion.values is a Map, or convert it if it's an object
-  const valuesMap = currentVersion.values instanceof Map ? currentVersion.values : new Map(Object.entries(currentVersion.values));
+  const valuesMap =
+    currentVersion.values instanceof Map
+      ? currentVersion.values
+      : new Map(Object.entries(currentVersion.values));
 
   const newValues = new Map(); // Create a Map for new version's values
 
   // Update globalValues and reset newValues
   for (const [key, value] of valuesMap) {
     node.globalValues[key] = (node.globalValues[key] || 0) + value;
-    newValues.set(key, 0);  // Reset the value to 0 for the new version
+    newValues.set(key, 0); // Reset the value to 0 for the new version
   }
 
   const newVersion = {
     prestige: node.prestige + 1,
-    values: newValues,  // Store as Map
+    values: newValues, // Store as Map
     status: "active",
     dateCreated: new Date().toISOString(),
     schedule: handleSchedule(currentVersion), // Update schedule or keep floating
@@ -410,10 +413,12 @@ async function addPrestige(node) {
 
   // Add the "===================" in the notes file
   const noteFilePath = path.join(notesFolder, node.notes);
-  const prestigeData = `\n\nPrestige: ${node.prestige}\nDate: ${new Date().toISOString()}\n=================================\n\n`;
-  
+  const prestigeData = `\n\nPrestige: ${
+    node.prestige
+  }\nDate: ${new Date().toISOString()}\n=================================\n\n`;
+
   try {
-    fs.appendFileSync(noteFilePath, prestigeData, 'utf8');
+    fs.appendFileSync(noteFilePath, prestigeData, "utf8");
     console.log("Prestige data added to notes.");
   } catch (error) {
     console.error("Error appending to notes file:", error);
@@ -422,15 +427,15 @@ async function addPrestige(node) {
   node.prestige++;
   node.versions.push(newVersion);
 
-  await node.save()
+  await node
+    .save()
     .then(() => console.log(`Node prestige updated to ${node.prestige}`))
     .catch((err) => console.error("Error saving node:", err));
 }
 
-
 app.post("/add-prestige", async (req, res) => {
   const { nodeId } = req.body;
-  console.log(nodeId)
+  console.log(nodeId);
   const node = await findNodeById(nodeId);
   if (node) {
     await addPrestige(node);
@@ -479,6 +484,29 @@ app.post("/complete-node", (req, res) => {
 });
 
 */
+
+app.post("/delete-node", async (req, res) => {
+  const { nodeId } = req.body; // Get the node ID from the URL
+
+  try {
+    const nodeToDelete = await Node.findById(nodeId);
+
+    if (!nodeToDelete) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Node not found" });
+    }
+
+    // Delete the node from the database
+    await Node.findByIdAndDelete(nodeId);
+
+    res.json({ success: true, message: "Node deleted successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
+  }
+});
 
 // Start the server
 app.listen(port, () => {

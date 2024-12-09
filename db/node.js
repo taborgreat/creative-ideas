@@ -34,56 +34,79 @@ const NodeSchema = new mongoose.Schema({
 NodeSchema.methods.updateGlobalValues = async function () {
   const Node = mongoose.model("Node"); // Avoid circular dependency
 
-  // Step 1: Aggregate values from all versions
-  const aggregatedValues = new Map();
+  // Step 1: Aggregate values from all versions of the current node
+  const localValues = new Map();
   this.versions.forEach((version) => {
     version.values.forEach((value, key) => {
-      aggregatedValues.set(key, (aggregatedValues.get(key) || 0) + value);
+      localValues.set(key, (localValues.get(key) || 0) + value);
     });
   });
 
-  // Step 2: Include contributions from child nodes
+  // Step 2: Include contributions from child nodes (globalValues)
   const children = await Node.find({ parent: this._id });
+  const childValues = new Map();
   for (const child of children) {
     child.globalValues.forEach((value, key) => {
-      aggregatedValues.set(key, (aggregatedValues.get(key) || 0) + value);
+      childValues.set(key, (childValues.get(key) || 0) + value);
     });
   }
 
-  // Step 3: Determine values that need to be subtracted
-  const previousValues = this.globalValues || new Map();
-  const valuesToSubtract = new Map();
+  // Step 3: Compute the current node's globalValues as the sum of localValues + childValues
+  const newGlobalValues = new Map(localValues);
+  childValues.forEach((value, key) => {
+    newGlobalValues.set(key, (newGlobalValues.get(key) || 0) + value);
+  });
 
-  // Find removed values by comparing previous globalValues and aggregatedValues
-  previousValues.forEach((prevValue, key) => {
-    if (!aggregatedValues.has(key)) {
-      valuesToSubtract.set(key, prevValue);
-    } else if (aggregatedValues.get(key) < prevValue) {
-      valuesToSubtract.set(key, prevValue - aggregatedValues.get(key));
+  // Step 4: Update this node's globalValues
+  const previousGlobalValues = this.globalValues || new Map();
+  this.globalValues = newGlobalValues;
+
+  // Step 5: Calculate the net difference to propagate upwards
+  const netChanges = new Map();
+  newGlobalValues.forEach((value, key) => {
+    const previousValue = previousGlobalValues.get(key) || 0;
+    const diff = value - previousValue;
+    if (diff !== 0) {
+      netChanges.set(key, diff);
+    }
+  });
+  previousGlobalValues.forEach((value, key) => {
+    if (!newGlobalValues.has(key)) {
+      netChanges.set(key, -value); // Remove values no longer present
     }
   });
 
-  // Step 4: Update the current node's globalValues
-  this.globalValues = aggregatedValues;
+  // Step 6: Propagate changes to the parent
+  let currentNetChanges = netChanges;
+  let currentNode = this;
 
-  // Step 5: Propagate updates up the parent chain recursively
-  let parentNode = this;
-  while (parentNode.parent) {
-    parentNode = await Node.findById(parentNode.parent);
-    if (parentNode) {
-      // Aggregate the current node's globalValues to the parent
-      aggregatedValues.forEach((value, key) => {
-        parentNode.globalValues.set(key, (parentNode.globalValues.get(key) || 0) + value);
-      });
+  while (currentNode.parent) {
+    const parentNode = await Node.findById(currentNode.parent);
 
-      // Subtract removed values from the parent's globalValues
-      valuesToSubtract.forEach((value, key) => {
-        parentNode.globalValues.set(key, (parentNode.globalValues.get(key) || 0) - value);
-      });
-
-      // Save the parent node
-      await parentNode.save();
+    if (!parentNode) {
+      console.error(`Parent node not found for node: ${currentNode._id}`);
+      break;
     }
+
+    const newParentValues = new Map(parentNode.globalValues || new Map());
+    currentNetChanges.forEach((change, key) => {
+      const previousValue = newParentValues.get(key) || 0;
+      const newValue = previousValue + change;
+
+      if (newValue === 0) {
+        newParentValues.delete(key);
+      } else {
+        newParentValues.set(key, newValue);
+      }
+    });
+
+    parentNode.globalValues = newParentValues;
+    await parentNode.save();
+
+    //console.log(`Updated parent node ${parentNode._id} globalValues:`, parentNode.globalValues);
+
+    // Prepare the changes for the next parent
+    currentNode = parentNode;
   }
 };
 
@@ -94,7 +117,77 @@ NodeSchema.pre("save", async function (next) {
   next();
 });
 
+NodeSchema.methods.deleteWithChildrenBottomUp = async function () {
+  const Node = mongoose.model("Node");
 
+  try {
+    console.log(`Deleting node: ${this._id} with global values: ${JSON.stringify(Object.fromEntries(this.globalValues))}`);
+
+    // Step 1: Find all children of the current node
+    const children = await Node.find({ parent: this._id });
+
+    // Step 2: Process each child recursively (to delete all children first)
+    for (const child of children) {
+      console.log(`Recursive deletion of child: ${child._id}`);
+      await child.deleteWithChildrenBottomUp();
+    }
+
+    // Step 3: If the current node has a parent, propagate changes to the parent
+    if (this.parent) {
+      const parentNode = await Node.findById(this.parent);
+
+      if (parentNode) {
+        console.log(`Found parent node: ${parentNode._id}`);
+        
+        // Remove the current node's values from the parent's globalValues
+        if (this.globalValues) {
+          this.globalValues.forEach((value, key) => {
+            const parentValue = parentNode.globalValues.get(key) || 0;
+            const newParentValue = parentValue - value;
+
+            console.log(`Updating key ${key}: parent value ${parentValue} - node value ${value} = ${newParentValue}`);
+
+            if (newParentValue === 0) {
+              parentNode.globalValues.delete(key); // Delete the key if the new value is zero
+            } else {
+              parentNode.globalValues.set(key, newParentValue); // Otherwise update with the new value
+            }
+          });
+        }
+
+        console.log(`Parent global values before update: ${JSON.stringify(Object.fromEntries(parentNode.globalValues))}`);
+
+        // Save the updated parent node
+        await parentNode.save();
+
+        console.log(`Parent global values after update: ${JSON.stringify(Object.fromEntries(parentNode.globalValues))}`);
+      }
+    }
+
+    // Step 4: Finally, delete this node
+    await this.deleteOne();
+
+  } catch (error) {
+    console.error(`Error in deleteWithChildrenBottomUp for node ${this._id}:`, error);
+    throw error;
+  }
+};
+
+
+NodeSchema.pre("findOneAndDelete", async function (next) {
+  const Node = mongoose.model("Node");
+
+  // Find the node being deleted
+  const nodeId = this.getQuery()._id;
+  const node = await Node.findById(nodeId);
+
+  if (node) {
+    // Trigger cascading collection and deletion
+    await node.deleteWithChildrenBottomUp();
+  }
+
+  next(); // Proceed with the original delete operation
+});
 
 const Node = mongoose.model("Node", NodeSchema);
 module.exports = Node;

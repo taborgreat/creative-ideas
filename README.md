@@ -4,7 +4,7 @@
 
 ## Introduction
 
-Welcome to the *Treeffiency**! This project is designed to help you build, track, and refine your goals based on root principles. With the ability to track data, write notes, reflect, analyze performance, and autogenerate new plans/further steps, this system empowers you to optimize your goals and reach higher levels of success.
+Welcome to the *Treeffiency*! This project is designed to help you build, track, and refine your goals based on root principles. With the ability to track data, write notes, reflect, analyze performance, and autogenerate new plans/further steps, this system empowers you to optimize your goals and reach higher levels of success.
 
 ## Key Features
 

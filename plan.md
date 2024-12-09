@@ -6,12 +6,12 @@ FINISHED insert and pull node data from mongo db
 clean up all backend code that is unneeded/ SIMPLIFY from creation phase
 
 make goal endpoint
-manage kinks with value endpoints
+FINISHED manage kinks with value endpoints
 manage kinks with status endpoint- make sure children inherit status. combine set status and complete endpoints
 
 FINISHED make it so when you prestige it adds ================== in mark up with prestige data and a reflection field (reflection prompt pops up when prestiging, or you can add later)
 FINISHED Add goal properties attached to values and way to track (whether they be quanitifable or yes/no)
-determine an efficient system to value inherit- thinking all values get summed into the root exchange node, or if created from a diff type node get summed to it
+FINISHED determine an efficient system to value inherit- thinking all values get summed into the root exchange node, or if created from a diff type node get summed to it
 rework front end into react and components- ALL FRONT END NOW IS PLAY AND SHIT
 add ability to send tree to llm with new task and receive branch back from parent id (variable complexity) that you can append to the parent
 add ability to send tree to llm and ask questions about it, receiving new perspectives and correlation detection
@@ -223,88 +223,5 @@ noteId:
 id:
 parentId:
 data:
-
-
-vrrsion control idea
-Adding version control to your system can significantly improve the ability to track changes, collaborate, and manage revisions in your creative and planning workflow. Here’s how you can incorporate version control into your existing plan:
-
-1. Version Control for the Creative Idea Objects (with Git)
-
-Git is the most common version control system used for software development, but its concepts can be adapted to track changes in your creative ideas. Here’s how:
-
-	•	Commit Changes to Creative Idea Objects: Each creative idea or task could be tracked as a file or entry, where every change (new plans, updates, reflections) can be committed as a new version. Git allows you to commit every update with a description of what has changed.
-	•	Example: When you update the noteId or the schedule object in your idea, it can trigger a commit that records the change.
-	•	Branching for Alternate Versions: In situations where you explore different ideas or approaches to a task, you can create branches for each approach, test them out, and merge the best one back into the main plan.
-	•	Example: You could branch off a particular idea (like branching from main in Git) and explore new concepts without affecting your primary plan.
-	•	Revert to Previous States: If an idea or task doesn’t pan out, you can roll back to a previous version.
-
-2. Tracking Changes to Notes and Progress
-
-For each creative idea object that contains notes and progress tracking data, version control would allow you to:
-
-	•	Track Edits: As you refine your plan or add reflections, Git could track these updates over time. This creates a record of every change you’ve made, along with the date and reason (similar to your “reflection” component).
-	•	Storing Notes as Markdown Files: Since markdown (.md) files are easy to version control and read, you could store the body of planning details, progress, and reflections in markdown files, with each note having a version history.
-
-3. Version Control for Scheduling and Learning Plans
-
-Scheduling objects (for floating tasks, recurring tasks) and your learning components can also benefit from versioning:
-
-	•	Scheduled Task Versions: When a task’s schedule changes (e.g., from floating to a specific date or when you add recurrence), Git would log that update. This way, you can view when a task was rescheduled and why.
-	•	Tracking Learning Progress: You could track not only the creative work but also learning milestones, using commits to log when you’ve completed a topic or added new things to learn.
-
-4. Integration with GitHub for Commits
-
-	•	GitHub Integration: If you integrate this with GitHub, you could link commits directly to your system’s creative idea objects. This would allow you to see a full history of changes to each idea, and potentially link these commits back to relevant issues (if you’re using GitHub Issues or Projects).
-
-Example commit messages:
-
-	•	Added reflection on the progress of the project.
-	•	Updated the timeline and rescheduled milestones.
-	•	Completed the "Learn" section for creative idea #2.
-
-5. Adding Versioning to Your System’s UI
-
-To make version control intuitive within your system, you could implement features like:
-
-	•	View History: Add an option to view the version history of any creative idea object, showing a timeline of changes (similar to the “commits” view in Git).
-	•	Revert Changes: Allow users to revert back to a previous version of a creative idea, note, or learning plan.
-	•	Branch Ideas: Allow the user to create “branches” of ideas. They can fork an idea, experiment with new approaches, and then merge the results back into the main project if successful.
-
-6. Git as Backend for Version Control
-
-You can use Git or a similar version control tool as the backend to track and store changes to all aspects of your system. Here’s how it could work:
-
-	•	Git Repository: Every user (or project) can have their own Git repository where all creative ideas, notes, reflections, schedules, and learnings are stored as files (JSON, Markdown, etc.).
-	•	Commit Changes: Whenever the user makes changes to any creative idea, the system could automatically commit those changes to the repository.
-	•	Push and Pull: If you have multiple users collaborating, they can push and pull changes to a shared repository, allowing for collaborative idea development.
-	•	Merging and Conflict Resolution: If two users edit the same idea, Git’s merge and conflict resolution features could be used to decide how to integrate the changes.
-
-7. Custom Version Control System (Optional)
-
-If using Git directly seems too complex for your system, you could build a simplified version control system:
-
-	•	Version Numbers: Each creative idea could be given a version number (e.g., v1.0, v1.1), and each time a change is made, the system would automatically increment the version and store a copy of the old version.
-	•	Version History: Store previous versions of creative ideas and allow the user to revert to or compare different versions.
-	•	Diffing: Implement a basic “diff” system to show what’s changed between versions, especially useful for text-based components like notes or reflections.
-
-8. Visualizing the Version Control Process
-
-Since you already have a concept of a tree structure for tasks, you can represent the version control visually:
-
-	•	Tree View for Version Control: Much like a Git commit history, you could display a tree view showing how ideas have evolved over time.
-	•	Branches and Merges: Visually indicate when a new idea has branched from an existing one, or when multiple ideas merge into a finalized concept.
-
-Summary of Steps to Add Version Control:
-
-	1.	Implement Git as a Backend: Use Git to track changes to creative ideas, notes, reflections, and scheduling data.
-	2.	Connect to GitHub (Optional): Integrate GitHub for online collaboration, linking commits, and viewing history through GitHub’s interface.
-	3.	UI Enhancements for Version Control: Add features to your system’s UI to view, revert, and branch versions of tasks.
-	4.	Automate Commits: Automatically commit changes whenever a creative idea is updated, and link each commit with a detailed message.
-	5.	Handle Branching and Merging: Allow users to branch ideas and experiment, then merge their work back into the main project if successful.
-
-By doing this, you can create a system that tracks the full lifecycle of creative ideas, ensures nothing is lost, and allows you to experiment freely without losing the original plan.
-
-
-
 
 
