@@ -6,15 +6,42 @@ FINISHED insert and pull node data from mongo db
 clean up all backend code that is unneeded/ SIMPLIFY from creation phase
 
 make goal endpoint
+
+add second db to record value transfer: node id of node calling for trade, node id of donating node, values traded from calling node, values traded from donating node
+log in db for list of transactions and then also make the changes on the main database shifting values over from proper version to version
+keep in mind if you transfer $20 from wealth branch to workout branch, its $20 of value send to workout branch, and $20 lost from wealth, but you also want to see relationship how
+much hrs and other values in wealth it cost to get that $20 so you/llm can dictate value transfers and their worth to other branches. may be inherit with both branches and transactions json seeing how the value trade was worth
+
 FINISHED manage kinks with value endpoints
-manage kinks with status endpoint- make sure children inherit status. combine set status and complete endpoints
+FINISHED manage kinks with status endpoint- make sure children inherit status. combine set status and complete endpoints
 
 FINISHED make it so when you prestige it adds ================== in mark up with prestige data and a reflection field (reflection prompt pops up when prestiging, or you can add later)
 FINISHED Add goal properties attached to values and way to track (whether they be quanitifable or yes/no)
 FINISHED determine an efficient system to value inherit- thinking all values get summed into the root exchange node, or if created from a diff type node get summed to it
 rework front end into react and components- ALL FRONT END NOW IS PLAY AND SHIT
+
+flip tree graphics so root is bottom
+click title, status, schedule to manage on front end. click version icon next to name to switch between versions
+prestige button
+value chart is prestige dependenet with global values to side
+click + below or next to values to add new value or goal for value
+click on value or goal to pull up prompt to delete
+
+notes jump to prestige lines on current level
+add ability to upload media to notes
+
+on tree view line color/thickness is correlated to values. colors for values are next to name in value chart. thickness is relative value transfer
+top right corner of tree view there is in-progress, trim, and complete check boxes to select certain nodes
+click node to go make it have the page view
+
+![Front end initial plan](https://i.imgur.com/xc42Hdy.jpeg)
+
+
 add ability to send tree to llm with new task and receive branch back from parent id (variable complexity) that you can append to the parent
 add ability to send tree to llm and ask questions about it, receiving new perspectives and correlation detection
+
+fix removing nodes and children so it collects all values of children from global values and node being deleted, then subtracts those values from parent nodes to correct values after removing
+possibly: make it so statuses skip pass divider nodes and keep propating to children instead of stopping at divider node
 
 //done
 notes/editing notes
