@@ -5,6 +5,13 @@ const path = require("path");
 const mongoose = require("mongoose");
 require("dotenv").config();
 
+const app = express();
+const port = 3000;
+
+app.use(bodyParser.json());
+app.use(express.static("public"));
+
+
 const mongooseUri = process.env.MONGODB_URI;
 
 const Node = require("./db/node");
@@ -14,11 +21,6 @@ mongoose
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
-const app = express();
-const port = 3000;
-
-app.use(bodyParser.json());
-app.use(express.static("public"));
 
 // Ensure the "notes" folder exists
 const notesFolder = path.join(__dirname, "notes");
@@ -26,34 +28,47 @@ if (!fs.existsSync(notesFolder)) {
   fs.mkdirSync(notesFolder);
 }
 
-// Initial tree structure
-
-// Ensure root node exists
-async function ensureRootNode() {
-  const rootNode = await Node.findOne({ name: "Root" });
-  if (!rootNode) {
-    const root = new Node({
-      name: "Root",
-      prestige: 0,
-      notes: "root_notes.md",
-      globalValues: { hrs: 0 },
-      versions: [
-        {
-          prestige: 0,
-          values: {},
-          status: "exchange",
-          dateCreated: new Date(),
-          goals: [],
-        },
-      ],
-      children: [],
-      parent: null,
-    });
-    await root.save();
-    console.log("Root node created");
-  }
+// Generate a unique ID for file id in node (ideally use node id but its created after note assignment)
+function generateId() {
+  return Math.random().toString(36).substr(2, 9);
 }
-ensureRootNode();
+
+
+// Create a new notes file
+function createNotesFile() {
+  const id = generateId(); // Generate the UUID
+  const fileName = `${id}.md`;
+  const filePath = path.join(notesFolder, fileName);
+  fs.writeFileSync(filePath, `# Notes for node ${id}\n\n`, { flag: "w" });
+  return fileName;
+}
+
+app.get("/get-note/:noteName", (req, res) => {
+  const noteName = req.params.noteName;
+  const notePath = path.join(notesFolder, noteName);
+
+  if (fs.existsSync(notePath)) {
+    res.sendFile(notePath);
+  } else {
+    res.status(404).send("Note not found");
+  }
+});
+
+app.post("/save-note/:noteName", (req, res) => {
+  const noteName = req.params.noteName;
+  const noteContent = req.body.content;
+
+  // Save the content to the .md file
+  fs.writeFile(`notes/${noteName}`, noteContent, (err) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Error saving note." });
+    }
+    res.json({ success: true });
+  });
+});
+
 
 async function findNodeById(nodeId) {
   try {
@@ -68,34 +83,7 @@ async function findNodeById(nodeId) {
   }
 }
 
-// Generate a unique ID
-function generateId() {
-  return Math.random().toString(36).substr(2, 9);
-}
 
-/*
-// Helper function to recursively update the parent's values based on children's values
-async function updateParentValues(nodeId) {
-  const node = await findNodeById(nodeId);
-  if (!node) return;
-
-  const sums = {};
-
-  for (const childId of node.children) {
-    const child = await findNodeById(childId);
-    if (child && child.versions.some((v) => v.status === "active")) {
-      for (const [key, value] of Object.entries(child.values || {})) {
-        sums[key] = (sums[key] || 0) + (value || 0);
-      }
-    }
-    await updateParentValues(child._id);
-  }
-
-  node.values = sums;
-  await node.save();
-
-  node.values = { ...sums }; // Replace current values with the summed ones
-} */
 
 async function setValueForNode(nodeId, key, value) {
   try {
@@ -173,47 +161,12 @@ app.get("/get-tree", async (req, res) => {
 
     // Send the complete tree back as a JSON response
     res.json(rootNode);
-  
   } catch (error) {
     console.error("Error fetching tree:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// Create a new notes file
-function createNotesFile() {
-  const id = generateId(); // Generate the UUID
-  const fileName = `${id}.md`;
-  const filePath = path.join(notesFolder, fileName);
-  fs.writeFileSync(filePath, `# Notes for node ${id}\n\n`, { flag: "w" });
-  return fileName;
-}
-
-app.get("/get-note/:noteName", (req, res) => {
-  const noteName = req.params.noteName;
-  const notePath = path.join(notesFolder, noteName);
-
-  if (fs.existsSync(notePath)) {
-    res.sendFile(notePath);
-  } else {
-    res.status(404).send("Note not found");
-  }
-});
-
-app.post("/save-note/:noteName", (req, res) => {
-  const noteName = req.params.noteName;
-  const noteContent = req.body.content;
-
-  // Save the content to the .md file
-  fs.writeFile(`notes/${noteName}`, noteContent, (err) => {
-    if (err) {
-      return res
-        .status(500)
-        .json({ success: false, message: "Error saving note." });
-    }
-    res.json({ success: true });
-  });
-});
 
 // Create a new node with required properties
 async function createNewNode(name, schedule, reeffectTime, parentNodeID) {
@@ -328,38 +281,93 @@ app.post("/add-nodes-tree", async (req, res) => {
   }
 });
 
-/*
 
-// Helper function to recursively update children's statuses based on parent's status
-function updateChildrenStatus(node, newStatus) {
-  node.children.forEach((child) => {
-    child.status = newStatus;
-    updateChildrenStatus(child, newStatus);
-  });
-} */
 
-/*
-// POST /edit-status - Edits the status of a node and updates parent's values
-app.post("/edit-status", (req, res) => {
+// POST /edit-status - Edits the status of a node and all its child nodes
+app.post("/edit-status", async (req, res) => {
   const { nodeId, status } = req.body;
-  const node = findNodeById(tree, nodeId);
-  if (node) {
-    node.status = status;
-
-    if (status === "trimmed") {
-      updateChildrenStatus(node, "trimmed");
-    } else {
-      updateChildrenStatus(node, status);
+  console.log(status)
+  try {
+    const node = await findNodeById(nodeId);
+    if (!node) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Node not found" });
     }
 
-    updateParentValues(tree);
-    res.json({ success: true, tree });
-  } else {
-    res.status(404).json({ success: false, message: "Node not found" });
+    const currentVersion = node.versions.find(
+      (v) => v.prestige === node.prestige
+    );
+    if (!currentVersion) {
+      console.error("No version found for the current prestige level.");
+      return res
+        .status(500)
+        .json({ success: false, message: "No version found" });
+    }
+    
+    // Update the status of the node and all its children
+    await updateNodeStatusRecursively(node, status);
+
+    // Return success message
+    res.json({
+      success: true,
+      message: `Status updated to ${status} for node and all its children`,
+    });
+  } catch (error) {
+    console.error("Error updating node status:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Error updating node status" });
   }
 });
 
-*/
+
+
+// Helper function to recursively update status for the node and its children
+async function updateNodeStatusRecursively(node, status) {
+  // If the status is "exchange", update the parent node and skip child updates
+  if (status === "exchange") {
+
+    // Update the parent node status without modifying the children
+    const currentVersion = node.versions.find((v) => v.prestige === node.prestige);
+    if (currentVersion) {
+      currentVersion.status = status;
+      await node.save(); // Save the updated node
+    }
+  } else {
+    // If the status is "active", "trimmed", or "completed", process children
+    if (["active", "trimmed", "completed"].includes(status)) {
+      // Iterate over children nodes and update them
+      for (const childId of node.children) {
+        const childNode = await findNodeById(childId);
+
+
+        // Check if the latest generation (most recent version) has the status "exchange"
+        const latestVersion = childNode.versions.find((v) => v.prestige === childNode.prestige);
+        if (latestVersion && latestVersion.status === "exchange") {
+          continue; // Skip this child node and move to the next
+        }
+
+        // Recursively update the child node's status
+        if (childNode) {
+          console.log(`Updating child node ${childNode._id} with status ${status}`);
+          await updateNodeStatusRecursively(childNode, status); // Recursive call for child node
+        }
+      }
+    }
+  }
+
+  // Update the parent node status after processing all children
+  const currentVersion = node.versions.find((v) => v.prestige === node.prestige);
+  if (currentVersion) {
+    currentVersion.status = status;
+    await node.save(); // Save the updated node
+  }
+  console.log(`Parent node ${node._id} updated with status ${status}.`);
+}
+
+
+
 
 function handleSchedule(nodeVersion) {
   // Check if the node is floating or has a set date
@@ -445,45 +453,6 @@ app.post("/add-prestige", async (req, res) => {
     res.status(404).json({ success: false, message: "Node not found" });
   }
 });
-
-/*
-
-function completeNode(node) {
-  // Find the current version that matches the node's prestige level
-  const currentVersion = node.versions.find(
-    (v) => v.prestige === node.prestige
-  );
-
-  if (!currentVersion) {
-    console.error("No version found for the current prestige level.");
-    return;
-  }
-
-  // Update global values by adding the current version's values to globalValues
-  for (const [key, value] of Object.entries(currentVersion.values)) {
-    // Add the current values to globalValues
-    node.globalValues[key] = (node.globalValues[key] || 0) + value;
-  }
-
-  // Reset the current version's values to zero (or any other reset logic)
-  currentVersion.values = {};
-  // Mark the current version as "completed"
-  currentVersion.status = "completed";
-}
-
-app.post("/complete-node", (req, res) => {
-  const { nodeId } = req.body;
-  const node = findNodeById(tree, nodeId);
-
-  if (node) {
-    completeNode(node);
-    res.json({ success: true, tree });
-  } else {
-    res.status(404).json({ success: false, message: "Node not found" });
-  }
-});
-
-*/
 
 app.post("/delete-node", async (req, res) => {
   const { nodeId } = req.body; // Get the node ID from the URL

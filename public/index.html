@@ -80,9 +80,9 @@
             },
           },
           {
-            selector: 'node[status="exchange"]',
+            selector: 'node[status="divider"]',
             style: {
-              "background-color": "purple", // Color for exchange nodes
+              "background-color": "purple", // Color for divider nodes
             },
           },
           {
@@ -136,10 +136,11 @@
           case "completed":
             bgColor = "#666";
             break;
-          case "exchange":
-            bgColor = "#D4A857"; // Set background for exchange nodes
+          case "divider":
+            bgColor = "#D4A857"; // Set background for divider nodes
             break;
           default:
+            666;
             bgColor = "#666"; // Default color for any unspecified status
         }
 
@@ -329,10 +330,9 @@
         alert(`Node Details:
       ID: ${node.id()}
       Name: ${node.data("name")}
-      Status: "this is glitched"${node.data("status")}
       Prestige: ${node.data("prestige")}
 
-      Local Node Accumulation:
+      Global Accumulation:
       ${globalNodeDetails}
 
       Version History:
@@ -415,8 +415,7 @@
       3. Add/Edit Value
       4. Edit Status
       5. Prestige
-      6. Complete
-      7. Delete`);
+      6. Delete`);
 
         switch (action) {
           case "1":
@@ -433,7 +432,7 @@
 
           case "4":
             const newStatus = prompt(
-              "Enter new status (active, trimmed, completed):"
+              "Enter new status (active, completed, divider, trimmed):"
             );
             if (newStatus) {
               fetch("/edit-status", {
@@ -457,11 +456,8 @@
             break;
 
           case "6":
-            completeNode(nodeId); // Call the function to increase prestige
-            break;
-          case "7":
             const confirmRemove = confirm(
-              "Are you sure you want to remove this node?"
+              "Are you sure you want to remove this node and its children? This feature is buggy as shit and trimming is better."
             );
             if (confirmRemove) {
               fetch("/delete-node", {

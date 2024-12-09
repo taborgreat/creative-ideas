@@ -31,6 +31,9 @@ const NodeSchema = new mongoose.Schema({
   parent: { type: String, ref: "Node", default: null }, // Reference to the parent node
 });
 
+
+
+//update parent values from children when values are modified
 NodeSchema.methods.updateGlobalValues = async function () {
   const Node = mongoose.model("Node"); // Avoid circular dependency
 
@@ -109,7 +112,7 @@ NodeSchema.methods.updateGlobalValues = async function () {
     currentNode = parentNode;
   }
 };
-
+//attach the modification to happen anytime a node is saved
 NodeSchema.pre("save", async function (next) {
   if (this.isModified("versions")) {
     await this.updateGlobalValues();
@@ -117,6 +120,8 @@ NodeSchema.pre("save", async function (next) {
   next();
 });
 
+//delete node values when branch is deleted and all child nodes
+//buggy as shit. after deleting branch edit a value in root node to reupdate tree. 9 hrs wasted
 NodeSchema.methods.deleteWithChildrenBottomUp = async function () {
   const Node = mongoose.model("Node");
 
@@ -173,7 +178,7 @@ NodeSchema.methods.deleteWithChildrenBottomUp = async function () {
   }
 };
 
-
+//attach the delete script whenever a node is deleted
 NodeSchema.pre("findOneAndDelete", async function (next) {
   const Node = mongoose.model("Node");
 
@@ -191,3 +196,38 @@ NodeSchema.pre("findOneAndDelete", async function (next) {
 
 const Node = mongoose.model("Node", NodeSchema);
 module.exports = Node;
+
+//ensure root node on db creation
+async function ensureRootNode() {
+  const rootNode = await Node.findOneAndUpdate(
+    { name: "Root" }, // Find node by name "Root"
+    {
+      $setOnInsert: { // Only set the following values if the node doesn't exist
+        name: "Root",
+        prestige: 0,
+        notes: "root_notes.md",
+        globalValues: { hrs: 0 },
+        versions: [
+          {
+            prestige: 0,
+            values: {},
+            status: "divider",
+            dateCreated: new Date(),
+            goals: [],
+          },
+        ],
+        children: [],
+        parent: null,
+      },
+    },
+    { upsert: true, new: true } // `upsert: true` ensures that a new document is created if none exists
+  );
+
+  if (rootNode) {
+    console.log("Root node checked/created successfully");
+  } else {
+    console.error("Failed to ensure root node");
+  }
+}
+
+ensureRootNode();
