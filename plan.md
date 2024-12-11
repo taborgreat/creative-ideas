@@ -46,6 +46,29 @@ add ability to send tree to llm and ask questions about it, receiving new perspe
 fix removing nodes and children so it collects all values of children from global values and node being deleted, then subtracts those values from parent nodes to correct values after removing
 possibly: make it so statuses skip pass divider nodes and keep propating to children instead of stopping at divider node
 
+predefined brakches with extra functionality
+github branch, crypto wallet branch, 
+fitness branch. can link custom .js file
+to show in component area and act on values
+people build branches or nodes
+to add functionality for making actions on
+tree, graphing data, allowing more sophisticated
+value trade between peer nodes,leveling systems, etc
+
+user schema 
+id
+username passwords.
+root nodes[]
+
+root nodes points to different branches (trees)
+in db. users can have own trees, share roots
+with others and build togethrr, join in others
+trees branches at any part and collaborate
+or share values at any time from any node
+to any tree 
+
+
+
 //done
 notes/editing notes
 
