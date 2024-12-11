@@ -118,11 +118,14 @@
           .then((data) => {
             cy.elements().remove(); // Clear the current elements
             addTreeToCytoscape(data, null); // Recursively add the tree to Cytoscape
-            
+
             setTimeout(() => {
-        loadTransactions();
-      }, 100);
-            cy.layout({ name: "breadthfirst", directed: true }).run(); // Apply layout
+              loadTransactions();
+            }, 100);
+            cy.layout({
+              name: "breadthfirst",
+              directed: true, // Adjust padding if necessary
+            }).run();
           });
         updateGlobalTreeValuesDisplay();
       }
@@ -230,90 +233,95 @@
       }
 
       function loadTree() {
-  fetch("/get-tree")
-    .then((response) => response.json())
-    .then((data) => {
-      cy.elements().remove(); // Clear the current elements
-      addTreeToCytoscape(data, null); // Recursively add the tree to Cytoscape
-      cy.layout({ name: "breadthfirst", directed: true }).run(); // Apply layout
-      
-      // IMPORTANT: Load transactions AFTER the tree is fully populated
-      loadTransactions();
-    });
-  updateGlobalTreeValuesDisplay();
-}
+        fetch("/get-tree")
+          .then((response) => response.json())
+          .then((data) => {
+            cy.elements().remove(); // Clear the current elements
+            addTreeToCytoscape(data, null); // Recursively add the tree to Cytoscape
+            cy.layout({ name: "breadthfirst", directed: true }).run(); // Apply layout
 
-function loadTransactions() {
-  fetch("/get-transactions")
-    .then((response) => response.json())
-    .then((data) => {
-      console.log("ALL Transactions to add:", JSON.stringify(data, null, 2));
-      
-      // Log all current node IDs in the Cytoscape graph
-      const cyNodeIds = cy.nodes().map(node => node.id());
-      console.log("ALL Node IDs in Cytoscape:", cyNodeIds);
-      
-      data.forEach((transaction) => {
-        // Extract _id from node objects
-        const nodeAId = transaction.nodeAId._id;
-        const nodeBId = transaction.nodeBId._id;
-        
-        console.log("Processing Transaction:", {
-          nodeAId,
-          nodeBId,
-          valuesTraded: transaction.valuesTraded
-        });
-        
-        const sourceNode = cy.nodes().filter(node => node.id() === nodeAId);
-        const targetNode = cy.nodes().filter(node => node.id() === nodeBId);
-        
-        console.log(`Checking transaction between ${nodeAId} and ${nodeBId}`);
-        console.log("Source node exists:", sourceNode.length > 0);
-        console.log("Target node exists:", targetNode.length > 0);
-        
-        if (sourceNode.length > 0 && targetNode.length > 0) {
-          addTransactionEdge(
-            nodeAId, 
-            nodeBId,
-            transaction.valuesTraded
-          );
-        } else {
-          console.warn(`Cannot add transaction edge - nodes not found`, {
-            nodeAId,
-            nodeBId,
-            sourceNodeSearch: sourceNode.length,
-            targetNodeSearch: targetNode.length,
-            allCyNodeIds: cyNodeIds
+            // IMPORTANT: Load transactions AFTER the tree is fully populated
+            loadTransactions();
           });
-        }
-      });
-      
-      // Reapply layout after adding edges
-      cy.layout({ name: "breadthfirst", directed: true }).run();
-    })
-    .catch((error) => {
-      console.error("Error loading transactions:", error);
-    });
-}
+        updateGlobalTreeValuesDisplay();
+      }
 
-function addTransactionEdge(sourceId, targetId, valuesTraded) {
-  console.log(`Adding transaction edge: ${sourceId} -> ${targetId}`, valuesTraded);
-  
-  // Create a new edge with transaction details
-  cy.add({
-    data: { 
-      source: sourceId, 
-      target: targetId,
-      valuesTraded: valuesTraded
-    },
-    style: {
-      'line-color': 'blue',
-      'width': 3,
-      'target-arrow-color': 'blue',
-      'target-arrow-shape': 'triangle'
-    }
-  });
-}
+      function loadTransactions() {
+        fetch("/get-transactions")
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(
+              "ALL Transactions to add:",
+              JSON.stringify(data, null, 2)
+            );
+
+            // Log all current node IDs in the Cytoscape graph
+            const cyNodeIds = cy.nodes().map((node) => node.id());
+            console.log("ALL Node IDs in Cytoscape:", cyNodeIds);
+
+            data.forEach((transaction) => {
+              // Extract _id from node objects
+              const nodeAId = transaction.nodeAId._id;
+              const nodeBId = transaction.nodeBId._id;
+
+              console.log("Processing Transaction:", {
+                nodeAId,
+                nodeBId,
+                valuesTraded: transaction.valuesTraded,
+              });
+
+              const sourceNode = cy
+                .nodes()
+                .filter((node) => node.id() === nodeAId);
+              const targetNode = cy
+                .nodes()
+                .filter((node) => node.id() === nodeBId);
+
+              console.log(
+                `Checking transaction between ${nodeAId} and ${nodeBId}`
+              );
+              console.log("Source node exists:", sourceNode.length > 0);
+              console.log("Target node exists:", targetNode.length > 0);
+
+              if (sourceNode.length > 0 && targetNode.length > 0) {
+                addTransactionEdge(nodeAId, nodeBId, transaction.valuesTraded);
+              } else {
+                console.warn(`Cannot add transaction edge - nodes not found`, {
+                  nodeAId,
+                  nodeBId,
+                  sourceNodeSearch: sourceNode.length,
+                  targetNodeSearch: targetNode.length,
+                  allCyNodeIds: cyNodeIds,
+                });
+              }
+            });
+          })
+          .catch((error) => {
+            console.error("Error loading transactions:", error);
+          });
+      }
+
+      function addTransactionEdge(sourceId, targetId, valuesTraded) {
+        console.log(
+          `Adding transaction edge: ${sourceId} -> ${targetId}`,
+          valuesTraded
+        );
+
+        // Create a new edge with transaction details
+        cy.add({
+          data: {
+            source: sourceId,
+            target: targetId,
+            valuesTraded: valuesTraded,
+          },
+          style: {
+            "line-color": "blue",
+            width: 3,
+            "target-arrow-color": "blue",
+            "target-arrow-shape": "triangle",
+          },
+        });
+      }
 
       function calculateGlobalValues() {
         const nodes = cy.nodes();
@@ -348,7 +356,7 @@ function addTransactionEdge(sourceId, targetId, valuesTraded) {
             .then((data) => {
               if (data.success) {
                 loadTree(); // Reload the tree after editing the value
-                
+
                 updateGlobalTreeValuesDisplay();
               } else {
                 alert(data.message);
