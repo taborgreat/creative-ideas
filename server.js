@@ -11,17 +11,18 @@ const port = 3000;
 app.use(bodyParser.json());
 app.use(express.static("public"));
 
-
+/*DB connection*/
 const mongooseUri = process.env.MONGODB_URI;
 
 const Node = require("./db/node");
+const Transaction = require("./db/transaction"); 
 
 mongoose
   .connect(mongooseUri, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
-
+/*Notes Management*/
 // Ensure the "notes" folder exists
 const notesFolder = path.join(__dirname, "notes");
 if (!fs.existsSync(notesFolder)) {
@@ -32,7 +33,6 @@ if (!fs.existsSync(notesFolder)) {
 function generateId() {
   return Math.random().toString(36).substr(2, 9);
 }
-
 
 // Create a new notes file
 function createNotesFile() {
@@ -69,7 +69,7 @@ app.post("/save-note/:noteName", (req, res) => {
   });
 });
 
-
+/*Tree manipulation*/
 async function findNodeById(nodeId) {
   try {
     const node = await Node.findOne({ _id: nodeId }).populate("children");
@@ -82,8 +82,6 @@ async function findNodeById(nodeId) {
     throw error; // Re-throw the error to handle it in the calling function
   }
 }
-
-
 
 async function setValueForNode(nodeId, key, value) {
   try {
@@ -166,7 +164,6 @@ app.get("/get-tree", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 // Create a new node with required properties
 async function createNewNode(name, schedule, reeffectTime, parentNodeID) {
@@ -281,12 +278,10 @@ app.post("/add-nodes-tree", async (req, res) => {
   }
 });
 
-
-
 // POST /edit-status - Edits the status of a node and all its child nodes
 app.post("/edit-status", async (req, res) => {
   const { nodeId, status } = req.body;
-  console.log(status)
+  console.log(status);
   try {
     const node = await findNodeById(nodeId);
     if (!node) {
@@ -304,7 +299,7 @@ app.post("/edit-status", async (req, res) => {
         .status(500)
         .json({ success: false, message: "No version found" });
     }
-    
+
     // Update the status of the node and all its children
     await updateNodeStatusRecursively(node, status);
 
@@ -321,15 +316,14 @@ app.post("/edit-status", async (req, res) => {
   }
 });
 
-
-
 // Helper function to recursively update status for the node and its children
 async function updateNodeStatusRecursively(node, status) {
-  // If the status is "exchange", update the parent node and skip child updates
-  if (status === "exchange") {
-
+  // If the status is "divider", update the parent node and skip child updates
+  if (status === "divider") {
     // Update the parent node status without modifying the children
-    const currentVersion = node.versions.find((v) => v.prestige === node.prestige);
+    const currentVersion = node.versions.find(
+      (v) => v.prestige === node.prestige
+    );
     if (currentVersion) {
       currentVersion.status = status;
       await node.save(); // Save the updated node
@@ -341,16 +335,19 @@ async function updateNodeStatusRecursively(node, status) {
       for (const childId of node.children) {
         const childNode = await findNodeById(childId);
 
-
-        // Check if the latest generation (most recent version) has the status "exchange"
-        const latestVersion = childNode.versions.find((v) => v.prestige === childNode.prestige);
-        if (latestVersion && latestVersion.status === "exchange") {
+        // Check if the latest generation (most recent version) has the status "divider"
+        const latestVersion = childNode.versions.find(
+          (v) => v.prestige === childNode.prestige
+        );
+        if (latestVersion && latestVersion.status === "divider") {
           continue; // Skip this child node and move to the next
         }
 
         // Recursively update the child node's status
         if (childNode) {
-          console.log(`Updating child node ${childNode._id} with status ${status}`);
+          console.log(
+            `Updating child node ${childNode._id} with status ${status}`
+          );
           await updateNodeStatusRecursively(childNode, status); // Recursive call for child node
         }
       }
@@ -358,16 +355,15 @@ async function updateNodeStatusRecursively(node, status) {
   }
 
   // Update the parent node status after processing all children
-  const currentVersion = node.versions.find((v) => v.prestige === node.prestige);
+  const currentVersion = node.versions.find(
+    (v) => v.prestige === node.prestige
+  );
   if (currentVersion) {
     currentVersion.status = status;
     await node.save(); // Save the updated node
   }
   console.log(`Parent node ${node._id} updated with status ${status}.`);
 }
-
-
-
 
 function handleSchedule(nodeVersion) {
   // Check if the node is floating or has a set date
@@ -453,6 +449,94 @@ app.post("/add-prestige", async (req, res) => {
     res.status(404).json({ success: false, message: "Node not found" });
   }
 });
+
+
+
+
+async function tradeValuesBetweenNodes(nodeAId, versionAIndex, valuesA, nodeBId, versionBIndex, valuesB) {
+  const Node = mongoose.model("Node");
+  const Transaction = mongoose.model("Transaction");
+
+  // Fetch nodes
+  const nodeA = await Node.findById(nodeAId);
+  const nodeB = await Node.findById(nodeBId);
+
+  if (!nodeA || !nodeB) {
+    throw new Error(`One or both nodes not found.`);
+  }
+
+  // Ensure versions exist
+  const versionA = nodeA.versions[versionAIndex];
+  const versionB = nodeB.versions[versionBIndex];
+
+  if (!versionA || !versionB) {
+    throw new Error(`One or both versions not found.`);
+  }
+
+  // Perform trade
+  for (const [key, value] of Object.entries(valuesA)) {
+    if ((versionA.values.get(key) || 0) < value) {
+      throw new Error(`Node A's version ${versionAIndex} has insufficient ${key}.`);
+    }
+    versionA.values.set(key, (versionA.values.get(key) || 0) - value);
+    versionB.values.set(key, (versionB.values.get(key) || 0) + value);
+  }
+
+  for (const [key, value] of Object.entries(valuesB)) {
+    if ((versionB.values.get(key) || 0) < value) {
+      throw new Error(`Node B's version ${versionBIndex} has insufficient ${key}.`);
+    }
+    versionB.values.set(key, (versionB.values.get(key) || 0) - value);
+    versionA.values.set(key, (versionA.values.get(key) || 0) + value);
+  }
+
+  // Save the nodes
+  await nodeA.save();
+  await nodeB.save();
+
+  // Log the transaction
+  const transaction = new Transaction({
+    nodeAId: nodeAId,
+    nodeBId: nodeBId,
+    versionAIndex: versionAIndex,
+    versionBIndex: versionBIndex,
+    valuesTraded: {
+      nodeA: valuesA,
+      nodeB: valuesB,
+    },
+  });
+
+  await transaction.save();
+  console.log("Trade completed and transaction logged.");
+}
+
+
+// Trade values between two nodes
+app.post("/trade-values", async (req, res) => {
+  const { nodeAId, versionAIndex, valuesA, nodeBId, versionBIndex, valuesB } = req.body;
+  console.log(req.body)
+if (
+  nodeAId === undefined ||
+  versionAIndex === undefined ||
+  valuesA === undefined ||
+  nodeBId === undefined ||
+  versionBIndex === undefined ||
+  valuesB === undefined
+) {
+  return res
+    .status(400)
+    .json({ success: false, message: "Invalid request body. Ensure all required fields are provided." });
+}
+
+  try {
+    await tradeValuesBetweenNodes(nodeAId, versionAIndex, valuesA, nodeBId, versionBIndex, valuesB);
+    res.json({ success: true, message: "Trade completed successfully." });
+  } catch (error) {
+    console.error("Error during trade:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 
 app.post("/delete-node", async (req, res) => {
   const { nodeId } = req.body; // Get the node ID from the URL
