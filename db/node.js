@@ -135,6 +135,18 @@ NodeSchema.methods.deleteWithChildrenBottomUp = async function () {
       await child.deleteOne();
     }
 
+     // Step 3: Remove reference from the parent node's `children` array
+     if (this.parent) {
+      const parentNode = await Node.findById(this.parent);
+      if (parentNode) {
+        console.log(`Removing reference to ${this._id} from parent ${parentNode._id}`);
+        parentNode.children = parentNode.children.filter(
+          (childId) => childId !== this._id
+        );
+        await parentNode.save(); // Persist the changes (removes the child reference)
+      }
+    }
+
     // Step 3: Delete the current node
     console.log(`Deleting current node: ${this._id}`);
     await this.deleteOne();
@@ -145,6 +157,7 @@ NodeSchema.methods.deleteWithChildrenBottomUp = async function () {
       if (parentNode) {
         console.log(`Updating global values for parent node: ${parentNode._id}`);
         await parentNode.updateGlobalValues();
+    
         await parentNode.save(); // Persist the changes
       }
     }
@@ -168,6 +181,7 @@ NodeSchema.pre("findOneAndDelete", async function (next) {
     // Trigger cascading collection and deletion
     await node.deleteWithChildrenBottomUp();
   }
+  
 
   next(); // Proceed with the original delete operation
 });
