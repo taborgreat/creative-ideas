@@ -7,10 +7,10 @@ clean up all backend code that is unneeded/ SIMPLIFY from creation phase
 
 make goal endpoint
 
-add second db to record value transfer: node id of node calling for trade, node id of donating node, values traded from calling node, values traded from donating node
-log in db for list of transactions and then also make the changes on the main database shifting values over from proper version to version
-keep in mind if you transfer $20 from wealth branch to workout branch, its $20 of value send to workout branch, and $20 lost from wealth, but you also want to see relationship how
-much hrs and other values in wealth it cost to get that $20 so you/llm can dictate value transfers and their worth to other branches. may be inherit with both branches and transactions json seeing how the value trade was worth
+FINISHED add second db to record value transfer: node id of node calling for trade, node id of donating node, values traded from calling node, values traded from donating node
+        log in db for list of transactions and then also make the changes on the main database shifting values over from proper version to version
+        keep in mind if you transfer $20 from wealth branch to workout branch, its $20 of value send to workout branch, and $20 lost from wealth, but you also want to see relationship how
+        much hrs and other values in wealth it cost to get that $20 so you/llm can dictate value transfers and their worth to other branches. may be inherit with both branches and transactions json seeing how the value trade was worth
 
 build function/endpoint to insert a node between 2 nodes transferring parent id's respectively
 handle trading nodes either being set to null or to parent id in transactions collection when a node is deleted that was involved
