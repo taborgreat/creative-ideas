@@ -120,63 +120,41 @@ NodeSchema.pre("save", async function (next) {
   next();
 });
 
-//delete node values when branch is deleted and all child nodes
-//buggy as shit. after deleting branch edit a value in root node to reupdate tree. 9 hrs wasted
 NodeSchema.methods.deleteWithChildrenBottomUp = async function () {
   const Node = mongoose.model("Node");
 
   try {
-    console.log(`Deleting node: ${this._id} with global values: ${JSON.stringify(Object.fromEntries(this.globalValues))}`);
+    console.log(`Deleting node: ${this._id} along with its children.`);
 
-    // Step 1: Find all children of the current node
+    // Step 1: Collect all child nodes of the current node
     const children = await Node.find({ parent: this._id });
 
-    // Step 2: Process each child recursively (to delete all children first)
+    // Step 2: Delete all child nodes (separately in a loop)
     for (const child of children) {
-      console.log(`Recursive deletion of child: ${child._id}`);
-      await child.deleteWithChildrenBottomUp();
+      console.log(`Deleting child node: ${child._id}`);
+      await child.deleteOne();
     }
 
-    // Step 3: If the current node has a parent, propagate changes to the parent
+    // Step 3: Delete the current node
+    console.log(`Deleting current node: ${this._id}`);
+    await this.deleteOne();
+
+    // Step 4: Update global values on the parent node (after all deletions)
     if (this.parent) {
       const parentNode = await Node.findById(this.parent);
-
       if (parentNode) {
-        console.log(`Found parent node: ${parentNode._id}`);
-        
-        // Remove the current node's values from the parent's globalValues
-        if (this.globalValues) {
-          this.globalValues.forEach((value, key) => {
-            const parentValue = parentNode.globalValues.get(key) || 0;
-            const newParentValue = parentValue - value;
-
-            console.log(`Updating key ${key}: parent value ${parentValue} - node value ${value} = ${newParentValue}`);
-
-            if (newParentValue === 0) {
-              parentNode.globalValues.delete(key); // Delete the key if the new value is zero
-            } else {
-              parentNode.globalValues.set(key, newParentValue); // Otherwise update with the new value
-            }
-          });
-        }
-
-        console.log(`Parent global values before update: ${JSON.stringify(Object.fromEntries(parentNode.globalValues))}`);
-
-        // Save the updated parent node
-        await parentNode.save();
-
-        console.log(`Parent global values after update: ${JSON.stringify(Object.fromEntries(parentNode.globalValues))}`);
+        console.log(`Updating global values for parent node: ${parentNode._id}`);
+        await parentNode.updateGlobalValues();
+        await parentNode.save(); // Persist the changes
       }
     }
-
-    // Step 4: Finally, delete this node
-    await this.deleteOne();
 
   } catch (error) {
     console.error(`Error in deleteWithChildrenBottomUp for node ${this._id}:`, error);
     throw error;
   }
 };
+
 
 //attach the delete script whenever a node is deleted
 NodeSchema.pre("findOneAndDelete", async function (next) {

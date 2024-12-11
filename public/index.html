@@ -457,7 +457,7 @@
 
           case "6":
             const confirmRemove = confirm(
-              "Are you sure you want to remove this node and its children? This feature is buggy as shit and trimming is better."
+              "Are you sure you want to remove this node and its children? Trimming is preferred and all data will be removed."
             );
             if (confirmRemove) {
               fetch("/delete-node", {
