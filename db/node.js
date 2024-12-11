@@ -2,24 +2,25 @@ const mongoose = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
 
 const GoalSchema = new mongoose.Schema({
-  value: { type: String, required: false }, // The value being tracked
-  reached: { type: Boolean, required: true }, // Whether the goal is reached
-  quantifiableGoal: { type: Number, required: false }, // Optional numeric goal
+  value: { type: String, required: false },
+  reached: { type: Boolean, required: true },
+  quantifiableGoal: { type: Number, required: false },
 });
 
 const NodeSchema = new mongoose.Schema({
   _id: {
-    type: String, // Change to String to store UUID
-    default: uuidv4, // Generate UUID by default
+    type: String,
+    default: uuidv4,
   },
   name: { type: String, required: true },
+  type: { type: String, default: null },
   prestige: { type: Number, default: 0 },
   notes: { type: String, required: true },
-  globalValues: { type: Map, of: Number, default: {} }, // Tracks global summed values
+  globalValues: { type: Map, of: Number, default: {} },
   versions: [
     {
       prestige: { type: Number, required: true },
-      values: { type: Map, of: Number, default: {} }, // Individual version values
+      values: { type: Map, of: Number, default: {} },
       status: { type: String, default: "active" },
       dateCreated: { type: Date, default: Date.now },
       schedule: { type: Date, default: null },
@@ -27,9 +28,69 @@ const NodeSchema = new mongoose.Schema({
       goals: [GoalSchema],
     },
   ],
-  children: [{ type: String, ref: "Node" }], // References to child nodes
-  parent: { type: String, ref: "Node", default: null }, // Reference to the parent node
+  children: [{ type: String, ref: "Node" }],
+  parent: { type: String, ref: "Node", default: null },
+
+  rootOwner: { type: String, ref: "User", default: null }, // Owner of the root, if null it is not a root
+  contributors: [{ type: String, ref: "User" }], // Users who can contribute to this node from here on and have access to it
 });
+
+// Method to add contributors to a node
+NodeSchema.methods.addContributor = function (userId, removerId) {
+  if (!this.rootOwner)
+    throw new Error("Only nodes with an rootOwner can have contributors.");
+  // Check if the current user is the rootOwner
+  if (this.rootOwner.toString() !== removerId) {
+    throw new Error("Only the rootOwner can add contributors.");
+  }
+  if (!this.contributors.includes(userId)) {
+    this.contributors.push(userId);
+  }
+};
+
+NodeSchema.methods.removeContributor = function (userId, removerId) {
+  // Check if the remover is either the rootOwner or a contributor
+  if (
+    this.rootOwner.toString() !== removerId &&
+    !this.contributors.includes(removerId)
+  ) {
+    throw new Error("Only the rootOwner or a contributor can remove contributors.");
+  }
+  this.contributors = this.contributors.filter(
+    (contributor) => contributor !== userId
+  );
+};
+
+// Method to transfer rootOwnership of a node
+NodeSchema.methods.transferOwnership = function (newOwnerId, removerId) {
+  if (this.rootOwner.toString() !== removerId) {
+    throw new Error("Only the rootOwner can transfer ownershup.");
+  }
+  if (!this.rootOwner) throw new Error("Node does not have an owner.");
+  this.rootOwner = newOwnerId;
+};
+
+
+
+/*
+
+// Method to check if the current user is allowed to modify a node (including child nodes)
+NodeSchema.methods.isAllowedToModify = async function (userId) {
+  // rootOwner can always modify their nodes
+  if (this.rootOwner === userId) return true;
+
+  // Contributors can modify their assigned nodes
+  if (this.contributors.includes(userId)) return true;
+
+  // If the node has a parent, check if the parent grants modification rights
+  if (this.parent) {
+    const parentNode = await Node.findById(this.parent);
+    return parentNode.isAllowedToModify(userId);
+  }
+
+  // Otherwise, deny modification
+  return false;
+}; */
 
 //update parent values from children when values are modified
 NodeSchema.methods.updateGlobalValues = async function () {

@@ -11,11 +11,15 @@ const port = 3000;
 app.use(bodyParser.json());
 app.use(express.static("public"));
 
+
 /*DB connection*/
 const mongooseUri = process.env.MONGODB_URI;
 
 const Node = require("./db/node");
 const Transaction = require("./db/transaction");
+const User = require("./db/user"); 
+const Contribution = require("./db/contribution");
+
 
 mongoose
   .connect(mongooseUri, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -69,6 +73,107 @@ app.post("/save-note/:noteName", (req, res) => {
   });
 });
 
+
+
+
+// Endpoint to register a new user
+app.post("/register", async (req, res) => {
+  
+  try {
+    const { username, password } = req.body;
+
+    // Validate request body
+    if (!username || !password) {
+      return res.status(400).json({ message: "Username and password are required" });
+    }
+
+    // Check if username is already taken
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: "Username already taken" });
+    }
+
+    // Create a new user
+    const newUser = new User({
+      username,
+      password, // Password will be hashed by the pre-save hook in the model
+    });
+
+    await newUser.save();
+    res.status(201).json({ message: "User registered successfully", userId: newUser.id });
+  } catch (error) {
+    console.error("Error during registration:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+// Endpoint to log in
+app.post("/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    // Validate request body
+    if (!username || !password) {
+      return res.status(400).json({ message: "Username and password are required" });
+    }
+
+    // Find user by username
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    // Compare provided password with the stored hash
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    // Generate and return a token (you could use JWT or session-based auth here)
+    // For now, we're just returning the user ID as an example.
+    res.status(200).json({ message: "Login successful", userId: user.id });
+  } catch (error) {
+    console.error("Error during login:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+const logContribution = async ({ userId, nodeId, action, status, valueEdited, nodeVersion, tradeId }) => {
+  try {
+    // Validate request body
+    if (!userId || !nodeId || !action || !nodeVersion) {
+      throw new Error("Missing required fields");
+    }
+
+    // Find the user to ensure they exist
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Create a new contribution document
+    const newContribution = new Contribution({
+      userId: userId,
+      node: nodeId,
+      action: action,
+      status: status,
+      valueEdited: valueEdited,
+      tradeId: tradeId,
+      nodeVersion: nodeVersion,
+      date: new Date(),
+    });
+    console.log(newContribution)
+
+    // Save the new contribution to the database
+    await newContribution.save();
+
+  } catch (error) {
+    console.log("fucked")
+    throw new Error(error.message || "Internal server error");
+  
+  }
+};
+
+
 /*Tree manipulation*/
 async function findNodeById(nodeId) {
   try {
@@ -84,16 +189,18 @@ async function findNodeById(nodeId) {
 }
 
 async function setValueForNode(nodeId, key, value) {
+  const node = await findNodeById(nodeId);
+  const currentVersion = node.versions.find(
+    (v) => v.prestige === node.prestige
+  );
   try {
-    const node = await findNodeById(nodeId);
+   
     if (!node) {
       throw new Error("Node not found");
     }
 
     // Find the current version of the node based on the prestige
-    const currentVersion = node.versions.find(
-      (v) => v.prestige === node.prestige
-    );
+    
 
     if (!currentVersion) {
       throw new Error("No current version found");
@@ -111,10 +218,12 @@ async function setValueForNode(nodeId, key, value) {
     // Optionally save the node after modification if your system supports persistence
 
     node.save();
+    await logContribution({ userId: "0cbb2d7d-5367-4e77-8232-b80e9dec9a0f", nodeId, action: "editValue" , status: null,  valueEdited: { [key]: value }, nodeVersion: currentVersion.prestige, tradeId:null });
     return currentVersion;
   } catch (error) {
     console.error("Error setting value for node:", error);
   }
+  
 }
 
 app.post("/edit-value", async (req, res) => {
@@ -124,6 +233,7 @@ app.post("/edit-value", async (req, res) => {
   } catch {
     console.log("sorry bitch");
   }
+ 
 });
 
 // GET /get-tree - Returns the entire tree starting from the root (parent: null)
