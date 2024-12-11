@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
+const { v4: uuidv4 } = require("uuid");
 
 const TransactionSchema = new mongoose.Schema({
+    _id: {
+        type: String, // Change to String to store UUID
+        default: uuidv4, // Generate UUID by default
+      },
     nodeAId: { type: String, ref: "Node", required: true }, // First node in the transaction
     nodeBId: { type: String, ref: "Node", required: true }, // Second node in the transaction
     versionAIndex: { type: Number, required: true }, // Version index of Node A involved in the transaction

@@ -1,4 +1,19 @@
-//hold children data
+trade endpoint /trade-values
+{
+  "nodeAId": "string",
+  "versionAIndex": 0,
+  "valuesA": { "key1": 10, "key2": 5 },
+  "nodeBId": "string",
+  "versionBIndex": 1,
+  "valuesB": { "key1": 7, "key2": 3 }
+}
+
+
+
+
+
+
+/hold children data
 /*
     {
       id: generateId(),

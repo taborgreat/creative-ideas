@@ -31,8 +31,6 @@ const NodeSchema = new mongoose.Schema({
   parent: { type: String, ref: "Node", default: null }, // Reference to the parent node
 });
 
-
-
 //update parent values from children when values are modified
 NodeSchema.methods.updateGlobalValues = async function () {
   const Node = mongoose.model("Node"); // Avoid circular dependency
@@ -135,11 +133,13 @@ NodeSchema.methods.deleteWithChildrenBottomUp = async function () {
       await child.deleteOne();
     }
 
-     // Step 3: Remove reference from the parent node's `children` array
-     if (this.parent) {
+    // Step 3: Remove reference from the parent node's `children` array
+    if (this.parent) {
       const parentNode = await Node.findById(this.parent);
       if (parentNode) {
-        console.log(`Removing reference to ${this._id} from parent ${parentNode._id}`);
+        console.log(
+          `Removing reference to ${this._id} from parent ${parentNode._id}`
+        );
         parentNode.children = parentNode.children.filter(
           (childId) => childId !== this._id
         );
@@ -155,19 +155,22 @@ NodeSchema.methods.deleteWithChildrenBottomUp = async function () {
     if (this.parent) {
       const parentNode = await Node.findById(this.parent);
       if (parentNode) {
-        console.log(`Updating global values for parent node: ${parentNode._id}`);
+        console.log(
+          `Updating global values for parent node: ${parentNode._id}`
+        );
         await parentNode.updateGlobalValues();
-    
+
         await parentNode.save(); // Persist the changes
       }
     }
-
   } catch (error) {
-    console.error(`Error in deleteWithChildrenBottomUp for node ${this._id}:`, error);
+    console.error(
+      `Error in deleteWithChildrenBottomUp for node ${this._id}:`,
+      error
+    );
     throw error;
   }
 };
-
 
 //attach the delete script whenever a node is deleted
 NodeSchema.pre("findOneAndDelete", async function (next) {
@@ -179,9 +182,10 @@ NodeSchema.pre("findOneAndDelete", async function (next) {
 
   if (node) {
     // Trigger cascading collection and deletion
+    //update transaction to replace with null
+
     await node.deleteWithChildrenBottomUp();
   }
-  
 
   next(); // Proceed with the original delete operation
 });
@@ -194,7 +198,8 @@ async function ensureRootNode() {
   const rootNode = await Node.findOneAndUpdate(
     { name: "Root" }, // Find node by name "Root"
     {
-      $setOnInsert: { // Only set the following values if the node doesn't exist
+      $setOnInsert: {
+        // Only set the following values if the node doesn't exist
         name: "Root",
         prestige: 0,
         notes: "root_notes.md",
