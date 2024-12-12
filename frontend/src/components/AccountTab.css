@@ -1,0 +1,54 @@
+/* CSS for AccountTab */
+.account-tab {
+    padding: 10px;
+    cursor: pointer;
+    position: fixed; /* Fixed position to stay in the top-right corner */
+    top: 10px; /* Adjust the top distance from the page */
+    right: 10px; /* Adjust the right distance from the page */
+    width: 60px; /* Default width */
+    height: 20px; /* Default height */
+    background-color: #333; /* Background color */
+    border-radius: 5px; /* Rounded corners */
+    color: white;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: width 0.3s, height 0.3s, opacity 0.3s; /* Transition effect for size change */
+  }
+  
+  .account-tab:hover {
+    width: 150px; /* Width when hovered */
+    height: 120px; /* Height when hovered */
+  }
+  
+  .account-info {
+    transition: opacity 0.3s; /* Smooth fade-in transition */
+    position: absolute;
+    top: 10px; /* Adjusted position of info */
+    left: 10px; /* Adjusted position of info */
+    font-size: 14px;
+    color: white;
+  }
+  
+
+  
+  .account-tab p {
+    margin: 0;
+    font-size: 14px;
+  }
+  
+  .account-tab button {
+    margin-top: 10px;
+    padding: 5px 10px;
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  
+  .account-tab button:hover {
+    background-color: #ff2222;
+  }
+  
