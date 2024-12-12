@@ -254,38 +254,6 @@ NodeSchema.pre("findOneAndDelete", async function (next) {
 const Node = mongoose.model("Node", NodeSchema);
 module.exports = Node;
 
-//ensure root node on db creation
-async function ensureRootNode() {
-  const rootNode = await Node.findOneAndUpdate(
-    { name: "Root" }, // Find node by name "Root"
-    {
-      $setOnInsert: {
-        // Only set the following values if the node doesn't exist
-        name: "Root",
-        prestige: 0,
-        notes: "root_notes.md",
-        globalValues: { hrs: 0 },
-        versions: [
-          {
-            prestige: 0,
-            values: {},
-            status: "divider",
-            dateCreated: new Date(),
-            goals: [],
-          },
-        ],
-        children: [],
-        parent: null,
-      },
-    },
-    { upsert: true, new: true } // `upsert: true` ensures that a new document is created if none exists
-  );
 
-  if (rootNode) {
-    console.log("Root node checked/created successfully");
-  } else {
-    console.error("Failed to ensure root node");
-  }
-}
 
-ensureRootNode();
+
