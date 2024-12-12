@@ -2,14 +2,30 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const fs = require("fs");
 const path = require("path");
+const jwt = require('jsonwebtoken');
+const bcrypt = require("bcrypt"); // To securely hash passwords
 const mongoose = require("mongoose");
 require("dotenv").config();
 
 const app = express();
 const port = 3000;
 
+const cors = require("cors");
+
+// Enable CORS for all routes
+app.use(cors({
+  origin: 'http://localhost:5173', // Allow only your frontend's origin
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow specific HTTP methods
+  credentials: true, // Allow cookies and credentials to be sent
+}));
+
+
+
 app.use(bodyParser.json());
 app.use(express.static("public"));
+
+// Secret key for JWT signing
+const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';
 
 
 /*DB connection*/
@@ -74,7 +90,23 @@ app.post("/save-note/:noteName", (req, res) => {
 });
 
 
+/*user functions and ednpoints*/
+// Middleware to verify the JWT token and extract user info
+const authenticate = (req, res, next) => {
+  const token = req.header('Authorization')?.replace('Bearer ', '');
+  
+  if (!token) {
+    return res.status(401).json({ message: 'Access denied. No token provided.' });
+  }
 
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.userId = decoded.userId; // Attach userId to the request object
+    next(); // Call the next middleware or route handler
+  } catch (error) {
+    res.status(400).json({ message: 'Invalid token.' });
+  }
+};
 
 // Endpoint to register a new user
 app.post("/register", async (req, res) => {
@@ -111,49 +143,93 @@ app.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // Validate request body
     if (!username || !password) {
       return res.status(400).json({ message: "Username and password are required" });
     }
 
-    // Find user by username
     const user = await User.findOne({ username });
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Compare provided password with the stored hash
-    const isMatch = await user.comparePassword(password);
+    // Check password
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Generate and return a token (you could use JWT or session-based auth here)
-    // For now, we're just returning the user ID as an example.
-    res.status(200).json({ message: "Login successful", userId: user.id });
+    // Create JWT token
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+
+    // Send token as a response
+    res.status(200).json({ message: "Login successful", token });
   } catch (error) {
     console.error("Error during login:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
 
-const logContribution = async ({ userId, nodeId, action, status, valueEdited, nodeVersion, tradeId }) => {
+
+async function getRootNodes(userId) {
   try {
-    // Validate request body
+    const user = await User.findById(userId);  // No need to populate roots
+    if (!user) {
+      return null;  // If the user is not found
+    }
+    return user.roots;  // Return the roots array, which contains just the node IDs
+  } catch (error) {
+    throw error;  // Handle the error if needed
+  }
+}
+
+
+
+app.get("/get-root-nodes", authenticate, async (req, res) => {
+ // Debug log to check user ID
+ const userId = req.userId;
+  try {
+    const rootNodes = await getRootNodes(userId);
+    if (!rootNodes || rootNodes.length === 0) {
+      return res.json({ roots: [] });
+    }
+    res.json({ roots: rootNodes });
+  } catch (error) {
+    console.error("Error fetching root nodes:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+
+
+
+const logContribution = async ({ userId, nodeId, action, status, valueEdited, nodeVersion, tradeId }) => {
+
+      // Default handling for optional fields
+      status = status || null; // Set status to null if it's undefined or null
+      valueEdited = valueEdited || null; // Set valueEdited to an empty Map if undefined or null
+      tradeId = tradeId || null; // Set tradeId to null if undefined or null
+   // Validate 'action' field against allowed actions
+   const validActions = ["create", "statusChange", "editValue", "prestige", "trade", "delete"];
+   if (!validActions.includes(action)) {
+     throw new Error("Invalid action type");
+   }
+   console.log('userId:', userId, 'nodeId:', nodeId, 'action:', action, 'nodeVersion:', nodeVersion);
+
+  try {
+    // Validate required fields (userId, nodeId, action, and nodeVersion are required)
     if (!userId || !nodeId || !action || !nodeVersion) {
       throw new Error("Missing required fields");
     }
 
-    // Find the user to ensure they exist
-    const user = await User.findById(userId);
-    if (!user) {
-      throw new Error("User not found");
-    }
+
+
+   
 
     // Create a new contribution document
     const newContribution = new Contribution({
       userId: userId,
-      node: nodeId,
+      nodeId: nodeId,
       action: action,
       status: status,
       valueEdited: valueEdited,
@@ -161,34 +237,35 @@ const logContribution = async ({ userId, nodeId, action, status, valueEdited, no
       nodeVersion: nodeVersion,
       date: new Date(),
     });
-    console.log(newContribution)
+    
 
     // Save the new contribution to the database
     await newContribution.save();
-
+    console.log("Contribution logged successfully");
+    
   } catch (error) {
-    console.log("fucked")
+    console.error("Error logging contribution:", error);
     throw new Error(error.message || "Internal server error");
-  
   }
 };
 
 
-/*Tree manipulation*/
+
 async function findNodeById(nodeId) {
   try {
     const node = await Node.findOne({ _id: nodeId }).populate("children");
     if (!node) {
-      throw new Error("Node not found");
+      return null; // Return null if the node is not found
     }
     return node;
   } catch (error) {
     console.error("Error finding node by UUID:", error);
-    throw error; // Re-throw the error to handle it in the calling function
+    throw error; // Re-throw for unexpected errors
   }
 }
 
-async function setValueForNode(nodeId, key, value) {
+
+async function setValueForNode(nodeId, key, value, userId) {
   const node = await findNodeById(nodeId);
   const currentVersion = node.versions.find(
     (v) => v.prestige === node.prestige
@@ -218,7 +295,7 @@ async function setValueForNode(nodeId, key, value) {
     // Optionally save the node after modification if your system supports persistence
 
     node.save();
-    await logContribution({ userId: "0cbb2d7d-5367-4e77-8232-b80e9dec9a0f", nodeId, action: "editValue" , status: null,  valueEdited: { [key]: value }, nodeVersion: currentVersion.prestige, tradeId:null });
+    await logContribution({ userId: userId, nodeId, action: "editValue" , status: null,  valueEdited: { [key]: value }, nodeVersion: currentVersion.prestige, tradeId:null });
     return currentVersion;
   } catch (error) {
     console.error("Error setting value for node:", error);
@@ -226,27 +303,37 @@ async function setValueForNode(nodeId, key, value) {
   
 }
 
-app.post("/edit-value", async (req, res) => {
+app.post("/edit-value", authenticate, async (req, res) => {
   const { nodeId, key, value } = req.body;
+  const userId = req.userId;
   try {
-    await setValueForNode(nodeId, key, value);
+    await setValueForNode(nodeId, key, value, userId);
+    
   } catch {
     console.log("sorry bitch");
   }
  
 });
 
-// GET /get-tree - Returns the entire tree starting from the root (parent: null)
-app.get("/get-tree", async (req, res) => {
+// POST /get-tree - Returns the entire tree starting from a specified root node (rootId in body)
+app.post("/get-tree", async (req, res) => {
   try {
-    // Find the root node (parent: null)
-    const rootNode = await Node.findOne({ parent: null })
+    // Get the root node ID from the JSON body
+    const { rootId } = req.body;
+
+    // If no rootId is provided in the body, return an error message
+    if (!rootId) {
+      return res.status(400).json({ message: "Root node ID is required" });
+    }
+
+    // Find the specified root node by ID
+    const rootNode = await Node.findById(rootId)
       .populate("children") // Populate direct children of the root
       .exec();
 
-    // If no root node exists
+    // If no node with the specified ID exists
     if (!rootNode) {
-      return res.status(404).json({ message: "Root node not found" });
+      return res.status(404).json({ message: "Node not found" });
     }
 
     // Recursively populate all children of each node
@@ -264,7 +351,7 @@ app.get("/get-tree", async (req, res) => {
       }
     };
 
-    // Start with the root node and populate recursively
+    // Start with the specified root node and populate recursively
     await populateChildrenRecursive(rootNode);
 
     // Send the complete tree back as a JSON response
@@ -274,6 +361,7 @@ app.get("/get-tree", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
 
 // Endpoint to fetch all transactions
 app.get("/get-transactions", async (req, res) => {
@@ -292,10 +380,10 @@ app.get("/get-transactions", async (req, res) => {
   }
 });
 
-// Create a new node with required properties
-async function createNewNode(name, schedule, reeffectTime, parentNodeID) {
+async function createNewNode(name, schedule, reeffectTime, parentNodeID, isRoot = false, userId) {
   const notesFileName = createNotesFile();
 
+  
   const newNode = new Node({
     name,
     prestige: 0,
@@ -312,39 +400,91 @@ async function createNewNode(name, schedule, reeffectTime, parentNodeID) {
       },
     ],
     children: [],
-    parent: parentNodeID,
+    parent: parentNodeID && parentNodeID !== null ? parentNodeID : null, 
+    rootOwner: isRoot ? userId : null,  // Assign owner if it's a root node
+    contributors: [],
   });
+
   await newNode.save();
   return newNode;
 }
-app.post("/add-node", async (req, res) => {
-  const { parentId, name, schedule, reeffectTime } = req.body; //make it so just send in object and get values from that so you can have values and goals
-  console.log(parentId);
+
+app.post("/add-node", authenticate, async (req, res) => {
+  const { parentId, name, schedule, reeffectTime, isRoot } = req.body; // Include isRoot in request
+  const userId = req.userId;
   try {
-    // Fetch the parent node
-    const parentNode = await findNodeById(parentId);
-    if (!parentNode) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Parent node not found" });
+    // Check if the parentId is valid only if it's not a root node
+    if (isRoot) {
+      try {
+        if(parentId !== null){
+        const parentNode = await findNodeById(parentId);
+        if (!parentNode ) {
+          return res
+            .status(404)
+            .json({ success: false, message: "Parent node not found" });
+        }}
+      } catch (error) {
+        return res.status(500).json({ success: false, message: "Error finding parent node", error: error.message });
+      }
     }
 
     // Create the new node
-    const newNode = await createNewNode(name, schedule, reeffectTime, parentId);
-    // Add the new node's ID to the parent's children array
-    parentNode.children.push(newNode._id);
+    const newNode = await createNewNode(name, schedule, reeffectTime, parentId, isRoot, userId);
 
-    // Save the updated parent node
-    await parentNode.save();
+    // If the node is a root, add it to the user's roots array
+    if (isRoot) {
+      try {
+        const user = await User.findById(userId);
+        if (!user) {
+          return res
+            .status(404)
+            .json({ success: false, message: "User not found" });
+        }
+
+        user.roots.push(newNode._id);  // Add the new node to the user's roots array
+        await user.save();
+      } catch (error) {
+        return res.status(500).json({ success: false, message: "Error updating user's roots", error: error.message });
+      }
+    }
+
+    // If it's not a root, add the new node's ID to the parent's children array
+    if (parentId !== null) {
+      try {
+        const parentNode = await findNodeById(parentId);
+        if (!parentNode) {
+          return res
+            .status(404)
+            .json({ success: false, message: "Parent node not found" });
+        }
+        parentNode.children.push(newNode._id);
+        await parentNode.save();
+      } catch (error) {
+        return res.status(500).json({ success: false, message: "Error adding child node to parent", error: error.message });
+      }
+    }
+
+    // Log the user's contribution
+    try {
+      await logContribution({
+        userId: userId,
+        nodeId: newNode._id,
+        action: "create",
+        nodeVersion: "0",
+      });
+    } catch (error) {
+      return res.status(500).json({ success: false, message: "Error logging contribution", error: error.message });
+    }
 
     // Return the newly created node as a response
     res.json({ success: true, newNode });
   } catch (err) {
     res
       .status(500)
-      .json({ success: false, message: "Error adding node", error: err });
+      .json({ success: false, message: "Error adding node", error: err.message });
   }
 });
+
 
 app.post("/add-nodes-tree", async (req, res) => {
   const { parentId, nodeTree } = req.body;
