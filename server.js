@@ -132,7 +132,7 @@ app.post("/register", async (req, res) => {
     });
 
     await newUser.save();
-    res.status(201).json({ message: "User registered successfully", userId: newUser.id });
+    res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     console.error("Error during registration:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -162,7 +162,7 @@ app.post("/login", async (req, res) => {
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
 
     // Send token as a response
-    res.status(200).json({ message: "Login successful", token });
+    res.status(200).json({ message: "Login successful", token, userId: user.id });
   } catch (error) {
     console.error("Error during login:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -214,7 +214,7 @@ const logContribution = async ({ userId, nodeId, action, status, valueEdited, no
    if (!validActions.includes(action)) {
      throw new Error("Invalid action type");
    }
-   console.log('userId:', userId, 'nodeId:', nodeId, 'action:', action, 'nodeVersion:', nodeVersion);
+   console.log('userId:', userId, 'nodeId:', nodeId, 'action:', action, 'nodeVersion:', nodeVersion, 'value', valueEdited);
 
   try {
     // Validate required fields (userId, nodeId, action, and nodeVersion are required)
@@ -265,26 +265,23 @@ async function findNodeById(nodeId) {
 }
 
 
-async function setValueForNode(nodeId, key, value, userId) {
+async function setValueForNode(nodeId, key, value, userId, versionIndex) {
   const node = await findNodeById(nodeId);
-  const currentVersion = node.versions.find(
-    (v) => v.prestige === node.prestige
-  );
+
   try {
-   
     if (!node) {
       throw new Error("Node not found");
     }
 
-    // Find the current version of the node based on the prestige
-    
-
-    if (!currentVersion) {
-      throw new Error("No current version found");
+    // Check if the versionIndex exists in the versions array
+    if (node.versions[versionIndex] === undefined) {
+      throw new Error("Version index does not exist");
     }
 
+    const currentVersion = node.versions[versionIndex];
+
     // Ensure that the 'values' map is updated properly
-    if (currentVersion.values) {
+    if (currentVersion) {
       currentVersion.values.set(key, value);
     } else {
       // If there are no existing values, create a new Map
@@ -294,21 +291,38 @@ async function setValueForNode(nodeId, key, value, userId) {
 
     // Optionally save the node after modification if your system supports persistence
 
+    await logContribution({
+      userId: userId,
+      nodeId,
+      action: "editValue",
+      status: null,
+      valueEdited: { [key]: value },
+      nodeVersion: versionIndex,
+      tradeId: null
+    });
+
     node.save();
-    await logContribution({ userId: userId, nodeId, action: "editValue" , status: null,  valueEdited: { [key]: value }, nodeVersion: currentVersion.prestige, tradeId:null });
+
     return currentVersion;
   } catch (error) {
     console.error("Error setting value for node:", error);
   }
-  
 }
 
+
 app.post("/edit-value", authenticate, async (req, res) => {
-  const { nodeId, key, value } = req.body;
+  const { nodeId, key, value, version } = req.body;
   const userId = req.userId;
+  const versionIndex = version.toString();
+  const numericValue = Number(value);
+
+  // Check if the conversion was successful and that it's a number
+  if (isNaN(numericValue)) {
+    return res.status(400).json({ error: 'Value must be a valid number' });
+  }
   try {
-    await setValueForNode(nodeId, key, value, userId);
-    
+    await setValueForNode(nodeId, key, value, userId, versionIndex);
+
   } catch {
     console.log("sorry bitch");
   }
@@ -545,10 +559,10 @@ app.post("/add-nodes-tree", async (req, res) => {
   }
 });
 
-// POST /edit-status - Edits the status of a node and all its child nodes
+// POST /edit-status - Edits the status of a specific version of a node and all its child nodes
 app.post("/edit-status", async (req, res) => {
-  const { nodeId, status } = req.body;
-  console.log(status);
+  const { nodeId, status, version } = req.body;
+  console.log(status, version);
   try {
     const node = await findNodeById(nodeId);
     if (!node) {
@@ -557,23 +571,25 @@ app.post("/edit-status", async (req, res) => {
         .json({ success: false, message: "Node not found" });
     }
 
-    const currentVersion = node.versions.find(
-      (v) => v.prestige === node.prestige
-    );
-    if (!currentVersion) {
-      console.error("No version found for the current prestige level.");
+    // Find the specific version of the node based on the version provided
+    const targetVersion = node.versions.find((v) => v.version === version);
+    if (!targetVersion) {
       return res
-        .status(500)
-        .json({ success: false, message: "No version found" });
+        .status(404)
+        .json({ success: false, message: "Version not found" });
     }
 
-    // Update the status of the node and all its children
-    await updateNodeStatusRecursively(node, status);
+    // Update the status of the specific version of the node
+    targetVersion.status = status;
+    await node.save(); // Save the updated node
+
+    // Optionally, if you want to apply the status change recursively to child nodes:
+    await updateNodeStatusRecursively(node, status, version);
 
     // Return success message
     res.json({
       success: true,
-      message: `Status updated to ${status} for node and all its children`,
+      message: `Status updated to ${status} for node version ${version} and its children`,
     });
   } catch (error) {
     console.error("Error updating node status:", error);
@@ -583,16 +599,14 @@ app.post("/edit-status", async (req, res) => {
   }
 });
 
-// Helper function to recursively update status for the node and its children
-async function updateNodeStatusRecursively(node, status) {
+// Helper function to recursively update status for the node and its children (based on version)
+async function updateNodeStatusRecursively(node, status, version) {
   // If the status is "divider", update the parent node and skip child updates
   if (status === "divider") {
     // Update the parent node status without modifying the children
-    const currentVersion = node.versions.find(
-      (v) => v.prestige === node.prestige
-    );
-    if (currentVersion) {
-      currentVersion.status = status;
+    const targetVersion = node.versions.find((v) => v.prestige === version);
+    if (targetVersion) {
+      targetVersion.status = status;
       await node.save(); // Save the updated node
     }
   } else {
@@ -602,35 +616,24 @@ async function updateNodeStatusRecursively(node, status) {
       for (const childId of node.children) {
         const childNode = await findNodeById(childId);
 
-        // Check if the latest generation (most recent version) has the status "divider"
-        const latestVersion = childNode.versions.find(
-          (v) => v.prestige === childNode.prestige
+        // Check if the version provided in the request exists for the child node
+        const targetChildVersion = childNode.versions.find(
+          (v) => v.version === version
         );
-        if (latestVersion && latestVersion.status === "divider") {
-          continue; // Skip this child node and move to the next
-        }
+        if (targetChildVersion) {
+          targetChildVersion.status = status;
+          await childNode.save(); // Save the updated child node
 
-        // Recursively update the child node's status
-        if (childNode) {
-          console.log(
-            `Updating child node ${childNode._id} with status ${status}`
-          );
-          await updateNodeStatusRecursively(childNode, status); // Recursive call for child node
+          // Recursively update the child node's children
+          console.log(`Updating child node ${childNode._id} with status ${status}`);
+          await updateNodeStatusRecursively(childNode, status, version); // Recursive call for child node
         }
       }
     }
   }
-
-  // Update the parent node status after processing all children
-  const currentVersion = node.versions.find(
-    (v) => v.prestige === node.prestige
-  );
-  if (currentVersion) {
-    currentVersion.status = status;
-    await node.save(); // Save the updated node
-  }
-  console.log(`Parent node ${node._id} updated with status ${status}.`);
 }
+
+
 
 function handleSchedule(nodeVersion) {
   // Check if the node is floating or has a set date
