@@ -112,6 +112,10 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion }) => {
           <p>
             <strong>ID:</strong> {nodeSelected.id}
           </p>
+           <p>
+            <strong>Status:</strong> {nodeSelected.versions[nodeVersion].status}
+          </p>
+
 
           {/* Generation Selector */}
           <div>

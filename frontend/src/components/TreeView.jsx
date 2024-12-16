@@ -19,7 +19,10 @@ const TreeView = ({ rootSelected, nodeSelected, setNodeSelected, setNodeVersion,
           { selector: 'node', style: { 'background-color': 'data(bgColor)', 'label': 'data(name)' } },
           { selector: 'edge', style: { 'width': 2, 'line-color': '#ccc' } },
         ],
-        layout: { name: 'breadthfirst', directed: true, padding: 10 },
+        layout: { 
+          name: 'breadthfirst',
+          padding: 10,
+        },
       });
 
       cyRef.current.on('tap', 'node', (event) => {
@@ -35,13 +38,10 @@ const TreeView = ({ rootSelected, nodeSelected, setNodeSelected, setNodeVersion,
     cyInstance.elements().remove();
 
     fetch('http://localhost:3000/get-tree', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ rootId: rootSelected }),
-      })
-      
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rootId: rootSelected }),
+    })
       .then((res) => res.json())
       .then((data) => {
         addTreeToCytoscape(data, cyInstance);
@@ -51,11 +51,9 @@ const TreeView = ({ rootSelected, nodeSelected, setNodeSelected, setNodeVersion,
       .catch((err) => console.error('Error loading tree:', err));
   };
 
-  const addTreeToCytoscape = (node, cyInstance) => {
-    const bgColor = node.status === 'active' ? 'green' : node.status === 'trimmed' ? 'red' : '#666';
-    cyInstance.add({ 
-    
-    
+  const addTreeToCytoscape = (node, cyInstance, parentId = null) => {
+    const bgColor = node.versions[node.prestige].status === 'active' ? 'green' : node.status === 'trimmed' ? 'red' : '#666';
+    cyInstance.add({
       data: {
         id: node._id,
         name: `${node.name} `,
@@ -66,18 +64,28 @@ const TreeView = ({ rootSelected, nodeSelected, setNodeSelected, setNodeVersion,
         versions: node.versions,
         rootOwner: node.rootOwner,
         contributors: node.contributors,
-        bgColor
-
+        bgColor,
       },
+    });
+
+    // If a parent exists, create an edge between the parent and the current node
+    if (parentId) {
+      cyInstance.add({
+        data: {
+          source: parentId,
+          target: node._id,
+        },
+      });
     }
-    );
-    (node.children || []).forEach((child) => addTreeToCytoscape(child, cyInstance));
+
+    (node.children || []).forEach((child) => addTreeToCytoscape(child, cyInstance, node._id));
   };
 
-  return  <div>
-  <div id="cy" style={{ width: '100%', height: '600px' }} />
-  {/* Add TreeViewMenu below the Cytoscape div */}
-  <div className="selected-node">
+  return (
+    <div>
+      <div id="cy" style={{ width: '100%', height: '600px' }} />
+      {/* Add TreeViewMenu below the Cytoscape div */}
+      <div className="selected-node">
         {nodeSelected ? (
           <p>{`${nodeSelected.name}`}</p>
         ) : (
@@ -85,7 +93,8 @@ const TreeView = ({ rootSelected, nodeSelected, setNodeSelected, setNodeVersion,
         )}
       </div>
       <TreeViewMenu nodeSelected={nodeSelected} nodeVersion={nodeVersion} />
-</div>
+    </div>
+  );
 };
 
 export default TreeView;
