@@ -263,6 +263,45 @@ async function findNodeById(nodeId) {
     throw error; // Re-throw for unexpected errors
   }
 }
+app.post("/get-contributions", authenticate, async (req, res) => {
+  const { nodeId } = req.body;
+
+  try {
+    // Fetch contributions for the node and populate userId (to get the user name) and nodeId (to get the full node details)
+    const contributions = await Contribution.find({ nodeId })
+      .populate("userId", "username") // Populate only the 'username' field from the User model
+      .populate("nodeId") // Populate the entire node object
+      .sort({ date: -1 }); // Sort by date in descending order
+
+    // Modify the contributions to add more details based on the action
+    const enhancedContributions = contributions.map((contribution) => {
+      let additionalInfo = null;
+
+      if (contribution.action === "editValue") {
+        additionalInfo = contribution.valueEdited; // Show valueEdited for editValue actions
+      } else if (contribution.action === "statusChange") {
+        additionalInfo = contribution.status; // Show status for statusChange actions
+      } else if (contribution.action === "trade") {
+        additionalInfo = contribution.tradeId; // Show tradeId for trade actions
+      }
+
+      return {
+        ...contribution.toObject(),
+        username: contribution.userId.username, // Add the username to the contribution object
+        additionalInfo, // Add the conditional info based on the action type
+        nodeVersion: contribution.nodeVersion, // Add the node version
+      };
+    });
+
+    // Return the contributions with enhanced information
+    res.json({ contributions: enhancedContributions });
+  } catch (error) {
+    console.error("Error fetching contributions:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 
 
 async function setValueForNode(nodeId, key, value, userId, versionIndex) {
