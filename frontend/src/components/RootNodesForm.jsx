@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import Cookies from "js-cookie";
 
-const RootNodesForm = ({ setRootSelected }) => {
-  const [parentId, setParentId] = useState('');
+const RootNodesForm = ({ setRootSelected, rootSelected, rootNodes, setRootNodes }) => {
   const [name, setName] = useState('');
   const [schedule, setSchedule] = useState('');
   const [reeffectTime, setReeffectTime] = useState('');
-  const [rootNodes, setRootNodes] = useState([]);
-  const [selectedNode, setSelectedNode] = useState(null); // Track selected node
+
+
+
+
 
   useEffect(() => {
     const fetchRootNodes = async () => {
@@ -54,7 +55,7 @@ const RootNodesForm = ({ setRootSelected }) => {
       return;
     }
 
-    const parentIdValue = parentId ? parentId : null;
+    const parentIdValue = null;
 
     try {
       const response = await fetch('http://localhost:3000/add-node', {
@@ -78,35 +79,43 @@ const RootNodesForm = ({ setRootSelected }) => {
       }
 
       console.log('Node created:', data);
-      setRootNodes((prev) => [...prev, data.id]);
+      setRootNodes((prev) => [...prev, data.newNode._id]);
+      setRootSelected(data.newNode._id); // Sync with App
+
       setName('');
-      setSchedule('');
-      setReeffectTime('');
-      setParentId('');
     } catch (error) {
       console.error('Error creating node:', error.message);
     }
   };
 
-  const handleRootClick = (rootNodeId) => {
-    setSelectedNode(rootNodeId); // Set the selected node
-    setRootSelected(rootNodeId);
+  const handleRootSelection = (event) => {
+    const selectedId = event.target.value;
+    setRootSelected(selectedId); // Sync with App
   };
 
   return (
     <div>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Parent Node ID (Optional):</label>
-          <input
-            type="text"
-            value={parentId || ''}
-            onChange={(e) => setParentId(e.target.value)}
-            placeholder="Enter custom Parent Node ID (or leave empty)"
-          />
-        </div>
+      
+      <div>
+        <h3>Existing Root Nodes</h3>
+        <select
+          value={rootSelected || ''}
+          onChange={handleRootSelection}
+          style={{ width: '100%', padding: '8px' }}
+        >
+          <option value="" disabled>Select a root node</option>
+          {rootNodes.map((rootNode) => (
+            <option key={rootNode} value={rootNode}>
+              {rootNode}
+            </option>
+          ))}
+        </select>
+      </div>
 
+      <form onSubmit={handleSubmit}>
+      
         <div>
+        <button type="submit">Create New Root</button>
           <label>Node Name:</label>
           <input
             type="text"
@@ -116,44 +125,10 @@ const RootNodesForm = ({ setRootSelected }) => {
           />
         </div>
 
-        <div>
-          <label>Schedule:</label>
-          <input
-            type="datetime-local"
-            value={schedule}
-            onChange={(e) => setSchedule(e.target.value)}
-          />
-        </div>
 
-        <div>
-          <label>Reeffect Time:</label>
-          <input
-            type="number"
-            value={reeffectTime}
-            onChange={(e) => setReeffectTime(e.target.value)}
-          />
-        </div>
-
-        <button type="submit">Create New Root</button>
+       
       </form>
 
-      <div>
-        <h3>Existing Root Nodes</h3>
-        <ul>
-          {rootNodes.map((rootNode) => (
-            <li
-              key={rootNode}
-              onClick={() => handleRootClick(rootNode)}
-              style={{
-                cursor: 'pointer',
-                color: selectedNode === rootNode ? 'blue' : 'black', // Highlight selected node
-              }}
-            >
-              {rootNode}
-            </li>
-          ))}
-        </ul>
-      </div>
     </div>
   );
 };

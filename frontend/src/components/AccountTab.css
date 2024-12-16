@@ -1,54 +1,66 @@
-/* CSS for AccountTab */
+/* General styles for the account tab */
 .account-tab {
-    padding: 10px;
-    cursor: pointer;
-    position: fixed; /* Fixed position to stay in the top-right corner */
-    top: 10px; /* Adjust the top distance from the page */
-    right: 10px; /* Adjust the right distance from the page */
-    width: 60px; /* Default width */
-    height: 20px; /* Default height */
-    background-color: #333; /* Background color */
-    border-radius: 5px; /* Rounded corners */
-    color: white;
-    text-align: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: width 0.3s, height 0.3s, opacity 0.3s; /* Transition effect for size change */
-  }
-  
-  .account-tab:hover {
-    width: 150px; /* Width when hovered */
-    height: 120px; /* Height when hovered */
-  }
-  
-  .account-info {
-    transition: opacity 0.3s; /* Smooth fade-in transition */
-    position: absolute;
-    top: 10px; /* Adjusted position of info */
-    left: 10px; /* Adjusted position of info */
-    font-size: 14px;
-    color: white;
-  }
-  
+  padding: 10px;
+  cursor: pointer;
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 60px; /* Default size */
+  height: 20px; /* Default size */
+  background-color: #333;
+  border-radius: 5px;
+  color: white;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: width 0.3s, height 0.3s, opacity 0.3s;
+  z-index: 1000; /* Ensure it appears above other elements */
+}
 
-  
-  .account-tab p {
-    margin: 0;
-    font-size: 14px;
-  }
-  
-  .account-tab button {
-    margin-top: 10px;
-    padding: 5px 10px;
-    background-color: #ff4444;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-  }
-  
-  .account-tab button:hover {
-    background-color: #ff2222;
-  }
-  
+.account-tab:hover {
+  width: 180px; /* Expanded size on hover */
+  height: auto; /* Allow content to expand dynamically */
+  padding: 15px; /* More padding on hover */
+}
+
+/* Styles for additional dropdown content */
+.account-tab-content {
+  position: absolute;
+  top: 180px; /* Position below the tab */
+  right: 0;
+  background-color: #444;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  min-width: 150px;
+  z-index: 1000; /* Ensure it's above other elements */
+  max-height: 300px; /* Limit the height */
+  overflow-y: auto; /* Allow scrolling */
+}
+
+.account-tab-content select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #666;
+  border-radius: 4px;
+  background-color: #555;
+  color: white;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.account-tab-content button {
+  width: 100%;
+  padding: 8px;
+  background-color: #ff4444;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  color: white;
+  text-align: center;
+}
+
+.account-tab-content button:hover {
+  background-color: #ff2222;
+}

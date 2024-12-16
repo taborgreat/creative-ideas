@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Cookies from "js-cookie"; // Import js-cookie
 import "./Login.css";
 
-const Login = ({ setIsLoggedIn, setUsername, setUserId }) => {
+const Login = ({ setIsLoggedIn, setUsername, setUserId, userId }) => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [username, setUsernameInput] = useState("");
   const [password, setPassword] = useState("");
@@ -20,6 +20,7 @@ const Login = ({ setIsLoggedIn, setUsername, setUserId }) => {
       const data = await response.json();
       if (response.ok) {
         // Store JWT token in a cookie
+        console.log(data)
         Cookies.set("token", data.token, { expires: 7, secure: false });
 
         // Store additional user data in cookies if necessary
