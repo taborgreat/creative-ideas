@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import Cookies from "js-cookie";
+import AiCreate from './AiCreate'; // Import AiCreate component
 
 const CreateNodeForm = ({ nodeSelected, onComplete }) => {
   const [name, setName] = useState('');
   const [schedule, setSchedule] = useState('');
   const [reeffectTime, setReeffectTime] = useState('');
-  
-  
+  const [useAI, setUseAI] = useState(false); // Toggle between manual and AI creation
 
-  // Handle form submission
+  // Handle form submission for manual creation
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -17,7 +17,7 @@ const CreateNodeForm = ({ nodeSelected, onComplete }) => {
       console.error('No JWT token found!');
       return;
     }
-    
+
     try {
       const response = await fetch('http://localhost:3000/add-node', {
         method: 'POST',
@@ -30,7 +30,7 @@ const CreateNodeForm = ({ nodeSelected, onComplete }) => {
           name,
           schedule,
           reeffectTime,
-          isRoot: false,  // Assuming you're always creating a root node
+          isRoot: false,
         }),
       });
 
@@ -54,38 +54,57 @@ const CreateNodeForm = ({ nodeSelected, onComplete }) => {
 
   return (
     <div>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Node Name:</label>
+      <h1>Create Node</h1>
+      
+      {/* Switch between Manual and AI */}
+      <div>
+        <label>
           <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
+            type="checkbox"
+            checked={useAI}
+            onChange={(e) => setUseAI(e.target.checked)}
           />
-        </div>
+          Use AI Assistance
+        </label>
+      </div>
 
-        <div>
-          <label>Schedule:</label>
-          <input
-            type="datetime-local"
-            value={schedule}
-            onChange={(e) => setSchedule(e.target.value)}
-          />
-        </div>
+      {/* Manual Node Creation Form */}
+      {!useAI ? (
+        <form onSubmit={handleSubmit}>
+          <div>
+            <label>Node Name:</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
 
-        <div>
-          <label>Reeffect Time:</label>
-          <input
-            type="number"
-            value={reeffectTime}
-            onChange={(e) => setReeffectTime(e.target.value)}
-          />
-        </div>
+          <div>
+            <label>Schedule:</label>
+            <input
+              type="datetime-local"
+              value={schedule}
+              onChange={(e) => setSchedule(e.target.value)}
+            />
+          </div>
 
-        <button type="submit">Create New Node</button>
-      </form>
+          <div>
+            <label>Reeffect Time:</label>
+            <input
+              type="number"
+              value={reeffectTime}
+              onChange={(e) => setReeffectTime(e.target.value)}
+            />
+          </div>
 
+          <button type="submit">Create New Node</button>
+        </form>
+      ) : (
+        /* AI-Assisted Node Creation */
+        <AiCreate nodeSelected={nodeSelected}/>
+      )}
     </div>
   );
 };

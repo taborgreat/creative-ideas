@@ -7,6 +7,11 @@ const bcrypt = require("bcrypt"); // To securely hash passwords
 const mongoose = require("mongoose");
 require("dotenv").config();
 
+
+
+
+
+
 const app = express();
 const port = 3000;
 
@@ -89,6 +94,51 @@ app.post("/save-note/:noteName", (req, res) => {
   });
 });
 
+
+/*AI*/
+// Endpoint for Groq API
+app.post('/AiResponse', async (req, res) => {
+  const { messages, model, temperature, max_tokens, top_p, stop } = req.body;
+
+  const payload = {
+    messages,
+    model: model || 'llama3-8b-8192', // Default values
+    temperature: temperature || 1,
+    max_tokens: max_tokens || 1024,
+    top_p: top_p || 1,
+    stop: stop || null,
+  };
+
+  try {
+    const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!groqResponse.ok) {
+      throw new Error(`Groq API error: ${groqResponse.statusText}`);
+    }
+
+    const reader = groqResponse.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let content = '';
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      content += decoder.decode(value, { stream: true });
+    }
+
+    res.json({ success: true, data: content });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 /*user functions and ednpoints*/
 // Middleware to verify the JWT token and extract user info
@@ -414,6 +464,50 @@ app.post("/get-tree", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+// POST /get-parents - Returns all parent nodes up to the root for a given child node
+app.post("/get-parents", async (req, res) => {
+  try {
+    const { childId } = req.body;
+
+    // If no childId is provided, return an error
+    if (!childId) {
+      return res.status(400).json({ message: "Child node ID is required" });
+    }
+
+    // Function to recursively find all parents
+    const getParentsRecursive = async (nodeId, parents = []) => {
+      // Find the current node by ID
+      const currentNode = await Node.findById(nodeId).exec();
+
+      // If node doesn't exist, return the collected parents so far
+      if (!currentNode) {
+        return parents;
+      }
+
+      // Add the current node to the parents list
+      parents.push(currentNode);
+
+      // If the node has a parent, continue upwards
+      if (currentNode.parent) {
+        return await getParentsRecursive(currentNode.parent, parents);
+      }
+
+      // If no parent, return the collected parents
+      return parents;
+    };
+
+    // Start the recursive function with the child node
+    const parentNodes = await getParentsRecursive(childId);
+
+    // Return the list of parent nodes as a JSON response
+    res.json(parentNodes);
+  } catch (error) {
+    console.error("Error fetching parents:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 
 
 // Endpoint to fetch all transactions

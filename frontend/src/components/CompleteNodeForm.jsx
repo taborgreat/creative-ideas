@@ -59,17 +59,7 @@ const CompleteNodeForm = ({ nodeSelected, nodeVersion, onComplete  }) => {
         </div>
       )}
 
-      {status && loading && (
-        <div>
-          <p>Updating status to {status}.</p>
-        </div>
-      )}
-
-      {!showMenu && !loading && (
-        <div>
-          <p>Node status updated to {status}.</p>
-        </div>
-      )}
+    
     </div>
   );
 };

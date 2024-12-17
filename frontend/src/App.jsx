@@ -89,7 +89,7 @@ const App = () => {
       </div>
       <div className="side-content">
         <div className="transaction">
-          <Contributions nodeSelected={nodeSelected}  />
+          <Contributions nodeSelected={nodeSelected} />
         </div>
         <div className="schedule">
           <Schedule nodeSelected={nodeSelected} />
