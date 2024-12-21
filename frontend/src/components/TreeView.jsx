@@ -57,7 +57,6 @@ const TreeView = ({ rootSelected, nodeSelected, setNodeSelected, setNodeVersion,
       data: {
         id: node._id,
         name: `${node.name} `,
-        notes: node.notes || null,
         values: node.globalValues,
         status: node.versions[node.prestige].status,
         prestige: node.prestige,

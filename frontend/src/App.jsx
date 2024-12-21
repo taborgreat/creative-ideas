@@ -84,7 +84,7 @@ const App = () => {
           />
         </div>
         <div className="notes">
-          <Notes nodeSelected={nodeSelected} />
+          <Notes nodeSelected={nodeSelected} userId={userId}   nodeVersion={nodeVersion}/>
         </div>
       </div>
       <div className="side-content">

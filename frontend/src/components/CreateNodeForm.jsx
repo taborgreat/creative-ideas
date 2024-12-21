@@ -17,6 +17,7 @@ const CreateNodeForm = ({ nodeSelected, onComplete }) => {
       console.error('No JWT token found!');
       return;
     }
+    
 
     try {
       const response = await fetch('http://localhost:3000/add-node', {

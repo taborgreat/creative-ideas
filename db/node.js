@@ -15,7 +15,6 @@ const NodeSchema = new mongoose.Schema({
   name: { type: String, required: true },
   type: { type: String, default: null },
   prestige: { type: Number, default: 0 },
-  notes: { type: String, required: true },
   globalValues: { type: Map, of: Number, default: {} },
   versions: [
     {
