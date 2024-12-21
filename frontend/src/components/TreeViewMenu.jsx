@@ -3,20 +3,23 @@ import CreateNodeForm from './CreateNodeForm';
 import TrimNodeForm from './TrimNodeForm';  // Assuming you have a TrimNodeForm
 import CompleteNodeForm from './CompleteNodeForm';  // Assuming you have a CompleteNodeForm
 
-const TreeViewMenu = ({ nodeSelected, nodeVersion }) => {
+const TreeViewMenu = ({ nodeSelected, nodeVersion, getTree, rootSelected }) => {
   // State to track which component to show
   const [currentForm, setCurrentForm] = useState(null);
 
   const handleFormCompletion = () => {
     setCurrentForm(null);
+    getTree(rootSelected);
   };
   // Handle button actions
   const handleCreateChild = () => {
     if (nodeSelected) {
-      console.log("Creating child node for", nodeSelected);
+
       // Show the CreateNodeForm
       setCurrentForm('createNode');
+   
     }
+   
   };
 
   const handleTrim = () => {
@@ -25,6 +28,7 @@ const TreeViewMenu = ({ nodeSelected, nodeVersion }) => {
       // Show the TrimNodeForm
       setCurrentForm('trimNode');
     }
+
   };
 
   const handleComplete = () => {
@@ -33,6 +37,7 @@ const TreeViewMenu = ({ nodeSelected, nodeVersion }) => {
       // Show the CompleteNodeForm
       setCurrentForm('completeNode');
     }
+   
   };
 
   return (

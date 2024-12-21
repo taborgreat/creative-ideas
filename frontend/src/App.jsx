@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback  } from "react";
 import Cookies from "js-cookie"; // Import js-cookie
 import TreeView from "./components/TreeView.jsx";
 import NodeData from "./components/NodeData.jsx";
@@ -17,6 +17,7 @@ const App = () => {
   const [rootSelected, setRootSelected] = useState(null);
   const [nodeSelected, setNodeSelected] = useState(null);
   const [nodeVersion, setNodeVersion] = useState(null);
+  const [tree, setTree] = useState(null);
 
   // Check cookies on load
   useEffect(() => {
@@ -28,6 +29,27 @@ const App = () => {
       setIsLoggedIn(true);
       setUsername(storedUsername);
       setUserId(storedUserId);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (rootSelected) {
+      getTree(rootSelected);
+    }
+  }, [rootSelected]);
+
+  const getTree = useCallback(async (rootId) => {
+    try {
+      const response = await fetch('http://localhost:3000/get-tree', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rootId }),
+      });
+      if (!response.ok) throw new Error("Failed to fetch tree");
+      const data = await response.json();
+      setTree(data); // Set the tree after fetching
+    } catch (error) {
+      console.error("Error loading tree:", error);
     }
   }, []);
 
@@ -68,6 +90,8 @@ const App = () => {
       <div className="tree-view">
         <TreeView
           rootSelected={rootSelected}
+          getTree={getTree}
+          tree={tree}
           nodeSelected={nodeSelected}
           setNodeSelected={setNodeSelected}
           nodeVersion={nodeVersion}
@@ -92,7 +116,7 @@ const App = () => {
           <Contributions nodeSelected={nodeSelected} />
         </div>
         <div className="schedule">
-          <Schedule nodeSelected={nodeSelected} />
+          <Schedule nodeSelected={nodeSelected} tree={tree} />
         </div>
       </div>
     </div>
