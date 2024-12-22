@@ -40,6 +40,52 @@ click node to go make it have the page view
 ![Front end initial plan](https://i.imgur.com/xc42Hdy.jpeg)
 
 
+Each value has name, value, and inheritable bool. If inheritable is true (check mark next to value on front end)
+then all children will receive the value like hrs in root. Can be turned off in further generations so it stops if you don’t need to track further 
+
+need to add in goals, global values(toggle version values),), and schedule.schedule I already built just have to move old code into react components 
+
+Node top third of div is selected node
+Selected node outline
+
+Trim ai objects
+Graphic to view
+Add them to tree or regenerate 
+
+Tree upside down dirt with root in dirt
+Blue sky hackgroynd 
+
+Add contributions to everything 
+
+Filter for current gen, all, reflection  in notes
+
+and note
+prompt on completion or prestige
+
+Trade db: nodea and nodeb to nodeAsking and nodeAgreeing 
+
+Under schedule add option to show just node or children too
+Show version that the node is on schedule 
+
+Invites in db 
+User inviting
+User receiving
+IsToBeOwnrr
+isUninviting
+Status: pending, accepted, declined 
+Root id 
+
+Endpoints create invite
+To be contributor, to remove contributors, 
+To be owner
+Respond
+
+When deleting root ask you are owner and you have contributors. Choose a new person to own
+Send contributions when inviting someone, uninviting (whether be forced by owner or self) and changing owner 
+
++ create first tree 
+
+
 add ability to send tree to llm with new task and receive branch back from parent id (variable complexity) that you can append to the parent
 add ability to send tree to llm and ask questions about it, receiving new perspectives and correlation detection
 
