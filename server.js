@@ -1207,38 +1207,23 @@ app.post("/invite", authenticate, async (req, res) => {
       return res.status(200).json({ status: 200, message: "Ownership transferred and invite logged" });
     }
 
-    // Contributor self-removal
+    // self-removal
     if (isUninviting && userId === userReceiving) {
-      node.contributors = node.contributors.filter(
-        (u) => u._id.toString() !== receivingUser._id
-      );
-      await node.save();
-
-      // Log invite as accepted
-      invite.status = "accepted";
-      await invite.save();
-
-      await User.findByIdAndUpdate(receivingUser._id, {
-        $pull: { roots: rootId }, // Remove rootId from the user's roots
-      });
-
-      return res
-        .status(200)
-        .json({ status: 200, message: "Contributor removed themselves and invite logged" });
-    }
-
-   // Owner uninviting a contributor or self
-if (isUninviting && node.rootOwner._id.toString() === userId) {
-  // Check if the owner is trying to remove themselves
-  if (userId === receivingUser._id) {
+         // check if owner tryna remove self
+if (node.rootOwner._id.toString() === userId) {
+  
     // If there are contributors, do not allow owner self-removal
     if (node.contributors.length == 0) {
       return res
         .status(400)
         .json({ status: 400, message: "Owner cannot remove themselves when contributors exist" });
     }
-  }
+  
       node.contributors = node.contributors.filter(
+        (u) => u._id.toString() !== receivingUser._id
+      );
+      
+      node.rootOwner = node.rootOwner.filter(
         (u) => u._id.toString() !== receivingUser._id
       );
       await node.save();
@@ -1246,14 +1231,17 @@ if (isUninviting && node.rootOwner._id.toString() === userId) {
       // Log invite as accepted
       invite.status = "accepted";
       await invite.save();
+
       await User.findByIdAndUpdate(receivingUser._id, {
         $pull: { roots: rootId }, // Remove rootId from the user's roots
       });
 
       return res
         .status(200)
-        .json({ status: 200, message: "Contributor removed by owner and invite logged" });
+        .json({ status: 200, message: "Removed self from root and invite logged" });
     }
+
+
 
     res.status(400).json({ status: 400, message: "Invalid invite operation" });
   } catch (err) {
