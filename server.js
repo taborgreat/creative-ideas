@@ -1217,7 +1217,7 @@ if (node.rootOwner._id.toString() === userId) {
       return res
         .status(400)
         .json({ status: 400, message: "Owner cannot remove themselves when contributors exist" });
-    }
+    }}
   
       node.contributors = node.contributors.filter(
         (u) => u._id.toString() !== receivingUser._id
