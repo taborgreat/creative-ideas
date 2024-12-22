@@ -39,6 +39,22 @@
   overflow-y: auto; /* Allow scrolling */
 }
 
+
+/* Styles for additional dropdown content */
+.account-tab-content-2 {
+  position: absolute;
+  top: 0px;
+  right: 250px;
+  background-color: #444;
+  border-radius: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  min-width: 150px;
+  z-index: 1000; /* Ensure it's above other elements */
+  max-height: 300px; /* Limit the height */
+  overflow-y: auto; /* Allow scrolling */
+}
+
 .account-tab-content select {
   width: 100%;
   padding: 8px;

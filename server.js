@@ -3,16 +3,11 @@ const bodyParser = require("body-parser");
 const fs = require("fs");
 const multer = require("multer");
 const path = require("path");
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt"); // To securely hash passwords
 const mongoose = require("mongoose");
 
 require("dotenv").config();
-
-
-
-
-
 
 const app = express();
 const port = 3000;
@@ -20,47 +15,44 @@ const port = 3000;
 const cors = require("cors");
 
 // Enable CORS for all routes
-app.use(cors({
-  origin: 'http://localhost:5173', // Allow only your frontend's origin
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow specific HTTP methods
-  credentials: true, // Allow cookies and credentials to be sent
-}));
-
-
-
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Allow only your frontend's origin
+    methods: ["GET", "POST", "PUT", "DELETE"], // Allow specific HTTP methods
+    credentials: true, // Allow cookies and credentials to be sent
+  })
+);
 
 app.use(express.static("public"));
 app.use(bodyParser.json({ limit: "50mb" })); // Increase the limit to 50MB
 app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
 
 // Secret key for JWT signing
-const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';
-
+const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
 
 /*DB connection*/
 const mongooseUri = process.env.MONGODB_URI;
 
 const Node = require("./db/node");
 const Transaction = require("./db/transaction");
-const User = require("./db/user"); 
+const User = require("./db/user");
 const Contribution = require("./db/contribution");
 const Note = require("./db/notes");
-
+const Invite = require("./db/invite");
 
 mongoose
   .connect(mongooseUri, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
-
 /*AI*/
 // Endpoint for Groq API
-app.post('/AiResponse', async (req, res) => {
+app.post("/AiResponse", async (req, res) => {
   const { messages, model, temperature, max_tokens, top_p, stop } = req.body;
 
   const payload = {
     messages,
-    model: model || 'llama3-8b-8192', // Default values
+    model: model || "llama3-8b-8192", // Default values
     temperature: temperature || 1,
     max_tokens: max_tokens || 1024,
     top_p: top_p || 1,
@@ -68,22 +60,25 @@ app.post('/AiResponse', async (req, res) => {
   };
 
   try {
-    const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-      },
-      body: JSON.stringify(payload),
-    });
+    const groqResponse = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+        },
+        body: JSON.stringify(payload),
+      }
+    );
 
     if (!groqResponse.ok) {
       throw new Error(`Groq API error: ${groqResponse.statusText}`);
     }
 
     const reader = groqResponse.body.getReader();
-    const decoder = new TextDecoder('utf-8');
-    let content = '';
+    const decoder = new TextDecoder("utf-8");
+    let content = "";
 
     while (true) {
       const { value, done } = await reader.read();
@@ -101,10 +96,12 @@ app.post('/AiResponse', async (req, res) => {
 /*user functions and ednpoints*/
 // Middleware to verify the JWT token and extract user info
 const authenticate = (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-  
+  const token = req.header("Authorization")?.replace("Bearer ", "");
+
   if (!token) {
-    return res.status(401).json({ message: 'Access denied. No token provided.' });
+    return res
+      .status(401)
+      .json({ message: "Access denied. No token provided." });
   }
 
   try {
@@ -112,19 +109,20 @@ const authenticate = (req, res, next) => {
     req.userId = decoded.userId; // Attach userId to the request object
     next(); // Call the next middleware or route handler
   } catch (error) {
-    res.status(400).json({ message: 'Invalid token.' });
+    res.status(400).json({ message: "Invalid token." });
   }
 };
 
 // Endpoint to register a new user
 app.post("/register", async (req, res) => {
-  
   try {
     const { username, password } = req.body;
 
     // Validate request body
     if (!username || !password) {
-      return res.status(400).json({ message: "Username and password are required" });
+      return res
+        .status(400)
+        .json({ message: "Username and password are required" });
     }
 
     // Check if username is already taken
@@ -152,7 +150,9 @@ app.post("/login", async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
-      return res.status(400).json({ message: "Username and password are required" });
+      return res
+        .status(400)
+        .json({ message: "Username and password are required" });
     }
 
     const user = await User.findOne({ username });
@@ -167,34 +167,36 @@ app.post("/login", async (req, res) => {
     }
 
     // Create JWT token
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
     // Send token as a response
-    res.status(200).json({ message: "Login successful", token, userId: user.id });
+    res
+      .status(200)
+      .json({ message: "Login successful", token, userId: user.id });
   } catch (error) {
     console.error("Error during login:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
 
-
 async function getRootNodes(userId) {
   try {
-    const user = await User.findById(userId);  // No need to populate roots
+    const user = await User.findById(userId); // No need to populate roots
     if (!user) {
-      return null;  // If the user is not found
+      return null; // If the user is not found
     }
-    return user.roots;  // Return the roots array, which contains just the node IDs
+    return user.roots; // Return the roots array, which contains just the node IDs
   } catch (error) {
-    throw error;  // Handle the error if needed
+    throw error; // Handle the error if needed
   }
 }
 
-
-
+//gets root node id's from user db
 app.get("/get-root-nodes", authenticate, async (req, res) => {
- // Debug log to check user ID
- const userId = req.userId;
+  // Debug log to check user ID
+  const userId = req.userId;
   try {
     const rootNodes = await getRootNodes(userId);
     if (!rootNodes || rootNodes.length === 0) {
@@ -207,32 +209,74 @@ app.get("/get-root-nodes", authenticate, async (req, res) => {
   }
 });
 
+//for getting owner and contributors of roots from node db
+app.post("/get-root-details", async (req, res) => {
+  const { id } = req.body;
 
+  try {
+    // Find the node by ID and only return rootOwner and contributors
+    const node = await Node.findById(id, "rootOwner contributors")
+      .populate("rootOwner", "_id username") // Populates rootOwner details (like username)
+      .populate("contributors", "_id username"); // Populates contributors details (like usernames)
 
+    if (!node) {
+      return res.status(404).json({ error: "Node not found" });
+    }
 
+    // Respond with the data
+    res.json({
+      rootOwner: node.rootOwner,
+      contributors: node.contributors,
+    });
+  } catch (error) {
+    console.error("Error fetching node details:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
-const logContribution = async ({ userId, nodeId, action, status, valueEdited, nodeVersion, tradeId }) => {
-
-      // Default handling for optional fields
-      status = status || null; // Set status to null if it's undefined or null
-      valueEdited = valueEdited || null; // Set valueEdited to an empty Map if undefined or null
-      tradeId = tradeId || null; // Set tradeId to null if undefined or null
-   // Validate 'action' field against allowed actions
-   const validActions = ["create", "statusChange", "editValue", "prestige", "trade", "delete"];
-   if (!validActions.includes(action)) {
-     throw new Error("Invalid action type");
-   }
-   console.log('userId:', userId, 'nodeId:', nodeId, 'action:', action, 'nodeVersion:', nodeVersion, 'value', valueEdited);
+const logContribution = async ({
+  userId,
+  nodeId,
+  action,
+  status,
+  valueEdited,
+  nodeVersion,
+  tradeId,
+}) => {
+  // Default handling for optional fields
+  status = status || null; // Set status to null if it's undefined or null
+  valueEdited = valueEdited || null; // Set valueEdited to an empty Map if undefined or null
+  tradeId = tradeId || null; // Set tradeId to null if undefined or null
+  // Validate 'action' field against allowed actions
+  const validActions = [
+    "create",
+    "statusChange",
+    "editValue",
+    "prestige",
+    "trade",
+    "delete",
+  ];
+  if (!validActions.includes(action)) {
+    throw new Error("Invalid action type");
+  }
+  console.log(
+    "userId:",
+    userId,
+    "nodeId:",
+    nodeId,
+    "action:",
+    action,
+    "nodeVersion:",
+    nodeVersion,
+    "value",
+    valueEdited
+  );
 
   try {
     // Validate required fields (userId, nodeId, action, and nodeVersion are required)
     if (!userId || !nodeId || !action || !nodeVersion) {
       throw new Error("Missing required fields");
     }
-
-
-
-   
 
     // Create a new contribution document
     const newContribution = new Contribution({
@@ -245,19 +289,15 @@ const logContribution = async ({ userId, nodeId, action, status, valueEdited, no
       nodeVersion: nodeVersion,
       date: new Date(),
     });
-    
 
     // Save the new contribution to the database
     await newContribution.save();
     console.log("Contribution logged successfully");
-    
   } catch (error) {
     console.error("Error logging contribution:", error);
     throw new Error(error.message || "Internal server error");
   }
 };
-
-
 
 async function findNodeById(nodeId) {
   try {
@@ -309,9 +349,6 @@ app.post("/get-contributions", authenticate, async (req, res) => {
   }
 });
 
-
-
-
 async function setValueForNode(nodeId, key, value, userId, versionIndex) {
   const node = await findNodeById(nodeId);
 
@@ -345,7 +382,7 @@ async function setValueForNode(nodeId, key, value, userId, versionIndex) {
       status: null,
       valueEdited: { [key]: value },
       nodeVersion: versionIndex,
-      tradeId: null
+      tradeId: null,
     });
 
     node.save();
@@ -356,7 +393,6 @@ async function setValueForNode(nodeId, key, value, userId, versionIndex) {
   }
 }
 
-
 app.post("/edit-value", authenticate, async (req, res) => {
   const { nodeId, key, value, version } = req.body;
   const userId = req.userId;
@@ -365,15 +401,13 @@ app.post("/edit-value", authenticate, async (req, res) => {
 
   // Check if the conversion was successful and that it's a number
   if (isNaN(numericValue)) {
-    return res.status(400).json({ error: 'Value must be a valid number' });
+    return res.status(400).json({ error: "Value must be a valid number" });
   }
   try {
     await setValueForNode(nodeId, key, value, userId, versionIndex);
-
   } catch {
     console.log("sorry bitch");
   }
- 
 });
 
 // POST /get-tree - Returns the entire tree starting from a specified root node (rootId in body)
@@ -466,11 +500,8 @@ app.post("/get-parents", async (req, res) => {
   }
 });
 
-
-
 // Endpoint to fetch all transactions
 app.get("/get-transactions", async (req, res) => {
-
   try {
     const transactions = await Transaction.find()
       .populate("nodeAId") // Populate nodeAId to get its data
@@ -485,9 +516,14 @@ app.get("/get-transactions", async (req, res) => {
   }
 });
 
-async function createNewNode(name, schedule, reeffectTime, parentNodeID, isRoot = false, userId) {
-
-  
+async function createNewNode(
+  name,
+  schedule,
+  reeffectTime,
+  parentNodeID,
+  isRoot = false,
+  userId
+) {
   const newNode = new Node({
     name,
     prestige: 0,
@@ -503,8 +539,8 @@ async function createNewNode(name, schedule, reeffectTime, parentNodeID, isRoot 
       },
     ],
     children: [],
-    parent: parentNodeID && parentNodeID !== null ? parentNodeID : null, 
-    rootOwner: isRoot ? userId : null,  // Assign owner if it's a root node
+    parent: parentNodeID && parentNodeID !== null ? parentNodeID : null,
+    rootOwner: isRoot ? userId : null, // Assign owner if it's a root node
     contributors: [],
   });
 
@@ -519,20 +555,34 @@ app.post("/add-node", authenticate, async (req, res) => {
     // Check if the parentId is valid only if it's not a root node
     if (isRoot) {
       try {
-        if(parentId !== null){
-        const parentNode = await findNodeById(parentId);
-        if (!parentNode ) {
-          return res
-            .status(404)
-            .json({ success: false, message: "Parent node not found" });
-        }}
+        if (parentId !== null) {
+          const parentNode = await findNodeById(parentId);
+          if (!parentNode) {
+            return res
+              .status(404)
+              .json({ success: false, message: "Parent node not found" });
+          }
+        }
       } catch (error) {
-        return res.status(500).json({ success: false, message: "Error finding parent node", error: error.message });
+        return res
+          .status(500)
+          .json({
+            success: false,
+            message: "Error finding parent node",
+            error: error.message,
+          });
       }
     }
 
     // Create the new node
-    const newNode = await createNewNode(name, schedule, reeffectTime, parentId, isRoot, userId);
+    const newNode = await createNewNode(
+      name,
+      schedule,
+      reeffectTime,
+      parentId,
+      isRoot,
+      userId
+    );
 
     // If the node is a root, add it to the user's roots array
     if (isRoot) {
@@ -544,10 +594,16 @@ app.post("/add-node", authenticate, async (req, res) => {
             .json({ success: false, message: "User not found" });
         }
 
-        user.roots.push(newNode._id);  // Add the new node to the user's roots array
+        user.roots.push(newNode._id); // Add the new node to the user's roots array
         await user.save();
       } catch (error) {
-        return res.status(500).json({ success: false, message: "Error updating user's roots", error: error.message });
+        return res
+          .status(500)
+          .json({
+            success: false,
+            message: "Error updating user's roots",
+            error: error.message,
+          });
       }
     }
 
@@ -563,7 +619,13 @@ app.post("/add-node", authenticate, async (req, res) => {
         parentNode.children.push(newNode._id);
         await parentNode.save();
       } catch (error) {
-        return res.status(500).json({ success: false, message: "Error adding child node to parent", error: error.message });
+        return res
+          .status(500)
+          .json({
+            success: false,
+            message: "Error adding child node to parent",
+            error: error.message,
+          });
       }
     }
 
@@ -576,7 +638,13 @@ app.post("/add-node", authenticate, async (req, res) => {
         nodeVersion: "0",
       });
     } catch (error) {
-      return res.status(500).json({ success: false, message: "Error logging contribution", error: error.message });
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message: "Error logging contribution",
+          error: error.message,
+        });
     }
 
     // Return the newly created node as a response
@@ -584,10 +652,13 @@ app.post("/add-node", authenticate, async (req, res) => {
   } catch (err) {
     res
       .status(500)
-      .json({ success: false, message: "Error adding node", error: err.message });
+      .json({
+        success: false,
+        message: "Error adding node",
+        error: err.message,
+      });
   }
 });
-
 
 app.post("/add-nodes-tree", async (req, res) => {
   const { parentId, nodeTree } = req.body;
@@ -714,15 +785,15 @@ async function updateNodeStatusRecursively(node, status, version) {
           await childNode.save(); // Save the updated child node
 
           // Recursively update the child node's children
-          console.log(`Updating child node ${childNode._id} with status ${status}`);
+          console.log(
+            `Updating child node ${childNode._id} with status ${status}`
+          );
           await updateNodeStatusRecursively(childNode, status, version); // Recursive call for child node
         }
       }
     }
   }
 }
-
-
 
 function handleSchedule(nodeVersion) {
   // Check if the node is floating or has a set date
@@ -773,8 +844,6 @@ async function addPrestige(node) {
     schedule: handleSchedule(currentVersion), // Update schedule or keep floating
     reeffectTime: currentVersion.reeffectTime, // Inherit from previous version
   };
-
-  
 
   node.prestige++;
   node.versions.push(newVersion);
@@ -879,13 +948,10 @@ app.post("/trade-values", async (req, res) => {
     versionBIndex === undefined ||
     valuesB === undefined
   ) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        message:
-          "Invalid request body. Ensure all required fields are provided.",
-      });
+    return res.status(400).json({
+      success: false,
+      message: "Invalid request body. Ensure all required fields are provided.",
+    });
   }
 
   try {
@@ -927,7 +993,6 @@ app.post("/delete-node", async (req, res) => {
   }
 });
 
-
 /*Notes Management*/
 // Folder to store uploaded files
 const uploadsFolder = path.join(__dirname, "uploads");
@@ -955,53 +1020,60 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-app.post("/create-Note", authenticate ,upload.single("file"), async (req, res) => {
-  console.log(req.body);
-  try {
-    const { contentType, content, userId, nodeId, version, isReflection } = req.body;
+app.post(
+  "/create-Note",
+  authenticate,
+  upload.single("file"),
+  async (req, res) => {
+    console.log(req.body);
+    try {
+      const { contentType, content, userId, nodeId, version, isReflection } =
+        req.body;
 
-    // Validation
-    if (!contentType || !["file", "text"].includes(contentType)) {
-      return res.status(400).json({ message: "Invalid content type" });
-    }
-    if (!userId || !nodeId) {
-      return res.status(400).json({ message: "Missing required fields" });
-    }
-
-    let filePath = null;
-
-    if (contentType === "file") {
-      // Ensure file is uploaded
-      if (!req.file) {
-        return res.status(400).json({ message: "File is required for file content type" });
+      // Validation
+      if (!contentType || !["file", "text"].includes(contentType)) {
+        return res.status(400).json({ message: "Invalid content type" });
       }
-      filePath = req.file.filename; // Save the file name (or path) to the database
+      if (!userId || !nodeId) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      let filePath = null;
+
+      if (contentType === "file") {
+        // Ensure file is uploaded
+        if (!req.file) {
+          return res
+            .status(400)
+            .json({ message: "File is required for file content type" });
+        }
+        filePath = req.file.filename; // Save the file name (or path) to the database
+      }
+
+      // Convert isReflection to a boolean if it is sent as a string
+      const isReflectionBool = isReflection === "true" || isReflection === true;
+
+      // Create Note entry
+      const newNote = new Note({
+        contentType,
+        content: contentType === "file" ? filePath : content,
+        userId,
+        nodeId,
+        version,
+        isReflection: isReflectionBool, // Save the boolean value
+      });
+
+      await newNote.save();
+      res.status(201).json({
+        message: "Note created successfully",
+        Note: newNote,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Error creating Note" });
     }
-
-    // Convert isReflection to a boolean if it is sent as a string
-    const isReflectionBool = isReflection === "true" || isReflection === true;
-
-    // Create Note entry
-    const newNote = new Note({
-      contentType,
-      content: contentType === "file" ? filePath : content,
-      userId,
-      nodeId,
-      version,
-      isReflection: isReflectionBool, // Save the boolean value
-    });
-
-    await newNote.save();
-    res.status(201).json({
-      message: "Note created successfully",
-      Note: newNote,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error creating Note" });
   }
-});
-
+);
 
 // Example endpoint to serve uploaded files
 app.get("/uploads/:fileName", (req, res) => {
@@ -1018,32 +1090,30 @@ app.post("/get-Notes", async (req, res) => {
   try {
     const { nodeId, version } = req.body;
 
-
     // Build query filter
     let query = { nodeId };
 
     if (version && version !== "all") {
-      query.version = version;  // Only fetch notes for the specific version if it's not "all"
+      query.version = version; // Only fetch notes for the specific version if it's not "all"
     }
 
     // Find notes with the constructed query, populate the userId with username
     const notes = await Note.find(query)
-      .populate("userId", "username")  // Only populate the username field
-      .populate("nodeId");  // Optionally populate the nodeId if needed
+      .populate("userId", "username") // Only populate the username field
+      .populate("nodeId"); // Optionally populate the nodeId if needed
 
     if (!notes || notes.length === 0) {
       return res.status(404).json({ message: "No notes found for this node" });
     }
-    
 
     // Map through the notes to send back only the username and other necessary data
-    const notesWithUsername = notes.map(note => {
+    const notesWithUsername = notes.map((note) => {
       return {
         _id: note._id,
         contentType: note.contentType,
-        content: note.content,  // Could be filename for file content
-        username: note.userId ? note.userId.username : null,  // Attach username instead of userId
-        nodeId: note.nodeId._id,  // If nodeId needs to be included
+        content: note.content, // Could be filename for file content
+        username: note.userId ? note.userId.username : null, // Attach username instead of userId
+        nodeId: note.nodeId._id, // If nodeId needs to be included
         version: note.version,
         isReflection: note.isReflection,
         createdAt: note.createdAt,
@@ -1061,8 +1131,226 @@ app.post("/get-Notes", async (req, res) => {
   }
 });
 
+/*INVITING*/
+
+app.post("/invite", authenticate, async (req, res) => {
+  const { userReceiving, isToBeOwner, isUninviting, rootId } = req.body;
+  const userId = req.userId; // User ID of the person sending the invite
+
+  try {
+    const node = await Node.findById(rootId).populate("rootOwner contributors");
+    if (!node) return res.status(404).json({ status: 404, message: "Root node not found" });
+
+    const invitingUser = await User.findById(userId);
+    if (!invitingUser) return res.status(404).json({ status: 404, message: "Inviting user not found" });
+
+    let receivingUser = null;
+
+    // Regular expression for validating UUID (v4)
+    const isValidUUID = (id) =>
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
+        id
+      );
+
+    if (isValidUUID(userReceiving)) {
+      receivingUser = await User.findById(userReceiving);
+    }
+
+    // If it's not a valid UUID, try to find by username
+    if (!receivingUser) {
+      receivingUser = await User.findOne({ username: userReceiving });
+    }
+
+    if (!receivingUser) return res.status(404).json({ status: 404, message: "Receiving user not found" });
+
+    if (!isUninviting && userId === receivingUser._id) {
+      return res.status(400).json({ status: 400, message: "You cannot invite yourself" });
+    }
+
+    // Log the invite for every action
+    const invite = new Invite({
+      userInviting: userId,
+      userReceiving: receivingUser._id, // Use the user ID of the receiving user
+      isToBeOwner,
+      isUninviting,
+      rootId,
+      status: "pending", // Default status; will be updated below if action is immediate
+    });
+
+    // Contributor invitation
+    if (!isToBeOwner && !isUninviting) {
+      await invite.save();
+      return res.status(200).json({ status: 200, message: "Contributor invite created and logged" });
+    }
+
+    // Ownership transfer
+    if (isToBeOwner) {
+      if (node.rootOwner._id.toString() !== userId) {
+        return res
+          .status(403)
+          .json({ status: 403, message: "Only the current owner can invite a new owner" });
+      }
+
+      // Update ownership
+      node.rootOwner = receivingUser._id;
+      node.contributors = node.contributors.filter(
+        (u) => u._id.toString() !== receivingUser._id
+      );
+      node.contributors.push(invitingUser);
+
+      await node.save();
+
+      // Log invite as accepted
+      invite.status = "accepted";
+      await invite.save();
+
+      return res.status(200).json({ status: 200, message: "Ownership transferred and invite logged" });
+    }
+
+    // Contributor self-removal
+    if (isUninviting && userId === userReceiving) {
+      node.contributors = node.contributors.filter(
+        (u) => u._id.toString() !== receivingUser._id
+      );
+      await node.save();
+
+      // Log invite as accepted
+      invite.status = "accepted";
+      await invite.save();
+
+      await User.findByIdAndUpdate(receivingUser._id, {
+        $pull: { roots: rootId }, // Remove rootId from the user's roots
+      });
+
+      return res
+        .status(200)
+        .json({ status: 200, message: "Contributor removed themselves and invite logged" });
+    }
+
+   // Owner uninviting a contributor or self
+if (isUninviting && node.rootOwner._id.toString() === userId) {
+  // Check if the owner is trying to remove themselves
+  if (userId === receivingUser._id) {
+    // If there are contributors, do not allow owner self-removal
+    if (node.contributors.length == 0) {
+      return res
+        .status(400)
+        .json({ status: 400, message: "Owner cannot remove themselves when contributors exist" });
+    }
+  }
+      node.contributors = node.contributors.filter(
+        (u) => u._id.toString() !== receivingUser._id
+      );
+      await node.save();
+
+      // Log invite as accepted
+      invite.status = "accepted";
+      await invite.save();
+      await User.findByIdAndUpdate(receivingUser._id, {
+        $pull: { roots: rootId }, // Remove rootId from the user's roots
+      });
+
+      return res
+        .status(200)
+        .json({ status: 200, message: "Contributor removed by owner and invite logged" });
+    }
+
+    res.status(400).json({ status: 400, message: "Invalid invite operation" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: 500, message: "Server error" });
+  }
+});
 
 
+app.post("/invite/accept", authenticate, async (req, res) => {
+  const { inviteId, acceptInvite } = req.body;
+  const userReceiving = req.userId;
+  console.log(userReceiving, inviteId, acceptInvite);
+  try {
+    // Find the invite by ID
+    const invite = await Invite.findById(inviteId);
+
+    if (!invite) return res.status(404).send("Invite not found");
+
+    // Ensure the invite is for the correct user
+    if (invite.userReceiving.toString() !== userReceiving)
+      return res.status(403).send("This invite is not for the specified user");
+
+    
+
+    // Find the node associated with the invite
+    const node = await Node.findById(invite.rootId).populate(
+      "rootOwner contributors"
+    );
+    if (!node) return res.status(404).send("Node not found");
+
+   
+
+    // If accepting the invite
+    if (acceptInvite) {
+      // Add the user as a contributor to the node
+      node.contributors.push(userReceiving);
+      await node.save();
+
+      // Update the user's roots field
+      await User.findByIdAndUpdate(userReceiving, {
+        $addToSet: { roots: invite.rootId }, // Add the rootId to the user's roots
+      });
+
+      // Update the invite status to 'accepted'
+      invite.status = "accepted";
+      await invite.save();
+
+      // Return a JSON response with success
+      return res.status(200).json({
+        success: true,
+        message:
+          "Invite accepted, user added as contributor, and roots updated",
+      });
+    }
+
+    // If declining the invite
+    else {
+      // Update the invite status to 'declined'
+      invite.status = "declined";
+      await invite.save();
+
+      // Return a JSON response with success
+      return res.status(200).json({
+        success: true,
+        message: "Invite declined",
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error");
+  }
+});
+
+// Endpoint to get all pending invites for a user
+app.post("/pending-invites", authenticate, async (req, res) => {
+  const userId = req.userId; // Expect userId to be sent in the request body
+
+  if (!userId) {
+    return res.status(400).json({ message: "User ID is required" });
+  }
+
+  try {
+    // Fetch all pending invites where the user is either the inviter or the receiver
+    const pendingInvites = await Invite.find({
+      $or: [{ userReceiving: userId, status: "pending" }],
+    });
+
+    // Return the found invites
+    return res.status(200).json({ invites: pendingInvites });
+  } catch (error) {
+    console.error("Error fetching pending invites:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error, could not fetch pending invites" });
+  }
+});
 
 // Start the server
 app.listen(port, () => {

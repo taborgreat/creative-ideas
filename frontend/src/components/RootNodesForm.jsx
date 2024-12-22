@@ -1,61 +1,205 @@
 import React, { useState, useEffect } from 'react';
-import Cookies from "js-cookie";
+import Cookies from 'js-cookie';
 
-const RootNodesForm = ({ setRootSelected, rootSelected, rootNodes, setRootNodes }) => {
+const RootNodesForm = ({ setRootSelected, rootSelected, rootNodes, setRootNodes, userId }) => {
   const [name, setName] = useState('');
   const [schedule, setSchedule] = useState('');
   const [reeffectTime, setReeffectTime] = useState('');
+  const [nodeDetails, setNodeDetails] = useState(null); // Holds rootOwner and contributors
+  const [username, setUsername] = useState('');
+  const [responseMessage, setResponseMessage] = useState(''); // State to hold the response message
+  const [loading, setLoading] = useState(false); // Loading state for async operations
+  const token = Cookies.get('token');
 
+  // Helper function to handle errors and display messages
+  const handleError = (error, actionType) => {
+    setResponseMessage(`Error during ${actionType}: ${error.message || error}`);
+  };
 
+  // Fetch root node details
+  const fetchNodeDetails = async (nodeId) => {
+    setLoading(true);
+    try {
+      const response = await fetch('http://localhost:3000/get-root-details', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: nodeId }),
+      });
+      const data = await response.json();
 
-
-
-  useEffect(() => {
-    const fetchRootNodes = async () => {
-      const token = Cookies.get('token');
-
-      if (!token) {
-        console.error('No JWT token found!');
-        return;
+      if (response.ok) {
+        setNodeDetails(data);
+      } else {
+        setResponseMessage(`Failed to fetch node details: ${data.message}`);
       }
+    } catch (error) {
+      handleError(error, 'fetching node details');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Fetch root nodes
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchRootNodes = async () => {
+      setLoading(true);
       try {
         const response = await fetch('http://localhost:3000/get-root-nodes', {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
         const data = await response.json();
-        console.log(data);
 
         if (response.ok) {
           if (Array.isArray(data.roots)) {
             setRootNodes(data.roots);
-          } else {
-            console.error('Invalid root node data structure:', data);
           }
         } else {
-          console.error('Failed to fetch root nodes:', data.message);
+          setResponseMessage(`Failed to fetch root nodes: ${data.message}`);
         }
       } catch (error) {
-        console.error('Error fetching root nodes:', error);
+        handleError(error, 'fetching root nodes');
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchRootNodes();
-  }, []);
+  }, [token, setRootNodes]);
 
+  useEffect(() => {
+    if (rootSelected) {
+      fetchNodeDetails(rootSelected);
+    }
+  }, [rootSelected]);
+
+  // Common invite handler
+  const handleInviteAction = async (actionType, payload) => {
+    setLoading(true);
+    try {
+      const response = await fetch('http://localhost:3000/invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setResponseMessage(data.message || 'Action completed successfully');
+        fetchNodeDetails(rootSelected); // Refresh details
+        if (actionType === 'invite') setUsername(''); // Clear username input after invite
+      } else {
+        setResponseMessage(`Failed to ${actionType}: ${data.message}`);
+      }
+    } catch (error) {
+      handleError(error, actionType);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle inviting a contributor
+  const handleInvite = () => {
+    if (nodeDetails) {
+      handleInviteAction('invite', {
+        userReceiving: username,
+        isToBeOwner: false,
+        isUninviting: false,
+        rootId: rootSelected,
+      });
+    }
+  };
+
+  // Handle removing a contributor
+  const handleRemove = (contributorId) => {
+    if (nodeDetails) {
+      handleInviteAction('remove', {
+        userReceiving: contributorId,
+        isToBeOwner: false,
+        isUninviting: true,
+        rootId: rootSelected,
+      });
+    }
+  };
+
+  // Handle transferring ownership
+  const handleTransferOwnership = (newOwnerId) => {
+    if (nodeDetails) {
+      handleInviteAction('transfer-ownership', {
+        userReceiving: newOwnerId,
+        isToBeOwner: true,
+        isUninviting: false,
+        rootId: rootSelected,
+      });
+    }
+  };
+  const handleLeave = () => {
+    if (nodeDetails) {
+      const isOwner = nodeDetails.rootOwner._id === userId;
+  
+      // If the current user is the owner
+      if (isOwner) {
+        // Show alert for owners with contributors
+        if (nodeDetails.contributors.length > 0) {
+          alert('Your tree has contributors. Please assign a new owner before leaving.');
+        } else {
+          // Proceed to leave if no contributors
+          handleInviteAction('leave', {
+            userReceiving: userId,
+            isToBeOwner: false,
+            isUninviting: true,
+            rootId: rootSelected,
+          }).then(() => {
+            // Remove the node from the root nodes list after leaving
+            setRootNodes((prev) => prev.filter((rootNode) => rootNode !== rootSelected));
+            setRootSelected(null); // Reset the selected root node
+            setNodeDetails(null);  // Clear the root node details
+  
+            // Prevent any re-fetch after leaving
+            setTimeout(() => fetchNodeDetails(rootSelected), 0);
+          });
+        }
+      } else {
+        // If the current user is not the owner, just leave
+        handleInviteAction('leave', {
+          userReceiving: userId,
+          isToBeOwner: false,
+          isUninviting: true,
+          rootId: rootSelected,
+        }).then(() => {
+          // Remove the node from the root nodes list after leaving
+          setRootNodes((prev) => prev.filter((rootNode) => rootNode !== rootSelected));
+          setRootSelected(null); // Reset the selected root node
+          setNodeDetails(null);  // Clear the root node details
+  
+          // Prevent any re-fetch after leaving
+          setTimeout(() => fetchNodeDetails(rootSelected), 0);
+        });
+      }
+    }
+  };
+  // Handle creating a new root node
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const token = Cookies.get("token");
     if (!token) {
-      console.error('No JWT token found!');
+      setResponseMessage('No JWT token found!');
       return;
     }
 
     const parentIdValue = null;
+
+    setLoading(true);
 
     try {
       const response = await fetch('http://localhost:3000/add-node', {
@@ -73,34 +217,32 @@ const RootNodesForm = ({ setRootSelected, rootSelected, rootNodes, setRootNodes 
         }),
       });
       const data = await response.json();
+
       if (!response.ok) {
-        console.error('Error creating node:', data);
+        setResponseMessage(`Error creating node: ${data.message}`);
         throw new Error('Failed to create node');
       }
 
-      console.log('Node created:', data);
+      setResponseMessage('Node created successfully!');
       setRootNodes((prev) => [...prev, data.newNode._id]);
       setRootSelected(data.newNode._id); // Sync with App
-
-      setName('');
+      setName(''); // Clear input after successful creation
+      setSchedule(''); // Clear schedule input after submission
+      setReeffectTime(''); // Clear reeffect time input after submission
     } catch (error) {
-      console.error('Error creating node:', error.message);
+      setResponseMessage(`Error creating node: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleRootSelection = (event) => {
-    const selectedId = event.target.value;
-    setRootSelected(selectedId); // Sync with App
   };
 
   return (
     <div>
-      
       <div>
         <h3>Existing Root Nodes</h3>
         <select
           value={rootSelected || ''}
-          onChange={handleRootSelection}
+          onChange={(e) => setRootSelected(e.target.value)}
           style={{ width: '100%', padding: '8px' }}
         >
           <option value="" disabled>Select a root node</option>
@@ -112,23 +254,60 @@ const RootNodesForm = ({ setRootSelected, rootSelected, rootNodes, setRootNodes 
         </select>
       </div>
 
-      <form onSubmit={handleSubmit}>
-      
+      {nodeDetails && (
         <div>
-        <button type="submit">Create New Root</button>
-          <label>Node Name:</label>
+          <h3>Root Node Details</h3>
+          <p>Root Owner: {nodeDetails.rootOwner.username}</p>
+
+          <h4>Contributors:</h4>
+          <ul>
+            {nodeDetails.contributors.map((contributor) => (
+              <li key={contributor._id}>
+                {contributor.username}{' '}
+                {nodeDetails.rootOwner._id === userId && (
+                  <>
+                    <button onClick={() => handleRemove(contributor._id)}>Remove</button>
+                    <button onClick={() => handleTransferOwnership(contributor._id)}>Transfer Ownership</button>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+
+          {nodeDetails.rootOwner._id === userId ? (
+            <>
+              <h4>Invite Contributor</h4>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter username"
+              />
+              <button onClick={handleInvite}>Invite</button>
+              {responseMessage && <div>{responseMessage}</div>}
+              <button onClick={handleLeave}>Leave Node</button>
+            </>
+          ) : (
+            <button onClick={handleLeave}>Leave Node</button>
+          )}
+        </div>
+      )}
+
+      <div>
+        <h3>Create a New Root Node</h3>
+        <form onSubmit={handleSubmit}>
           <input
             type="text"
+            placeholder="Enter root node name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
           />
-        </div>
-
-
-       
-      </form>
-
+          <button type="submit" disabled={loading}>
+            {loading ? 'Creating...' : 'Create Root Node'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
