@@ -48,12 +48,14 @@ const Contributions = ({ nodeSelected }) => {
     } finally {
       setLoading(false);
     }
-  }, [nodeSelected, loading]);
+  }, [nodeSelected]);  // Only depend on `nodeSelected`
 
   // Trigger fetching of data when the component is mounted or nodeSelected changes
   useEffect(() => {
-    fetchContributions();
-  }, [fetchContributions]);
+    if (!loading) {  // Make sure we're not already fetching data
+      fetchContributions();
+    }
+  }, [nodeSelected, fetchContributions]);  // Only depend on `nodeSelected` and `fetchContributions`
 
   return (
     <div style={{ maxHeight: "400px", overflowY: "auto" }}>
@@ -84,8 +86,6 @@ const Contributions = ({ nodeSelected }) => {
           </li>
         ))}
       </ul>
-
- 
     </div>
   );
 };
