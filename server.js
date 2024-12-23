@@ -564,13 +564,11 @@ app.post("/add-node", authenticate, async (req, res) => {
           }
         }
       } catch (error) {
-        return res
-          .status(500)
-          .json({
-            success: false,
-            message: "Error finding parent node",
-            error: error.message,
-          });
+        return res.status(500).json({
+          success: false,
+          message: "Error finding parent node",
+          error: error.message,
+        });
       }
     }
 
@@ -597,13 +595,11 @@ app.post("/add-node", authenticate, async (req, res) => {
         user.roots.push(newNode._id); // Add the new node to the user's roots array
         await user.save();
       } catch (error) {
-        return res
-          .status(500)
-          .json({
-            success: false,
-            message: "Error updating user's roots",
-            error: error.message,
-          });
+        return res.status(500).json({
+          success: false,
+          message: "Error updating user's roots",
+          error: error.message,
+        });
       }
     }
 
@@ -619,13 +615,11 @@ app.post("/add-node", authenticate, async (req, res) => {
         parentNode.children.push(newNode._id);
         await parentNode.save();
       } catch (error) {
-        return res
-          .status(500)
-          .json({
-            success: false,
-            message: "Error adding child node to parent",
-            error: error.message,
-          });
+        return res.status(500).json({
+          success: false,
+          message: "Error adding child node to parent",
+          error: error.message,
+        });
       }
     }
 
@@ -638,25 +632,21 @@ app.post("/add-node", authenticate, async (req, res) => {
         nodeVersion: "0",
       });
     } catch (error) {
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message: "Error logging contribution",
-          error: error.message,
-        });
+      return res.status(500).json({
+        success: false,
+        message: "Error logging contribution",
+        error: error.message,
+      });
     }
 
     // Return the newly created node as a response
     res.json({ success: true, newNode });
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error adding node",
-        error: err.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error adding node",
+      error: err.message,
+    });
   }
 });
 
@@ -1139,10 +1129,16 @@ app.post("/invite", authenticate, async (req, res) => {
 
   try {
     const node = await Node.findById(rootId).populate("rootOwner contributors");
-    if (!node) return res.status(404).json({ status: 404, message: "Root node not found" });
+    if (!node)
+      return res
+        .status(404)
+        .json({ status: 404, message: "Root node not found" });
 
     const invitingUser = await User.findById(userId);
-    if (!invitingUser) return res.status(404).json({ status: 404, message: "Inviting user not found" });
+    if (!invitingUser)
+      return res
+        .status(404)
+        .json({ status: 404, message: "Inviting user not found" });
 
     let receivingUser = null;
 
@@ -1161,10 +1157,15 @@ app.post("/invite", authenticate, async (req, res) => {
       receivingUser = await User.findOne({ username: userReceiving });
     }
 
-    if (!receivingUser) return res.status(404).json({ status: 404, message: "Receiving user not found" });
+    if (!receivingUser)
+      return res
+        .status(404)
+        .json({ status: 404, message: "Receiving user not found" });
 
     if (!isUninviting && userId === receivingUser._id) {
-      return res.status(400).json({ status: 400, message: "You cannot invite yourself" });
+      return res
+        .status(400)
+        .json({ status: 400, message: "You cannot invite yourself" });
     }
 
     // Log the invite for every action
@@ -1180,15 +1181,19 @@ app.post("/invite", authenticate, async (req, res) => {
     // Contributor invitation
     if (!isToBeOwner && !isUninviting) {
       await invite.save();
-      return res.status(200).json({ status: 200, message: "Contributor invite created and logged" });
+      return res.status(200).json({
+        status: 200,
+        message: "Contributor invite created and logged",
+      });
     }
 
     // Ownership transfer
     if (isToBeOwner) {
       if (node.rootOwner._id.toString() !== userId) {
-        return res
-          .status(403)
-          .json({ status: 403, message: "Only the current owner can invite a new owner" });
+        return res.status(403).json({
+          status: 403,
+          message: "Only the current owner can invite a new owner",
+        });
       }
 
       // Update ownership
@@ -1204,44 +1209,106 @@ app.post("/invite", authenticate, async (req, res) => {
       invite.status = "accepted";
       await invite.save();
 
-      return res.status(200).json({ status: 200, message: "Ownership transferred and invite logged" });
+      return res.status(200).json({
+        status: 200,
+        message: "Ownership transferred and invite logged",
+      });
     }
 
     // self-removal
-    if (isUninviting && userId === userReceiving) {
-         // check if owner tryna remove self
-if (node.rootOwner._id.toString() === userId) {
-  
-    // If there are contributors, do not allow owner self-removal
-    if (node.contributors.length == 0) {
-      return res
-        .status(400)
-        .json({ status: 400, message: "Owner cannot remove themselves when contributors exist" });
-    }}
-  
-      node.contributors = node.contributors.filter(
-        (u) => u._id.toString() !== receivingUser._id
-      );
-      
-      node.rootOwner = node.rootOwner.filter(
-        (u) => u._id.toString() !== receivingUser._id
-      );
-      await node.save();
+    if (!isToBeOwner && isUninviting) {
+      const isOwner = node.rootOwner._id.toString() === userId;
 
-      // Log invite as accepted
-      invite.status = "accepted";
-      await invite.save();
+      // Case 1: Owner tries to remove themselves but contributors exist
+      if (
+        isOwner &&
+        receivingUser._id.toString() === userId &&
+        node.contributors.length > 0
+      ) {
+        return res.status(400).json({
+          status: 400,
+          message: "Owner cannot remove themselves when contributors exist",
+        });
+      }
 
-      await User.findByIdAndUpdate(receivingUser._id, {
-        $pull: { roots: rootId }, // Remove rootId from the user's roots
+      // Case 2: Owner removes a contributor
+      if (isOwner && receivingUser._id.toString() !== userId) {
+        node.contributors = node.contributors.filter(
+          (u) => u._id.toString() !== receivingUser._id
+        );
+
+        await node.save();
+
+        invite.status = "accepted";
+        await invite.save();
+
+        await User.findByIdAndUpdate(receivingUser._id, {
+          $pull: { roots: rootId }, // Remove rootId from the user's roots
+        });
+
+        return res.status(200).json({
+          status: 200,
+          message: "Contributor removed by owner and invite logged",
+        });
+      }
+
+      // Case 3: Owner removes themselves when there are no contributors
+      if (
+        isOwner &&
+        receivingUser._id.toString() === userId &&
+        node.contributors.length === 0
+      ) {
+        node.rootOwner = null; // Remove owner
+        await node.save();
+
+        await User.findByIdAndUpdate(userId, {
+          $pull: { roots: rootId }, // Remove rootId from the user's roots
+        });
+
+        return res.status(200).json({
+          status: 200,
+          message: "Owner removed themselves and root ownership cleared",
+        });
+      }
+
+      // Case 4: Contributor removes themselves
+      if (!isOwner && receivingUser._id.toString() === userId) {
+        // Check if the user is in the contributors array
+        const isContributor = node.contributors.some(
+          (u) => u._id.toString() === userId
+        );
+
+        if (!isContributor) {
+          return res.status(400).json({
+            status: 400,
+            message: "You are not a contributor and cannot remove yourself.",
+          });
+        }
+        node.contributors = node.contributors.filter(
+          (u) => u._id.toString() !== userId
+        );
+
+        await node.save();
+
+        invite.status = "accepted";
+        await invite.save();
+
+        await User.findByIdAndUpdate(userId, {
+          $pull: { roots: rootId }, // Remove rootId from the user's roots
+        });
+
+        return res.status(200).json({
+          status: 200,
+          message: "Contributor removed themselves and invite logged",
+        });
+      }
+
+      // Case 5: Invalid request
+      return res.status(400).json({
+        status: 400,
+        message: "Invalid uninviting request",
       });
-
-      return res
-        .status(200)
-        .json({ status: 200, message: "Removed self from root and invite logged" });
     }
-
-
 
     res.status(400).json({ status: 400, message: "Invalid invite operation" });
   } catch (err) {
@@ -1249,7 +1316,6 @@ if (node.rootOwner._id.toString() === userId) {
     res.status(500).json({ status: 500, message: "Server error" });
   }
 });
-
 
 app.post("/invite/accept", authenticate, async (req, res) => {
   const { inviteId, acceptInvite } = req.body;
@@ -1265,15 +1331,11 @@ app.post("/invite/accept", authenticate, async (req, res) => {
     if (invite.userReceiving.toString() !== userReceiving)
       return res.status(403).send("This invite is not for the specified user");
 
-    
-
     // Find the node associated with the invite
     const node = await Node.findById(invite.rootId).populate(
       "rootOwner contributors"
     );
     if (!node) return res.status(404).send("Node not found");
-
-   
 
     // If accepting the invite
     if (acceptInvite) {

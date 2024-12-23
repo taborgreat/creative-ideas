@@ -41,7 +41,7 @@ const RootNodesForm = ({ setRootSelected, rootSelected, rootNodes, setRootNodes,
     }
   };
 
-  // Fetch root nodes
+  // Fetch root node id's for user
   useEffect(() => {
     if (!token) return;
 
@@ -143,6 +143,7 @@ const RootNodesForm = ({ setRootSelected, rootSelected, rootNodes, setRootNodes,
       });
     }
   };
+
   const handleLeave = () => {
     if (nodeDetails) {
       const isOwner = nodeDetails.rootOwner._id === userId;
@@ -164,9 +165,6 @@ const RootNodesForm = ({ setRootSelected, rootSelected, rootNodes, setRootNodes,
             setRootNodes((prev) => prev.filter((rootNode) => rootNode !== rootSelected));
             setRootSelected(null); // Reset the selected root node
             setNodeDetails(null);  // Clear the root node details
-  
-            // Prevent any re-fetch after leaving
-            setTimeout(() => fetchNodeDetails(rootSelected), 0);
           });
         }
       } else {
@@ -181,26 +179,22 @@ const RootNodesForm = ({ setRootSelected, rootSelected, rootNodes, setRootNodes,
           setRootNodes((prev) => prev.filter((rootNode) => rootNode !== rootSelected));
           setRootSelected(null); // Reset the selected root node
           setNodeDetails(null);  // Clear the root node details
-  
-          // Prevent any re-fetch after leaving
-          setTimeout(() => fetchNodeDetails(rootSelected), 0);
         });
       }
     }
   };
-  // Handle creating a new root node
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (!token) {
       setResponseMessage('No JWT token found!');
       return;
     }
-
+  
     const parentIdValue = null;
-
     setLoading(true);
-
+  
     try {
       const response = await fetch('http://localhost:3000/add-node', {
         method: 'POST',
@@ -217,24 +211,29 @@ const RootNodesForm = ({ setRootSelected, rootSelected, rootNodes, setRootNodes,
         }),
       });
       const data = await response.json();
-
+  
       if (!response.ok) {
         setResponseMessage(`Error creating node: ${data.message}`);
         throw new Error('Failed to create node');
       }
-
+  
       setResponseMessage('Node created successfully!');
       setRootNodes((prev) => [...prev, data.newNode._id]);
       setRootSelected(data.newNode._id); // Sync with App
-      setName(''); // Clear input after successful creation
-      setSchedule(''); // Clear schedule input after submission
-      setReeffectTime(''); // Clear reeffect time input after submission
+  
+      // Fetch details of the newly created node
+      await fetchNodeDetails(data.newNode._id);
+  
+      setName('');
+      setSchedule('');
+      setReeffectTime('');
     } catch (error) {
       setResponseMessage(`Error creating node: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <div>
