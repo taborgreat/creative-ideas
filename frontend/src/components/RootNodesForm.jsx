@@ -252,10 +252,25 @@ const RootNodesForm = ({ setRootSelected, rootSelected, rootNodes, setRootNodes,
           ))}
         </select>
       </div>
+      <div>
+        <h3>Create a New Root Node</h3>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            placeholder="Enter root node name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+          <button type="submit" disabled={loading}>
+            {loading ? 'Creating...' : 'Create Root Node'}
+          </button>
+        </form>
+      </div>
 
       {nodeDetails && (
         <div>
-          <h3>Root Node Details</h3>
+          <h3>Selected Root Details</h3>
           <p>Root Owner: {nodeDetails.rootOwner.username}</p>
 
           <h4>Contributors:</h4>
@@ -292,21 +307,7 @@ const RootNodesForm = ({ setRootSelected, rootSelected, rootNodes, setRootNodes,
         </div>
       )}
 
-      <div>
-        <h3>Create a New Root Node</h3>
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Enter root node name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-          <button type="submit" disabled={loading}>
-            {loading ? 'Creating...' : 'Create Root Node'}
-          </button>
-        </form>
-      </div>
+      
     </div>
   );
 };
