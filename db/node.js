@@ -1,11 +1,6 @@
 const mongoose = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
-
-const GoalSchema = new mongoose.Schema({
-  value: { type: String, required: false },
-  reached: { type: Boolean, required: true },
-  quantifiableGoal: { type: Number, required: false },
-});
+const Goal = require("./Goal");
 
 const NodeSchema = new mongoose.Schema({
   _id: {
@@ -24,7 +19,7 @@ const NodeSchema = new mongoose.Schema({
       dateCreated: { type: Date, default: Date.now },
       schedule: { type: Date, default: null },
       reeffectTime: { type: Number, default: 0 },
-      goals: [GoalSchema],
+      goals: [{ type: String, ref: "Goal" }],
     },
   ],
   children: [{ type: String, ref: "Node" }],
@@ -53,7 +48,9 @@ NodeSchema.methods.removeContributor = function (userId, removerId) {
     this.rootOwner.toString() !== removerId &&
     !this.contributors.includes(removerId)
   ) {
-    throw new Error("Only the rootOwner or a contributor can remove contributors.");
+    throw new Error(
+      "Only the rootOwner or a contributor can remove contributors."
+    );
   }
   this.contributors = this.contributors.filter(
     (contributor) => contributor !== userId
@@ -68,8 +65,6 @@ NodeSchema.methods.transferOwnership = function (newOwnerId, removerId) {
   if (!this.rootOwner) throw new Error("Node does not have an owner.");
   this.rootOwner = newOwnerId;
 };
-
-
 
 /*
 
@@ -252,7 +247,3 @@ NodeSchema.pre("findOneAndDelete", async function (next) {
 
 const Node = mongoose.model("Node", NodeSchema);
 module.exports = Node;
-
-
-
-
