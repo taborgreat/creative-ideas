@@ -23,7 +23,7 @@ FINISHED Add goal properties attached to values and way to track (whether they b
 FINISHED determine an efficient system to value inherit- thinking all values get summed into the root exchange node, or if created from a diff type node get summed to it
 rework front end into react and components- ALL FRONT END NOW IS PLAY AND SHIT
 
-flip tree graphics so root is bottom
+FINISHED flip tree graphics so root is bottom
 click title, status, schedule to manage on front end. click version icon next to name to switch between versions
 prestige button
 value chart is prestige dependenet with global values to side
@@ -31,7 +31,7 @@ click + below or next to values to add new value or goal for value
 click on value or goal to pull up prompt to delete
 
 notes jump to prestige lines on current level
-add ability to upload media to notes
+FINISHED add ability to upload media to notes
 
 on tree view line color/thickness is correlated to values. colors for values are next to name in value chart. thickness is relative value transfer
 top right corner of tree view there is in-progress, trim, and complete check boxes to select certain nodes

@@ -53,7 +53,7 @@ const Invites = () => {
       });
 
       const data = await response.json();
-      console.log(data)
+
       if (response.ok) {
         // Update the invites list after successful acceptance/decline
         setInvites((prevInvites) =>
@@ -79,16 +79,13 @@ const Invites = () => {
         <ul>
           {invites.map((invite) => (
             <li key={invite._id}>
-              Invite from {invite.userInviting} (Status: {invite.status})
+              From: {invite.userInviting.username}, root: {invite.rootId.name}{" "}
+              (Status: {invite.status})
               <div>
-                <button
-                  onClick={() => handleInviteResponse(invite._id, true)}
-                >
+                <button onClick={() => handleInviteResponse(invite._id, true)}>
                   Accept
                 </button>
-                <button
-                  onClick={() => handleInviteResponse(invite._id, false)}
-                >
+                <button onClick={() => handleInviteResponse(invite._id, false)}>
                   Decline
                 </button>
               </div>

@@ -116,7 +116,7 @@ const App = () => {
           <Contributions nodeSelected={nodeSelected} />
         </div>
         <div className="schedule">
-          <Schedule nodeSelected={nodeSelected} tree={tree} />
+          <Schedule nodeSelected={nodeSelected} tree={tree} nodeVersion={nodeVersion} />
         </div>
       </div>
     </div>
