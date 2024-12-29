@@ -27,7 +27,7 @@ const CompleteNodeForm = ({ nodeSelected, nodeVersion, onComplete }) => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          nodeId: nodeSelected.id, // Pass the selected node's ID
+          nodeId: nodeSelected._id, // Pass the selected node's ID
           status: selectedStatus, // Pass the selected status
           version: nodeVersion,
           isInherited: isInherited, // Include isInherited in the request

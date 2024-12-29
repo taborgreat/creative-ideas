@@ -46,12 +46,23 @@ const App = () => {
         body: JSON.stringify({ rootId }),
       });
       if (!response.ok) throw new Error("Failed to fetch tree");
+  
       const data = await response.json();
-      setTree(data); // Set the tree after fetching
+      console.log("Fetched tree data", data);
+      setTree(data); // Update the tree state
+  
+      if (nodeSelected) {
+        // Find the updated node from the fetched tree data
+        const updatedNode = data.find(node => node.id === nodeSelected.id);
+        if (updatedNode) {
+          setNodeSelected(updatedNode);  // Ensure nodeSelected is updated
+        }
+      }
     } catch (error) {
       console.error("Error loading tree:", error);
     }
-  }, []);
+  }, [nodeSelected]);
+  
 
   // Handle logout
   const handleLogout = () => {
@@ -105,6 +116,9 @@ const App = () => {
             nodeSelected={nodeSelected}
             nodeVersion={nodeVersion}
             setNodeVersion={setNodeVersion}
+            getTree={getTree}
+            rootSelected={rootSelected}
+            tree={tree}
           />
         </div>
         <div className="notes">

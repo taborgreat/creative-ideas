@@ -14,6 +14,7 @@ const extractSchedules = (node, schedules = []) => {
           dateCreated: version.dateCreated,
         });
       }
+      
     });
   }
 
@@ -49,7 +50,8 @@ const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
   }, [nodeSelected, nodeVersion]);
 
   const chopTree = (node, nodeId) => {
-    if (node._id === nodeId.id) {
+    if (node._id === nodeId._id) {
+      console.log("returned",{...node})
       return { ...node };
     }
 
@@ -76,6 +78,7 @@ const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
     if (choppedTree) {
       const schedules = extractSchedules(choppedTree);
       const filtered = schedules.filter((schedule) => statusFilter[schedule.status]);
+      console.log("filter", filtered)
       setFilteredSchedules(filtered);
     }
   }, [statusFilter, choppedTree]);
@@ -116,7 +119,7 @@ const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            nodeId: nodeSelected.id,
+            nodeId: nodeSelected._id,
             newSchedule: newSchedule,
             reeffectTime: reeffectTime,
             versionIndex: nodeVersion

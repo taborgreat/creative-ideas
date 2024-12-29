@@ -2,7 +2,41 @@ import React, { useEffect, useRef } from 'react';
 import TreeViewMenu from './TreeViewMenu';
 import cytoscape from 'cytoscape';
 
+// Utility function to recursively search for a node by its id
+const findNodeById = (node, id) => {
+
+  if (node._id === id) {
+    console.log(node)
+    return node;
+  }
+
+  // Check children recursively
+  for (let child of node.children || []) {
+    const foundNode = findNodeById(child, id);
+    if (foundNode) {
+      return foundNode;
+    }
+  }
+
+  // Return null if not found
+  return null;
+};
+
 const TreeView = ({ rootSelected, nodeSelected, setNodeSelected, setNodeVersion, nodeVersion, tree, getTree }) => {
+
+  // Function to handle node selection by id to set nodeselected object from rto
+  const selectNodeById = (id) => {
+    console.log("se;ected",tree,id, rootSelected, nodeSelected)
+    const selectedNode = findNodeById(tree, id);
+
+    if (selectedNode) {
+      setNodeSelected(selectedNode);
+      console.log("mp",selectedNode);
+    } else {
+      console.log("Node not found");
+    }
+  };
+
   const cyRef = useRef(null);
 
   const addTreeToCytoscape = (node, cyInstance, parentId = null) => {
@@ -33,6 +67,7 @@ const TreeView = ({ rootSelected, nodeSelected, setNodeSelected, setNodeVersion,
 
     (node.children || []).forEach((child) => addTreeToCytoscape(child, cyInstance, node._id));
   };
+  
 
   useEffect(() => {
     if (!cyRef.current) {
@@ -60,20 +95,9 @@ const TreeView = ({ rootSelected, nodeSelected, setNodeSelected, setNodeVersion,
         ],
       });
 
-      cyRef.current.on('tap', 'node', (event) => {
-        const nodeId = event.target.id();
-        const tappedNode = cyRef.current.getElementById(nodeId).data(); // Get the full node data
-        
-        // Remove the 'selected' class from all nodes
-        cyRef.current.nodes().removeClass('selected');
-
-        // Add the 'selected' class to the tapped node
-        event.target.addClass('selected');
-
-        setNodeSelected(tappedNode); // Set the full node object
-        setNodeVersion(tappedNode.prestige);
-      });
+   
     }
+
 
     const cyInstance = cyRef.current;
     cyInstance.elements().remove(); // Remove previous elements
@@ -101,7 +125,7 @@ const TreeView = ({ rootSelected, nodeSelected, setNodeSelected, setNodeVersion,
       if (rootNode) rootNode.addClass('root');
       cyInstance.center(rootNode); // Focus on the root node
     }
-  }, [tree, setNodeSelected, setNodeVersion, rootSelected]);
+  }, [tree, nodeSelected, setNodeVersion, rootSelected]);
 
   // Use effect to adjust the camera when nodeSelected changes
   useEffect(() => {
@@ -111,13 +135,32 @@ const TreeView = ({ rootSelected, nodeSelected, setNodeSelected, setNodeVersion,
       cyInstance.nodes().removeClass('selected');
 
       // Add the 'selected' class to the newly selected node
-      const selectedNode = cyInstance.getElementById(nodeSelected.id);
+      const selectedNode = cyInstance.getElementById(nodeSelected._id);
       if (selectedNode) {
         selectedNode.addClass('selected');
         cyInstance.center(selectedNode); // Focus the camera on the selected node
       }
     }
   }, [nodeSelected]);
+
+  useEffect(() => {
+    if (!cyRef.current || !tree) return;
+  
+    cyRef.current.on('tap', 'node', (event) => {
+      const nodeId = event.target.id();
+      const tappedNode = cyRef.current.getElementById(nodeId).data();
+  
+      // Remove the 'selected' class from all nodes
+      cyRef.current.nodes().removeClass('selected');
+  
+      // Add the 'selected' class to the tapped node
+      event.target.addClass('selected');
+  
+      // Ensure tree is available
+      selectNodeById(tappedNode.id);
+      setNodeVersion(tappedNode.prestige);
+    });
+  }, [tree]); // Re-run effect when tree changes
 
   return (
     <div>

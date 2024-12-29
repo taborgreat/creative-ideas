@@ -63,3 +63,9 @@
   padding: 10px;
   overflow: hidden; /* Prevent overflow */
 }
+
+  
+h3 {
+  margin: 0;
+  font-weight: bolder;
+}

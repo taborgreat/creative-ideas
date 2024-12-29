@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Cookies from "js-cookie";
 import './NodeData.css'; 
 
-const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion }) => {
+const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSelected, }) => {
   const [keyValuePairs, setKeyValuePairs] = useState([]);
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");
@@ -58,12 +58,13 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion }) => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          nodeId: nodeSelected.id,
+          nodeId: nodeSelected._id,
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
+        getTree(rootSelected);
         if (data.success) {
           console.log("Prestige added successfully!");
         } else {
@@ -102,7 +103,7 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion }) => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          nodeId: nodeSelected.id,
+          nodeId: nodeSelected._id,
           key,
           goal,
           version: nodeVersion,
@@ -136,7 +137,7 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion }) => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          nodeId: nodeSelected.id,
+          nodeId: nodeSelected._id,
           key,
           value,
           version: nodeVersion,
@@ -177,9 +178,7 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion }) => {
             <p>
               <strong>Name:</strong> {nodeSelected.name}
             </p>
-            <p>
-              <strong>ID:</strong> {nodeSelected.id}
-            </p>
+
             <p>
               <strong>Status:</strong> {nodeSelected.versions[nodeVersion].status}
             </p>

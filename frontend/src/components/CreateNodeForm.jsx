@@ -27,7 +27,7 @@ const CreateNodeForm = ({ nodeSelected, onComplete }) => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          parentId: nodeSelected.id,
+          parentId: nodeSelected._id,
           name,
           schedule,
           reeffectTime,

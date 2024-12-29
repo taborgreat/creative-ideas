@@ -23,7 +23,7 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ nodeId: nodeSelected.id, version: nodeVersion }),
+        body: JSON.stringify({ nodeId: nodeSelected._id, version: nodeVersion }),
       });
 
       const result = await response.json();
@@ -115,7 +115,7 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
           content: noteContent,
           contentType: "text",
           userId,
-          nodeId: nodeSelected.id,
+          nodeId: nodeSelected._id,
           version: nodeVersion,
           isReflection,
         }),
@@ -152,7 +152,7 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
     formData.append("file", file);
     formData.append("contentType", "file");
     formData.append("userId", userId);
-    formData.append("nodeId", nodeSelected.id);
+    formData.append("nodeId", nodeSelected._id);
     formData.append("version", nodeVersion);
     formData.append("isReflection", isReflection);
 

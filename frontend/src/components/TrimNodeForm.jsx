@@ -25,13 +25,13 @@ const TrimNodeForm = ({ nodeSelected, nodeVersion, onComplete }) => {
           },
       
           body: JSON.stringify({
-            nodeId: nodeSelected.id, // Pass the selected node's ID
+            nodeId: nodeSelected._id, // Pass the selected node's ID
             status: "trimmed", // Trim the status before sending
             version: nodeVersion,
             isInherited: true,
           }),
         });
-        console.log({nodeId: nodeSelected.id, // Pass the selected node's ID
+        console.log({nodeId: nodeSelected._id, // Pass the selected node's ID
             status: "trimmed", // Trim the status before sending
             version: nodeVersion,})
         const data = await response.json();

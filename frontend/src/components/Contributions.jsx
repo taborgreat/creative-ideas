@@ -12,7 +12,7 @@ const Contributions = ({ nodeSelected }) => {
       console.error('No JWT token found!');
       return;
     }
-    if (!nodeSelected || !nodeSelected.id) {
+    if (!nodeSelected || !nodeSelected._id) {
       console.error("Node ID is not available");
       return;
     }
@@ -28,7 +28,7 @@ const Contributions = ({ nodeSelected }) => {
           Authorization: `Bearer ${token}`, // Include the token for authentication
         },
         body: JSON.stringify({
-          nodeId: nodeSelected.id,
+          nodeId: nodeSelected._id,
         }),
       });
       
