@@ -5,7 +5,7 @@ FINSIHED rework server endpoints to receive json, whether it be single node or a
 FINISHED insert and pull node data from mongo db 
 clean up all backend code that is unneeded/ SIMPLIFY from creation phase
 
-make goal endpoint
+FINSIHEDmake goal endpoint
 
 FINISHED add second db to record value transfer: node id of node calling for trade, node id of donating node, values traded from calling node, values traded from donating node
         log in db for list of transactions and then also make the changes on the main database shifting values over from proper version to version
@@ -26,16 +26,16 @@ rework front end into react and components- ALL FRONT END NOW IS PLAY AND SHIT
 FINISHED flip tree graphics so root is bottom
 click title, status, schedule to manage on front end. click version icon next to name to switch between versions
 prestige button
-value chart is prestige dependenet with global values to side
-click + below or next to values to add new value or goal for value
-click on value or goal to pull up prompt to delete
+FINSIHED value chart is prestige dependenet with global values to side
+FINSIHED click + below or next to values to add new value or goal for value
+FINSIHED click on value or goal to pull up prompt to delete
 
-notes jump to prestige lines on current level
+DINSIHED AND REMOVED notes jump to prestige lines on current level
 FINISHED add ability to upload media to notes
 
 on tree view line color/thickness is correlated to values. colors for values are next to name in value chart. thickness is relative value transfer
 top right corner of tree view there is in-progress, trim, and complete check boxes to select certain nodes
-click node to go make it have the page view
+FINSIHED click node to go make it have the page view
 
 ![Front end initial plan](https://i.imgur.com/xc42Hdy.jpeg)
 
@@ -43,10 +43,10 @@ click node to go make it have the page view
 Each value has name, value, and inheritable bool. If inheritable is true (check mark next to value on front end)
 then all children will receive the value like hrs in root. Can be turned off in further generations so it stops if you don’t need to track further 
 
-need to add in goals, global values(toggle version values),), and schedule.schedule I already built just have to move old code into react components 
+FINSIHED need to add in goals, global values(toggle version values),), and schedule.schedule I already built just have to move old code into react components 
 
 Node top third of div is selected node
-Selected node outline
+FINISHED Selected node outline
 
 Trim ai objects
 Graphic to view
@@ -55,7 +55,7 @@ Add them to tree or regenerate
 Tree upside down dirt with root in dirt
 Blue sky hackgroynd 
 
-Add contributions to everything 
+FINISHED Add contributions to everything 
 
 Filter for current gen, all, reflection  in notes
 
@@ -64,7 +64,7 @@ prompt on completion or prestige
 
 Trade db: nodea and nodeb to nodeAsking and nodeAgreeing 
 
-Under schedule add option to show just node or children too
+FINISHED AND REMOVED Under schedule add option to show just node or children too
 Show version that the node is on schedule 
 
 Invites in db 
@@ -93,15 +93,15 @@ fix removing nodes and children so it collects all values of children from globa
 possibly: make it so statuses skip pass divider nodes and keep propating to children instead of stopping at divider node
 
 
-
+FINSIHED
 user schema 
 id
 username passwords.
 root nodes[]
 contributions[] changes to nodes in db
 
-root nodes points to different branches (trees)
-in db. users can have own trees, share roots
+REMOVED root nodes points to different branches (trees)
+FINSIHED in db. users can have own trees, share roots
 with others and build togethrr, join in others
 trees branches at any part and collaborate
 or share values at any time from any node
