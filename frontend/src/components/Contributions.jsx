@@ -31,6 +31,7 @@ const Contributions = ({ nodeSelected }) => {
           nodeId: nodeSelected.id,
         }),
       });
+      
 
       if (!response.ok) {
         console.error("Failed to fetch contributions:", response.statusText);
@@ -38,6 +39,7 @@ const Contributions = ({ nodeSelected }) => {
       }
 
       const data = await response.json();
+      console.log(data)
       if (data.contributions && data.contributions.length > 0) {
         setContributions(data.contributions);
       } else {
@@ -48,14 +50,14 @@ const Contributions = ({ nodeSelected }) => {
     } finally {
       setLoading(false);
     }
-  }, [nodeSelected]);  // Only depend on `nodeSelected`
+  }, [nodeSelected]); // Only depend on `nodeSelected`
 
   // Trigger fetching of data when the component is mounted or nodeSelected changes
   useEffect(() => {
-    if (!loading) {  // Make sure we're not already fetching data
+    if (!loading) { // Make sure we're not already fetching data
       fetchContributions();
     }
-  }, [nodeSelected, fetchContributions]);  // Only depend on `nodeSelected` and `fetchContributions`
+  }, [nodeSelected, fetchContributions]); // Only depend on `nodeSelected` and `fetchContributions`
 
   return (
     <div style={{ maxHeight: "400px", overflowY: "auto" }}>
@@ -71,13 +73,29 @@ const Contributions = ({ nodeSelected }) => {
             {contribution.additionalInfo && (
               <div>
                 {contribution.action === "editValue" && (
-                  <p><strong>Edited Value:</strong> {JSON.stringify(contribution.additionalInfo)}</p>
+                  <p><strong>Edited Value:</strong> {JSON.stringify(contribution.additionalInfo.valueEdited)}</p>
                 )}
                 {contribution.action === "statusChange" && (
-                  <p><strong>Status:</strong> {contribution.additionalInfo}</p>
+                  <p><strong>Status:</strong> {contribution.statusEdited}</p>
                 )}
                 {contribution.action === "trade" && (
                   <p><strong>Trade ID:</strong> {contribution.additionalInfo}</p>
+                )}
+                {contribution.action === "invite" && contribution.additionalInfo && (
+                  <div>
+                    <p><strong>Invite Action:</strong> {contribution.additionalInfo.inviteAction.action}</p>
+                    <p><strong>Receiving Username:</strong> {contribution.additionalInfo.inviteAction.receivingUsername || "N/A"}</p>
+                  </div>
+                )}
+                {contribution.action === "editSchedule" && contribution.scheduleEdited && (
+                  <p>
+                    <strong>Schedule Edited:</strong> 
+                    Date: {contribution.scheduleEdited.date && new Date(contribution.scheduleEdited.date).toLocaleString()},
+                    Reeffect Time: {contribution.scheduleEdited.reeffectTime}
+                  </p>
+                )}
+                {contribution.action === "editGoal" && contribution.additionalInfo && (
+                  <p><strong>Goal Edited:</strong> {JSON.stringify(contribution.additionalInfo.goalEdited)}</p>
                 )}
               </div>
             )}

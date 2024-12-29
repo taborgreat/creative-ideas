@@ -21,7 +21,7 @@ const ContributionSchema = new mongoose.Schema({
     type: String,
     enum: [
       "create",
-      "statusChange",
+      "editStatus",
       "editValue",
       "prestige",
       "trade",
@@ -32,9 +32,9 @@ const ContributionSchema = new mongoose.Schema({
     ],
     required: true, // Action taken in the contribution
   },
-  status: {
+  statusEdited: {
     type: String,
-    enum: ["complete", "inProgress", "trimmed", "divider"],
+    enum: ["completed", "active", "trimmed", "divider"],
     default: null, // Nullable status for the contribution
   },
   valueEdited: {
@@ -47,7 +47,7 @@ const ContributionSchema = new mongoose.Schema({
     ref: "Transaction",
     default: null, // Nullable tradeId for trade-related actions
   },
-  invite: {
+  inviteAction: {
     type: {
       action: {
         type: String,
@@ -82,20 +82,11 @@ const ContributionSchema = new mongoose.Schema({
     default: null, // Default the entire scheduleEdited object to null
   },
   goalEdited: {
-    type: {
-      action: {
-        type: String,
-        enum: ["add", "remove", "finished", "removeContributor", "switchOwner"],
-        default: null, // Nullable goal action
-      },
-      goalId: {
-        type: String,
-        ref: "Goal",
-        default: null, // Nullable reference to the goal edited
-      },
-    },
-    default: null, // Default the entire goalEdited object to null
+    type: Map,
+    of: Number,
+    default: null,
   },
+  
   nodeVersion: {
     type: String,
     required: true, // Required node version for tracking

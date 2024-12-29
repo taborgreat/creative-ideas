@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import Cookies from 'js-cookie';
 
-const CompleteNodeForm = ({ nodeSelected, nodeVersion, onComplete  }) => {
+const CompleteNodeForm = ({ nodeSelected, nodeVersion, onComplete }) => {
   const [showMenu, setShowMenu] = useState(true); // To control the visibility of the menu
   const [status, setStatus] = useState(null); // Store the selected status
   const [loading, setLoading] = useState(false); // Indicate request in progress
+  const [isInherited, setIsInherited] = useState(true); // State for checkbox (defaults to true)
 
   // Handle the action when a status is chosen
   const handleStatusChange = async (selectedStatus) => {
@@ -29,6 +30,7 @@ const CompleteNodeForm = ({ nodeSelected, nodeVersion, onComplete  }) => {
           nodeId: nodeSelected.id, // Pass the selected node's ID
           status: selectedStatus, // Pass the selected status
           version: nodeVersion,
+          isInherited: isInherited, // Include isInherited in the request
         }),
       });
 
@@ -49,17 +51,31 @@ const CompleteNodeForm = ({ nodeSelected, nodeVersion, onComplete  }) => {
     }
   };
 
+  // Handle checkbox change
+  const handleCheckboxChange = (event) => {
+    setIsInherited(event.target.checked); // Update state based on checkbox
+  };
+
   return (
     <div>
       {showMenu && (
         <div>
           <h2>Set Node Status</h2>
-          <button onClick={() => handleStatusChange('complete')}>Complete</button>
-          <button onClick={() => handleStatusChange('inProgress')}>Active</button>
+          <button onClick={() => handleStatusChange('completed')}>Complete</button>
+          <button onClick={() => handleStatusChange('active')}>Active</button>
+          
+          <div>
+            <label>
+              Apply to all children:
+              <input
+                type="checkbox"
+                checked={isInherited}
+                onChange={handleCheckboxChange}
+              />
+            </label>
+          </div>
         </div>
       )}
-
-    
     </div>
   );
 };

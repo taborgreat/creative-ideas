@@ -32,7 +32,7 @@ const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
   const [statusFilter, setStatusFilter] = useState({
     active: true,
     trimmed: false,
-    complete: false,
+    completed: false,
   });
 
   const [filteredSchedules, setFilteredSchedules] = useState([]);
@@ -230,8 +230,8 @@ const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
         <label>
           <input
             type="checkbox"
-            checked={statusFilter.complete}
-            onChange={() => handleStatusChange('complete')}
+            checked={statusFilter.completed}
+            onChange={() => handleStatusChange('completed')}
           />
           Completed
         </label>
@@ -244,9 +244,8 @@ const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
                 <thead>
                   <tr>
                     <th>Node Name</th>
-                    <th>Schedule</th>
+                    <th>Scheduled</th>
                     <th>Status</th>
-                    <th>Date Created</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -255,7 +254,7 @@ const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
                       <td>{schedule.nodeName}</td>
                       <td>{schedule.schedule}</td>
                       <td>{schedule.status}</td>
-                      <td>{new Date(schedule.dateCreated).toLocaleString()}</td>
+                 
                     </tr>
                   ))}
                 </tbody>
@@ -270,9 +269,8 @@ const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
                 <thead>
                   <tr>
                     <th>Node Name</th>
-                    <th>Schedule</th>
+                    <th>Scheduled</th>
                     <th>Status</th>
-                    <th>Date Created</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -281,7 +279,7 @@ const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
                       <td>{schedule.nodeName}</td>
                       <td>{schedule.schedule}</td>
                       <td>{schedule.status}</td>
-                      <td>{new Date(schedule.dateCreated).toLocaleString()}</td>
+   
                     </tr>
                   ))}
                 </tbody>
@@ -296,7 +294,6 @@ const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
                 <thead>
                   <tr>
                     <th>Node Name</th>
-                    <th>Schedule</th>
                     <th>Status</th>
                     <th>Date Created</th>
                   </tr>
@@ -305,7 +302,6 @@ const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
                   {floatingSchedules.map((schedule, index) => (
                     <tr key={index}>
                       <td>{schedule.nodeName}</td>
-                      <td>{schedule.schedule}</td>
                       <td>{schedule.status}</td>
                       <td>{new Date(schedule.dateCreated).toLocaleString()}</td>
                     </tr>
