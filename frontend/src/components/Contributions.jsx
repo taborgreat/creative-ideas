@@ -75,7 +75,7 @@ const Contributions = ({ nodeSelected }) => {
                 {contribution.action === "editValue" && (
                   <p><strong>Edited Value:</strong> {JSON.stringify(contribution.additionalInfo.valueEdited)}</p>
                 )}
-                {contribution.action === "statusChange" && (
+                {contribution.action === "editStatus" && (
                   <p><strong>Status:</strong> {contribution.statusEdited}</p>
                 )}
                 {contribution.action === "trade" && (
