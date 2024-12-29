@@ -238,43 +238,42 @@ const logContribution = async ({
   userId,
   nodeId,
   action,
-  status,
+  statusEdited,
   valueEdited,
   nodeVersion,
   tradeId,
+  goalEdited,
+  scheduleEdited,
+  inviteAction,
 }) => {
   // Default handling for optional fields
-  status = status || null; // Set status to null if it's undefined or null
+  statusEdited = statusEdited || null; // Set status to null if it's undefined or null
+  goalEdited = goalEdited || null;
+  scheduleEdited = scheduleEdited || null;
+  inviteAction = inviteAction || null;
   valueEdited = valueEdited || null; // Set valueEdited to an empty Map if undefined or null
   tradeId = tradeId || null; // Set tradeId to null if undefined or null
   // Validate 'action' field against allowed actions
+ 
   const validActions = [
     "create",
-    "statusChange",
+    "editStatus",
     "editValue",
     "prestige",
     "trade",
     "delete",
+    "invite",
+    "editSchedule",
+    "editGoal",
   ];
   if (!validActions.includes(action)) {
     throw new Error("Invalid action type");
   }
-  console.log(
-    "userId:",
-    userId,
-    "nodeId:",
-    nodeId,
-    "action:",
-    action,
-    "nodeVersion:",
-    nodeVersion,
-    "value",
-    valueEdited
-  );
+ 
 
   try {
     // Validate required fields (userId, nodeId, action, and nodeVersion are required)
-    if (!userId || !nodeId || !action || !nodeVersion) {
+    if (!userId || !nodeId || !action || nodeVersion === undefined) {
       throw new Error("Missing required fields");
     }
 
@@ -283,10 +282,13 @@ const logContribution = async ({
       userId: userId,
       nodeId: nodeId,
       action: action,
-      status: status,
+      statusEdited: statusEdited,
       valueEdited: valueEdited,
       tradeId: tradeId,
       nodeVersion: nodeVersion,
+      goalEdited: goalEdited,
+      scheduleEdited: scheduleEdited,
+      inviteAction: inviteAction,
       date: new Date(),
     });
 
@@ -319,18 +321,44 @@ app.post("/get-contributions", authenticate, async (req, res) => {
     const contributions = await Contribution.find({ nodeId })
       .populate("userId", "username") // Populate only the 'username' field from the User model
       .populate("nodeId") // Populate the entire node object
+      .populate("inviteAction.receivingId", "username") // Populate receivingId in inviteAction
       .sort({ date: -1 }); // Sort by date in descending order
 
     // Modify the contributions to add more details based on the action
     const enhancedContributions = contributions.map((contribution) => {
       let additionalInfo = null;
 
-      if (contribution.action === "editValue") {
-        additionalInfo = contribution.valueEdited; // Show valueEdited for editValue actions
-      } else if (contribution.action === "statusChange") {
-        additionalInfo = contribution.status; // Show status for statusChange actions
-      } else if (contribution.action === "trade") {
-        additionalInfo = contribution.tradeId; // Show tradeId for trade actions
+      // Determine additional information based on the action
+      switch (contribution.action) {
+        case "editValue":
+          additionalInfo = { valueEdited: contribution.valueEdited };
+          break;
+        case "editStatus":
+          additionalInfo = { statusEdited: contribution.statusEdited };
+          break;
+        case "trade":
+          additionalInfo = { tradeId: contribution.tradeId };
+          break;
+        case "invite":
+          additionalInfo = {
+            inviteAction: contribution.inviteAction
+              ? {
+                  action: contribution.inviteAction.action,
+                  receivingUsername: contribution.inviteAction.receivingId
+                    ? contribution.inviteAction.receivingId.username
+                    : null,
+                }
+              : null,
+          };
+          break;
+        case "editSchedule":
+          additionalInfo = { scheduleEdited: contribution.scheduleEdited };
+          break;
+        case "editGoal":
+          additionalInfo = { goalEdited: contribution.goalEdited };
+          break;
+        default:
+          additionalInfo = null;
       }
 
       return {
@@ -341,13 +369,13 @@ app.post("/get-contributions", authenticate, async (req, res) => {
       };
     });
 
-    // Return the contributions with enhanced information
-    res.json({ contributions: enhancedContributions });
-  } catch (error) {
-    console.error("Error fetching contributions:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(200).json({ success: true, contributions: enhancedContributions });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
+
 
 async function setValueForNode(nodeId, key, value, userId, versionIndex) {
   const node = await findNodeById(nodeId);
@@ -408,6 +436,69 @@ app.post("/edit-value", authenticate, async (req, res) => {
   } catch {
     console.log("sorry bitch");
   }
+  return res.status(200).json({ message: "Value updated successfully." });
+});
+
+async function setGoalForNode(nodeId, key, goal, userId, versionIndex) {
+  const node = await findNodeById(nodeId);
+
+  try {
+    if (!node) {
+      throw new Error("Node not found");
+    }
+
+    // Check if the versionIndex exists in the versions array
+    if (node.versions[versionIndex] === undefined) {
+      throw new Error("Version index does not exist");
+    }
+
+    const currentVersion = node.versions[versionIndex];
+
+    // Ensure that the 'values' map is updated properly
+    if (currentVersion) {
+      currentVersion.goals.set(key, goal);
+    } else {
+      // If there are no existing values, create a new Map
+      currentVersion.values = new Map();
+      currentVersion.goals.set(key, goal);
+    }
+
+    // Optionally save the node after modification if your system supports persistence
+
+    await logContribution({
+      userId: userId,
+      nodeId,
+      action: "editGoal",
+      status: null,
+      goalEdited: { [key]: goal },
+      nodeVersion: versionIndex,
+      tradeId: null,
+    });
+
+    node.save();
+
+    return currentVersion;
+  } catch (error) {
+    console.error("Error setting goal for node:", error);
+  }
+}
+
+app.post("/edit-goal", authenticate, async (req, res) => {
+  const { nodeId, key, goal, version } = req.body;
+  const userId = req.userId;
+  const versionIndex = version.toString();
+  const numericValue = Number(goal);
+
+  // Check if the conversion was successful and that it's a number
+  if (isNaN(numericValue)) {
+    return res.status(400).json({ error: "Goal  must be a valid number" });
+  }
+  try {
+    await setGoalForNode(nodeId, key, goal, userId, versionIndex);
+  } catch {
+    console.log("sorry bitch");
+  }
+  return res.status(200).json({ message: "Goal updated successfully." });
 });
 
 // POST /get-tree - Returns the entire tree starting from a specified root node (rootId in body)
@@ -710,9 +801,10 @@ app.post("/add-nodes-tree", async (req, res) => {
 });
 
 // POST /edit-status - Edits the status of a specific version of a node and all its child nodes
-app.post("/edit-status", async (req, res) => {
-  const { nodeId, status, version } = req.body;
-  console.log(status, version);
+app.post("/edit-status", authenticate, async (req, res) => {
+  const { nodeId, status, version, isInherited } = req.body;
+  const userId = req.userId;
+
   try {
     const node = await findNodeById(nodeId);
     if (!node) {
@@ -733,8 +825,26 @@ app.post("/edit-status", async (req, res) => {
     targetVersion.status = status;
     await node.save(); // Save the updated node
 
-    // Optionally, if you want to apply the status change recursively to child nodes:
-    await updateNodeStatusRecursively(node, status, version);
+    try {
+      await logContribution({
+        userId: userId,
+        nodeId: nodeId,
+        action: "editStatus",
+        statusEdited: status,
+        nodeVersion: version,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Error logging contribution",
+        error: error.message,
+      });
+    }
+
+    if (isInherited){
+      await updateNodeStatusRecursively(node, status, version, userId);
+    }
+
 
     // Return success message
     res.json({
@@ -749,14 +859,17 @@ app.post("/edit-status", async (req, res) => {
   }
 });
 
-// Helper function to recursively update status for the node and its children (based on version)
-async function updateNodeStatusRecursively(node, status, version) {
+async function updateNodeStatusRecursively(node, status, version, userId) {
+
   // If the status is "divider", update the parent node and skip child updates
   if (status === "divider") {
     // Update the parent node status without modifying the children
-    const targetVersion = node.versions.find((v) => v.prestige === version);
-    if (targetVersion) {
-      targetVersion.status = status;
+    const targetVersionIndex = node.versions.findIndex(
+      (v) => v.prestige === version
+    );
+    if (targetVersionIndex !== -1) {
+      // Update the version status by index
+      node.versions[targetVersionIndex].status = status;
       await node.save(); // Save the updated node
     }
   } else {
@@ -766,19 +879,42 @@ async function updateNodeStatusRecursively(node, status, version) {
       for (const childId of node.children) {
         const childNode = await findNodeById(childId);
 
-        // Check if the version provided in the request exists for the child node
-        const targetChildVersion = childNode.versions.find(
-          (v) => v.version === version
+        // Find the index of the version that matches the child's prestige
+        const targetChildVersionIndex = childNode.versions.findIndex(
+          (v) => v.prestige === childNode.prestige
         );
-        if (targetChildVersion) {
-          targetChildVersion.status = status;
+
+        // If a matching version is found, update its status
+        if (targetChildVersionIndex !== -1) {
+          childNode.versions[targetChildVersionIndex].status = status;
           await childNode.save(); // Save the updated child node
 
-          // Recursively update the child node's children
-          console.log(
-            `Updating child node ${childNode._id} with status ${status}`
-          );
-          await updateNodeStatusRecursively(childNode, status, version); // Recursive call for child node
+        
+          try {
+            await logContribution({
+              userId: userId,
+              nodeId: childNode._id,
+              action: "editStatus",
+              statusEdited: status,
+              nodeVersion: targetChildVersionIndex,
+            });
+          } catch (error) {
+            console.log({
+              userId: userId,
+              nodeId: childNode._id,
+              action: "editStatus",
+              statusEdited: status,
+              nodeVersion: childNode.versions[targetChildVersionIndex].prestige,
+            });
+            return res.status(500).json({
+              success: false,
+              message: "Error logging contribution",
+              error: error.message,
+            });
+          }
+          await updateNodeStatusRecursively(childNode, status, version, userId); // Recursive call for child node
+        } else {
+          console.log(`Version not found for child node ${childNode._id}`);
         }
       }
     }
@@ -800,17 +936,25 @@ function handleSchedule(nodeVersion) {
   }
 }
 
-app.post("/update-schedule", async (req, res) => {
+app.post("/update-schedule", authenticate, async (req, res) => {
   const { nodeId, versionIndex, newSchedule, reeffectTime } = req.body;
-
+  const userId = req.userId;
   // Validate inputs
-  if (!nodeId || versionIndex === undefined || !newSchedule || reeffectTime===undefined) {
+  if (
+    !nodeId ||
+    versionIndex === undefined ||
+    !newSchedule ||
+    reeffectTime === undefined
+  ) {
     return res
       .status(400)
-      .json({ message: "nodeId, versionIndex, newSchedule, and reEffectTime are required." });
+      .json({
+        message:
+          "nodeId, versionIndex, newSchedule, and reEffectTime are required.",
+      });
   }
 
-  if(reeffectTime > 1000000){
+  if (reeffectTime > 1000000) {
     return res
       .status(400)
       .json({ message: "reeffect time must be below 1,000,000 hrs" });
@@ -827,16 +971,35 @@ app.post("/update-schedule", async (req, res) => {
       return res.status(400).json({ message: "Invalid version index." });
     }
 
+    let formattedDate = new Date(newSchedule);;
     // Update the schedule and reEffectTime for the specified version
-    node.versions[versionIndex].schedule = new Date(newSchedule);
+    node.versions[versionIndex].schedule = formattedDate;
     node.versions[versionIndex].reeffectTime = reeffectTime;
 
     // Save the updated node
     await node.save();
 
+   
+    const scheduleEdited = {
+        date: formattedDate,
+        
+        reeffectTime: reeffectTime,
+        }
+ 
+
+    await logContribution({
+      userId: userId,
+      nodeId: nodeId,
+      action: "editSchedule",
+      nodeVersion: versionIndex, // Index of the version with prestige
+      scheduleEdited: scheduleEdited,
+    });
     return res
       .status(200)
-      .json({ message: "Schedule and re-effect time updated successfully.", node });
+      .json({
+        message: "Schedule and re-effect time updated successfully.",
+        node,
+      });
   } catch (error) {
     console.error("Error updating schedule:", error);
     return res
@@ -844,8 +1007,6 @@ app.post("/update-schedule", async (req, res) => {
       .json({ message: "Server error, could not update schedule." });
   }
 });
-
-
 
 async function addPrestige(node) {
   const currentVersion = node.versions.find(
@@ -889,20 +1050,43 @@ async function addPrestige(node) {
     .save()
     .then(() => console.log(`Node prestige updated to ${node.prestige}`))
     .catch((err) => console.error("Error saving node:", err));
+
+  
 }
 
-app.post("/add-prestige", async (req, res) => {
+app.post("/add-prestige", authenticate, async (req, res) => {
   const { nodeId } = req.body;
+  const userId  = req.userId; // Assuming req.userId exists and contains userId
   console.log(nodeId);
-  const node = await findNodeById(nodeId);
-  if (node) {
-    await addPrestige(node);
 
-    res.json({ success: true });
-  } else {
-    res.status(404).json({ success: false, message: "Node not found" });
+  try {
+    const node = await findNodeById(nodeId);
+
+    if (node) {
+      // Assume `node.versions` is an array containing version information
+      const targetNodeIndex = node.prestige;
+
+    
+
+      await addPrestige(node);
+     
+      await logContribution({
+        userId: userId,
+        nodeId: nodeId,
+        action: "prestige",
+        nodeVersion: targetNodeIndex, // Index of the version with prestige
+      });
+
+      res.json({ success: true });
+    } else {
+      res.status(404).json({ success: false, message: "Node not found" });
+    }
+  } catch (error) {
+    console.error("Error processing prestige:", error);
+    res.status(500).json({ success: false, message: "An error occurred" });
   }
 });
+
 
 async function tradeValuesBetweenNodes(
   nodeAId,
@@ -1225,16 +1409,33 @@ app.post("/invite", authenticate, async (req, res) => {
       status: "pending", // Default status; will be updated below if action is immediate
     });
 
+    const inviteAction = {
+      receivingId: receivingUser._id}
+    
+
+   
+
+    
+
     const isOwner = node.rootOwner._id.toString() === userId;
 
     // Contributor invitation which only owner can do
     if (!isToBeOwner && !isUninviting) {
-      if(!isOwner){
+      if (!isOwner) {
         return res.status(403).json({
           status: 403,
           message: "Only the current owner can invite a new contributor",
         });
       }
+      inviteAction.action="invite"
+    
+      await logContribution({
+        userId: userId,
+        nodeId: node.id,
+        action: "invite",
+        inviteAction: inviteAction,
+        nodeVersion: node.prestige, // Index of the version with prestige
+      });
       await invite.save();
       return res.status(200).json({
         status: 200,
@@ -1264,6 +1465,16 @@ app.post("/invite", authenticate, async (req, res) => {
       invite.status = "accepted";
       await invite.save();
 
+      inviteAction.action="switchOwner"
+    
+      await logContribution({
+        userId: userId,
+        nodeId: node.id,
+        action: "invite",
+        inviteAction: inviteAction,
+        nodeVersion: node.prestige, // Index of the version with prestige
+      });
+
       return res.status(200).json({
         status: 200,
         message: "Ownership transferred and invite logged",
@@ -1272,8 +1483,6 @@ app.post("/invite", authenticate, async (req, res) => {
 
     // self-removal
     if (!isToBeOwner && isUninviting) {
-      
-
       // Case 1: Owner tries to remove themselves but contributors exist
       if (
         isOwner &&
@@ -1300,6 +1509,16 @@ app.post("/invite", authenticate, async (req, res) => {
         await User.findByIdAndUpdate(receivingUser._id, {
           $pull: { roots: rootId }, // Remove rootId from the user's roots
         });
+        inviteAction.action="removeContributor"
+    
+        await logContribution({
+          userId: userId,
+          nodeId: node.id,
+          action: "invite",
+          inviteAction: inviteAction,
+          nodeVersion: node.prestige, // Index of the version with prestige
+        });
+        
 
         return res.status(200).json({
           status: 200,
@@ -1319,7 +1538,15 @@ app.post("/invite", authenticate, async (req, res) => {
         await User.findByIdAndUpdate(userId, {
           $pull: { roots: rootId }, // Remove rootId from the user's roots
         });
-
+        inviteAction.action="removeContributor"
+    
+        await logContribution({
+          userId: userId,
+          nodeId: node.id,
+          action: "invite",
+          inviteAction: inviteAction,
+          nodeVersion: node.prestige, // Index of the version with prestige
+        });
         return res.status(200).json({
           status: 200,
           message: "Owner removed themselves and root ownership cleared",
@@ -1351,7 +1578,15 @@ app.post("/invite", authenticate, async (req, res) => {
         await User.findByIdAndUpdate(userId, {
           $pull: { roots: rootId }, // Remove rootId from the user's roots
         });
-
+        inviteAction.action="removeContributor"
+    
+        await logContribution({
+          userId: userId,
+          nodeId: node.id,
+          action: "invite",
+          inviteAction: inviteAction,
+          nodeVersion: node.prestige, // Index of the version with prestige
+        });
         return res.status(200).json({
           status: 200,
           message: "Contributor removed themselves and invite logged",
@@ -1375,7 +1610,10 @@ app.post("/invite", authenticate, async (req, res) => {
 app.post("/invite/accept", authenticate, async (req, res) => {
   const { inviteId, acceptInvite } = req.body;
   const userReceiving = req.userId;
-  console.log(userReceiving, inviteId, acceptInvite);
+  const inviteAction = {
+    receivingId: userReceiving}
+  
+
   try {
     // Find the invite by ID
     const invite = await Invite.findById(inviteId);
@@ -1406,7 +1644,15 @@ app.post("/invite/accept", authenticate, async (req, res) => {
       // Update the invite status to 'accepted'
       invite.status = "accepted";
       await invite.save();
+      inviteAction.action="acceptInvite"
 
+      await logContribution({
+        userId: userReceiving,
+        nodeId: node.id,
+        action: "invite",
+        inviteAction: inviteAction,
+        nodeVersion: node.prestige, // Index of the version with prestige
+      });
       // Return a JSON response with success
       return res.status(200).json({
         success: true,
@@ -1420,6 +1666,15 @@ app.post("/invite/accept", authenticate, async (req, res) => {
       // Update the invite status to 'declined'
       invite.status = "declined";
       await invite.save();
+      inviteAction.action="denyInvite"
+    
+      await logContribution({
+        userId: userReceiving,
+        nodeId: node.id,
+        action: "invite",
+        inviteAction: inviteAction,
+        nodeVersion: node.prestige, // Index of the version with prestige
+      });
 
       // Return a JSON response with success
       return res.status(200).json({
@@ -1446,9 +1701,9 @@ app.post("/pending-invites", authenticate, async (req, res) => {
     const pendingInvites = await Invite.find({
       userReceiving: userId,
       status: "pending",
-    }).populate("userInviting", "username")
-    .populate("rootId", "name"); // Populate the username field for userReceiving
-
+    })
+      .populate("userInviting", "username")
+      .populate("rootId", "name"); // Populate the username field for userReceiving
 
     // Return the found invites
     return res.status(200).json({ invites: pendingInvites });
@@ -1459,7 +1714,6 @@ app.post("/pending-invites", authenticate, async (req, res) => {
       .json({ message: "Server error, could not fetch pending invites" });
   }
 });
-
 
 // Start the server
 app.listen(port, () => {

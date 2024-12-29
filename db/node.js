@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
-const Goal = require("./Goal");
+
 
 const NodeSchema = new mongoose.Schema({
   _id: {
@@ -19,7 +19,7 @@ const NodeSchema = new mongoose.Schema({
       dateCreated: { type: Date, default: Date.now },
       schedule: { type: Date, default: null },
       reeffectTime: { type: Number, default: 0 },
-      goals: [{ type: String, ref: "Goal" }],
+      goals: { type: Map, of: Number, default: {} },
     },
   ],
   children: [{ type: String, ref: "Node" }],
