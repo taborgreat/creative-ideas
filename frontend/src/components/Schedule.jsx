@@ -14,7 +14,6 @@ const extractSchedules = (node, schedules = []) => {
           dateCreated: version.dateCreated,
         });
       }
-      
     });
   }
 
@@ -25,7 +24,7 @@ const extractSchedules = (node, schedules = []) => {
   return schedules;
 };
 
-const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
+const Schedule = ({ nodeSelected, tree, nodeVersion, getTree, rootSelected }) => {
   if (!nodeSelected) {
     return <div><h3>Schedule</h3><p>No node selected</p></div>;
   }
@@ -42,6 +41,7 @@ const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
   const [isEditing, setIsEditing] = useState(false);  // Track whether the schedule is being edited
   const [newSchedule, setNewSchedule] = useState(scheduleSelected || '');  // Store the new schedule
   const [reeffectTime, setReeffectTime] = useState(nodeSelected?.versions?.[nodeVersion]?.reeffectTime || 0);
+
   useEffect(() => {
     if (nodeSelected && nodeSelected.versions?.length > 0) {
       setScheduleSelected(nodeSelected.versions[nodeVersion].schedule);
@@ -51,7 +51,7 @@ const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
 
   const chopTree = (node, nodeId) => {
     if (node._id === nodeId._id) {
-      console.log("returned",{...node})
+   
       return { ...node };
     }
 
@@ -78,7 +78,6 @@ const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
     if (choppedTree) {
       const schedules = extractSchedules(choppedTree);
       const filtered = schedules.filter((schedule) => statusFilter[schedule.status]);
-      console.log("filter", filtered)
       setFilteredSchedules(filtered);
     }
   }, [statusFilter, choppedTree]);
@@ -98,49 +97,45 @@ const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
     setReeffectTime(event.target.value);
   };
 
-
-
   const handleScheduleSubmit = async (e) => {
+    e.preventDefault();
 
-      e.preventDefault();
-  
-      const token = Cookies.get("token");
-      if (!token) {
-        console.error('No JWT token found!');
-        return;
+    const token = Cookies.get("token");
+    if (!token) {
+      console.error('No JWT token found!');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:3000/update-schedule', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          nodeId: nodeSelected._id,
+          newSchedule: newSchedule,
+          reeffectTime: reeffectTime,
+          versionIndex: nodeVersion,
+        }),
+      });
+
+      const data = await response.json();
+      getTree(rootSelected);
+
+      if (!response.ok) {
+        console.error('error changing schedule', data);
+        throw new Error('Failed to create node');
       }
-      
-  
-      try {
-        const response = await fetch('http://localhost:3000/update-schedule', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            nodeId: nodeSelected._id,
-            newSchedule: newSchedule,
-            reeffectTime: reeffectTime,
-            versionIndex: nodeVersion
-          }),
-        });
-  
-        const data = await response.json();
-        if (!response.ok) {
-          console.error('error changing schdule', data);
-          throw new Error('Failed to create node');
-        }
-  
- 
-  
-        // Reset state after successful creation
-        setScheduleSelected(newSchedule);
-        setIsEditing(false);
-      } catch (error) {
-        console.error('Error setting schedule:', error.message);
-      }
-    };
+
+      getTree(rootSelected);
+      setScheduleSelected(newSchedule);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error setting schedule:', error.message);
+    }
+  };
 
   const today = new Date();
   const todaySchedules = [];
@@ -148,32 +143,23 @@ const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
   const floatingSchedules = [];
 
   filteredSchedules.forEach((schedule) => {
-    const scheduleDate = new Date(schedule.schedule);
-  
-    if (!schedule.schedule) {
-      // Classify as floating if there is no schedule
-      floatingSchedules.push(schedule);
-    } else {
-      const timeDiff = scheduleDate - today;
-  
-      // Check if it's scheduled within 24 hours
-      if (scheduleDate.toDateString() === today.toDateString() && timeDiff <= 86400000 && timeDiff >= 0) {
-        todaySchedules.push(schedule);
-      } 
-      // Check if it's scheduled after today (upcoming)
-      else if (scheduleDate > today) {
-        upcomingSchedules.push(schedule);
-      } 
-    }
-  });
+    const scheduleDate = schedule.schedule ? new Date(schedule.schedule) : null;
 
-  // Sort the today schedules by urgency (ascending time)
+    if (!schedule.schedule) {
+      floatingSchedules.push(schedule); // Add to floating if no schedule
+    } else {
+      
+        upcomingSchedules.push(schedule); // Add to upcoming schedules
+      }
+    }
+  );
+
   todaySchedules.sort((a, b) => new Date(a.schedule) - new Date(b.schedule));
 
   return (
     <div>
       <h3>Schedule</h3>
-  
+
       <div className="schedule-container">
         {scheduleSelected ? (
           <div>
@@ -183,62 +169,64 @@ const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
         ) : (
           <p>No schedule for this node</p>
         )}
-  
+
         <button onClick={() => setIsEditing(!isEditing)}>
           {isEditing ? 'Cancel' : 'Edit Schedule'}
         </button>
-  
+
         {isEditing && (
-           <form onSubmit={handleScheduleSubmit}>
-           <input
-             type="datetime-local"
-             value={newSchedule}
-             onChange={handleScheduleChange}
-             required
-           />
-           <br />
-           <label>
-             Re-effect Time (hours):
-             <input
-               type="number"
-               value={reeffectTime}
-               onChange={handleReeffectTimeChange}
-               required
-               step="0.1"
-               min="0"
-               max="1000000"
-             />
-           </label>
-           <br />
-           <button type="submit">Submit Schedule</button>
-         </form>
+          <form onSubmit={handleScheduleSubmit}>
+            <input
+              type="datetime-local"
+              value={newSchedule}
+              onChange={handleScheduleChange}
+              required
+            />
+            <br />
+            <label>
+              Re-effect Time (hours):
+              <input
+                type="number"
+                value={reeffectTime}
+                onChange={handleReeffectTimeChange}
+                required
+                step="0.1"
+                min="0"
+                max="1000000"
+              />
+            </label>
+            <br />
+            <button type="submit">Submit Schedule</button>
+          </form>
         )}
-          <div>
-        <label>
-          <input
-            type="checkbox"
-            checked={statusFilter.active}
-            onChange={() => handleStatusChange('active')}
-          />
-          Active
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={statusFilter.trimmed}
-            onChange={() => handleStatusChange('trimmed')}
-          />
-          Trimmed
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={statusFilter.completed}
-            onChange={() => handleStatusChange('completed')}
-          />
-          Completed
-        </label>
-      </div>
+
+        <div>
+          <label>
+            <input
+              type="checkbox"
+              checked={statusFilter.active}
+              onChange={() => handleStatusChange('active')}
+            />
+            Active
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={statusFilter.trimmed}
+              onChange={() => handleStatusChange('trimmed')}
+            />
+            Trimmed
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={statusFilter.completed}
+              onChange={() => handleStatusChange('completed')}
+            />
+            Completed
+          </label>
+        </div>
+
         <div>
           {todaySchedules.length > 0 && (
             <div>
@@ -257,14 +245,13 @@ const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
                       <td>{schedule.nodeName}</td>
                       <td>{schedule.schedule}</td>
                       <td>{schedule.status}</td>
-                 
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           )}
-  
+
           {upcomingSchedules.length > 0 && (
             <div>
               <h4>Upcoming</h4>
@@ -282,14 +269,13 @@ const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
                       <td>{schedule.nodeName}</td>
                       <td>{schedule.schedule}</td>
                       <td>{schedule.status}</td>
-   
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           )}
-  
+
           {floatingSchedules.length > 0 && (
             <div>
               <h4>Floating</h4>
@@ -313,7 +299,7 @@ const Schedule = ({ nodeSelected, tree, nodeVersion }) => {
               </table>
             </div>
           )}
-  
+
           {filteredSchedules.length === 0 && <p>No schedules found.</p>}
         </div>
       </div>

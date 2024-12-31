@@ -24,7 +24,6 @@ const TreeViewMenu = ({ nodeSelected, nodeVersion, getTree, rootSelected }) => {
 
   const handleTrim = () => {
     if (nodeSelected) {
-      console.log("Trimming node", nodeSelected);
       // Show the TrimNodeForm
       setCurrentForm('trimNode');
     }
@@ -33,7 +32,6 @@ const TreeViewMenu = ({ nodeSelected, nodeVersion, getTree, rootSelected }) => {
 
   const handleComplete = () => {
     if (nodeSelected) {
-      console.log("Completing node", nodeSelected);
       // Show the CompleteNodeForm
       setCurrentForm('completeNode');
     }

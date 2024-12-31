@@ -40,7 +40,6 @@ const CompleteNodeForm = ({ nodeSelected, nodeVersion, onComplete }) => {
         throw new Error('Failed to update status');
       }
 
-      console.log(`Node status updated to "${selectedStatus}" successfully:`, data);
       setShowMenu(false); // Hide the menu after confirmation
 
       onComplete();

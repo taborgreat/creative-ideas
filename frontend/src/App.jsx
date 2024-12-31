@@ -38,7 +38,7 @@ const App = () => {
     }
   }, [rootSelected]);
 
-  const getTree = useCallback(async (rootId) => {
+  const getTree = async (rootId) => {
     try {
       const response = await fetch('http://localhost:3000/get-tree', {
         method: 'POST',
@@ -48,20 +48,42 @@ const App = () => {
       if (!response.ok) throw new Error("Failed to fetch tree");
   
       const data = await response.json();
-      console.log("Fetched tree data", data);
       setTree(data); // Update the tree state
-  
+      
       if (nodeSelected) {
-        // Find the updated node from the fetched tree data
-        const updatedNode = data.find(node => node.id === nodeSelected.id);
+        // Find the updated node from the fetched tree data using a recursive search
+    
+      
+        const findNodeById = (node, id) => {
+
+          if (node._id === id) {
+            return node;
+          }
+        
+          // Check children recursively
+          for (let child of node.children || []) {
+            const foundNode = findNodeById(child, id);
+            if (foundNode) {
+              return foundNode;
+            }
+          }
+        
+          // Return null if not found
+          return null;
+        };
+        
+      
+        const updatedNode = findNodeById(data, nodeSelected._id);
+        
         if (updatedNode) {
           setNodeSelected(updatedNode);  // Ensure nodeSelected is updated
         }
       }
+      
     } catch (error) {
       console.error("Error loading tree:", error);
     }
-  }, [nodeSelected]);
+  };
   
 
   // Handle logout
@@ -130,7 +152,8 @@ const App = () => {
           <Contributions nodeSelected={nodeSelected} />
         </div>
         <div className="schedule">
-          <Schedule nodeSelected={nodeSelected} tree={tree} nodeVersion={nodeVersion} />
+          <Schedule nodeSelected={nodeSelected} tree={tree} nodeVersion={nodeVersion}  getTree={getTree}
+            rootSelected={rootSelected} />
         </div>
       </div>
     </div>

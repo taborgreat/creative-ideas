@@ -41,7 +41,6 @@ const CreateNodeForm = ({ nodeSelected, onComplete }) => {
         throw new Error('Failed to create node');
       }
 
-      console.log('Node created:', data);
 
       // Reset state after successful creation
       setName('');

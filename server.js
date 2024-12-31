@@ -294,7 +294,6 @@ const logContribution = async ({
 
     // Save the new contribution to the database
     await newContribution.save();
-    console.log("Contribution logged successfully");
   } catch (error) {
     console.error("Error logging contribution:", error);
     throw new Error(error.message || "Internal server error");
@@ -402,7 +401,7 @@ async function setValueForNode(nodeId, key, value, userId, versionIndex) {
     }
 
     // Optionally save the node after modification if your system supports persistence
-
+    await node.save();
     await logContribution({
       userId: userId,
       nodeId,
@@ -413,7 +412,7 @@ async function setValueForNode(nodeId, key, value, userId, versionIndex) {
       tradeId: null,
     });
 
-    node.save();
+
 
     return currentVersion;
   } catch (error) {
@@ -433,10 +432,11 @@ app.post("/edit-value", authenticate, async (req, res) => {
   }
   try {
     await setValueForNode(nodeId, key, value, userId, versionIndex);
+    return res.status(200).json({ message: "Value updated successfully." });
   } catch {
-    console.log("sorry bitch");
+    console.log("value update was not full of success");
   }
-  return res.status(200).json({ message: "Value updated successfully." });
+  
 });
 
 async function setGoalForNode(nodeId, key, goal, userId, versionIndex) {
@@ -464,7 +464,7 @@ async function setGoalForNode(nodeId, key, goal, userId, versionIndex) {
     }
 
     // Optionally save the node after modification if your system supports persistence
-
+    await node.save();
     await logContribution({
       userId: userId,
       nodeId,
@@ -475,7 +475,7 @@ async function setGoalForNode(nodeId, key, goal, userId, versionIndex) {
       tradeId: null,
     });
 
-    node.save();
+   
 
     return currentVersion;
   } catch (error) {
@@ -489,16 +489,17 @@ app.post("/edit-goal", authenticate, async (req, res) => {
   const versionIndex = version.toString();
   const numericValue = Number(goal);
 
-  // Check if the conversion was successful and that it's a number
   if (isNaN(numericValue)) {
-    return res.status(400).json({ error: "Goal  must be a valid number" });
+    return res.status(400).json({ error: "Goal must be a valid number" });
   }
+
   try {
     await setGoalForNode(nodeId, key, goal, userId, versionIndex);
-  } catch {
-    console.log("sorry bitch");
+    return res.status(200).json({ message: "Goal updated successfully." });
+  } catch (error) {
+    console.error("Error updating goal:", error);
+    return res.status(500).json({ error: "Failed to update goal" });
   }
-  return res.status(200).json({ message: "Goal updated successfully." });
 });
 
 // POST /get-tree - Returns the entire tree starting from a specified root node (rootId in body)
@@ -1048,7 +1049,7 @@ async function addPrestige(node) {
 
   await node
     .save()
-    .then(() => console.log(`Node prestige updated to ${node.prestige}`))
+    .then()
     .catch((err) => console.error("Error saving node:", err));
 
   
@@ -1057,7 +1058,7 @@ async function addPrestige(node) {
 app.post("/add-prestige", authenticate, async (req, res) => {
   const { nodeId } = req.body;
   const userId  = req.userId; // Assuming req.userId exists and contains userId
-  console.log(nodeId);
+
 
   try {
     const node = await findNodeById(nodeId);
@@ -1153,14 +1154,14 @@ async function tradeValuesBetweenNodes(
   });
 
   await transaction.save();
-  console.log("Trade completed and transaction logged.");
+
 }
 
 // Trade values between two nodes
 app.post("/trade-values", async (req, res) => {
   const { nodeAId, versionAIndex, valuesA, nodeBId, versionBIndex, valuesB } =
     req.body;
-  console.log(req.body);
+
   if (
     nodeAId === undefined ||
     versionAIndex === undefined ||
@@ -1246,7 +1247,7 @@ app.post(
   authenticate,
   upload.single("file"),
   async (req, res) => {
-    console.log(req.body);
+ 
     try {
       const { contentType, content, userId, nodeId, version, isReflection } =
         req.body;

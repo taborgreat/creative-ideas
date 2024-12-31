@@ -6,7 +6,6 @@ import cytoscape from 'cytoscape';
 const findNodeById = (node, id) => {
 
   if (node._id === id) {
-    console.log(node)
     return node;
   }
 
@@ -26,15 +25,13 @@ const TreeView = ({ rootSelected, nodeSelected, setNodeSelected, setNodeVersion,
 
   // Function to handle node selection by id to set nodeselected object from rto
   const selectNodeById = (id) => {
-    console.log("se;ected",tree,id, rootSelected, nodeSelected)
+
     const selectedNode = findNodeById(tree, id);
 
     if (selectedNode) {
       setNodeSelected(selectedNode);
-      console.log("mp",selectedNode);
-    } else {
-      console.log("Node not found");
-    }
+  
+    } 
   };
 
   const cyRef = useRef(null);
@@ -118,7 +115,7 @@ const TreeView = ({ rootSelected, nodeSelected, setNodeSelected, setNodeVersion,
         },
       }).run();
 
-      console.log(tree);
+
 
       // Highlight the root node
       const rootNode = cyInstance.getElementById(rootSelected);

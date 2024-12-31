@@ -8,13 +8,14 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const notesEndRef = useRef(null);
+  
 
   const token = Cookies.get("token");
 
   // Function to fetch notes
   const fetchNotes = async () => {
     if (!nodeSelected) return;
-
+    setNotes([]);
     setLoading(true);
     try {
       const response = await fetch("http://localhost:3000/get-Notes/", {
@@ -173,7 +174,7 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
         setMessage(result.message || "Error uploading the file.");
       }
     } catch (error) {
-      console.error("Error:", error);
+      //console.error("Error:", error); shows if no notes
       setMessage("An error occurred while uploading the file.");
     } finally {
       setLoading(false);
@@ -183,6 +184,7 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
   return (
     <div>
       <h3>Notes and Reflections</h3>
+      
      
       {/* Display Notes */}
       <div style={{ maxHeight: "400px", maxWidth: "600px", overflowY: "scroll", border: "1px solid #ccc", marginTop: "20px" }}>

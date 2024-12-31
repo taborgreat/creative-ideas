@@ -39,11 +39,8 @@ const Contributions = ({ nodeSelected }) => {
       }
 
       const data = await response.json();
-      console.log(data)
       if (data.contributions && data.contributions.length > 0) {
         setContributions(data.contributions);
-      } else {
-        console.log("No contributions found.");
       }
     } catch (error) {
       console.error("Error fetching contributions:", error);

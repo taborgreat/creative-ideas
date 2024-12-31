@@ -65,11 +65,7 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
       if (response.ok) {
         const data = await response.json();
         getTree(rootSelected);
-        if (data.success) {
-          console.log("Prestige added successfully!");
-        } else {
-          console.error("Failed to add prestige:", data.message);
-        }
+       
       } else {
         console.error("Failed to add prestige:", await response.text());
       }
@@ -111,9 +107,12 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
       });
 
       if (response.ok) {
+        const data = await response.json();
         setGoals((prev) => ({ ...prev, [key]: goal }));
         setEditingGoal(null);
         setGoalInput("");
+        getTree(rootSelected);
+      
       } else {
         console.error("Failed to save goal:", await response.text());
       }
@@ -150,6 +149,7 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
         );
         setEditingKey(null);
         setEditingValue("");
+        getTree(rootSelected);
       } else {
         console.error("Failed to save value:", await response.text());
       }
@@ -281,7 +281,7 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
                       {editingGoal === key ? (
                         <div>
                           <input
-                            type="text"
+                            type="number"
                             value={goalInput}
                             onChange={handleGoalChange}
                             placeholder="Enter goal"
@@ -308,11 +308,12 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
                       placeholder="New Key"
                       value={newKey}
                       onChange={(e) => setNewKey(e.target.value)}
+                      
                     />
                   </td>
                   <td>
                     <input
-                      type="text"
+                      type="number"
                       placeholder="New Value"
                       value={newValue}
                       onChange={(e) => setNewValue(e.target.value)}

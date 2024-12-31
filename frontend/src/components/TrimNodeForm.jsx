@@ -31,16 +31,13 @@ const TrimNodeForm = ({ nodeSelected, nodeVersion, onComplete }) => {
             isInherited: true,
           }),
         });
-        console.log({nodeId: nodeSelected._id, // Pass the selected node's ID
-            status: "trimmed", // Trim the status before sending
-            version: nodeVersion,})
+      
         const data = await response.json();
         if (!response.ok) {
           console.error('Error trimming node:', data);
           throw new Error('Failed to trim node');
         }
 
-        console.log('Node and its children trimmed successfully:', data);
         setShowMenu(false); // Hide the menu after confirmation
         onComplete();
       } catch (error) {
