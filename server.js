@@ -23,7 +23,7 @@ const credentials = { key: privateKey, cert: certificate };
 
 const cors = require('cors');
 app.use(cors({
-  origin: 'https://nopoo.life',  // Allow only this origin
+  origin: 'http://localhost:5173',  // Allow only this origin
   methods: ['GET', 'POST', 'OPTIONS'],    // Allow GET, POST, and OPTIONS methods
   allowedHeaders: ['Content-Type', 'Authorization'],       // Allow Content-Type header
   credentials: true,                      // Allow credentials if needed

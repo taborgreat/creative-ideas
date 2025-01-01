@@ -39,3 +39,7 @@ Assign a mongodb uri in .env based off example.env
 
 
 *To make something from your mind into the present
+
+
+To switch from development to production-> change the frontend/.env to the server IP or DNS record
+switch the CORS on server from local network to front end website
