@@ -101,7 +101,7 @@ const TreeView = ({ rootSelected, nodeSelected, setNodeSelected, setNodeVersion,
 
     if (tree) {
       addTreeToCytoscape(tree, cyInstance); // Use the passed `tree` prop
-
+      
       // Apply layout once after tree nodes and edges are added
       cyInstance.layout({
         name: 'breadthfirst',
@@ -115,7 +115,10 @@ const TreeView = ({ rootSelected, nodeSelected, setNodeSelected, setNodeVersion,
         },
       }).run();
 
-
+      cyInstance.fit();  // Ensure all nodes are in view
+    cyInstance.zoom({
+      level: 0.7, // Set zoom level (lower for more zoom-out)
+    });
 
       // Highlight the root node
       const rootNode = cyInstance.getElementById(rootSelected);
@@ -124,18 +127,31 @@ const TreeView = ({ rootSelected, nodeSelected, setNodeSelected, setNodeVersion,
     }
   }, [tree, nodeSelected, setNodeVersion, rootSelected]);
 
-  // Use effect to adjust the camera when nodeSelected changes
   useEffect(() => {
     const cyInstance = cyRef.current;
     if (cyInstance && nodeSelected) {
       // Remove the 'selected' class from all nodes
       cyInstance.nodes().removeClass('selected');
-
+  
       // Add the 'selected' class to the newly selected node
       const selectedNode = cyInstance.getElementById(nodeSelected._id);
       if (selectedNode) {
         selectedNode.addClass('selected');
-        cyInstance.center(selectedNode); // Focus the camera on the selected node
+        
+        // Get the node's current position
+        const position = selectedNode.position();
+        
+        // Animate to center on node with controlled zoom
+        cyInstance.animate({
+          center: {
+            eles: selectedNode
+          },
+          zoom: 1.5, // Adjust this value to control zoom level (1 = 100%, 2 = 200%, etc.)
+          padding: 50, // Add padding around the node
+        }, {
+          duration: 500, // Animation duration in milliseconds
+          easing: 'ease-out-cubic'
+        });
       }
     }
   }, [nodeSelected]);
@@ -157,6 +173,8 @@ const TreeView = ({ rootSelected, nodeSelected, setNodeSelected, setNodeVersion,
       selectNodeById(tappedNode.id);
       setNodeVersion(tappedNode.prestige);
     });
+
+    
   }, [tree]); // Re-run effect when tree changes
 
   return (

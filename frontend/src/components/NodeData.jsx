@@ -192,6 +192,7 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
                 value={nodeVersion}
                 onChange={handleGenerationChange}
                 style={{ padding: "5px" }}
+                
               >
                 {nodeSelected.versions.map((version, index) => (
                   <option key={version._id} value={index}>
@@ -201,7 +202,7 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
               </select>
               {/* Prestige Button */}
               <div style={{ marginTop: "10px" }}>
-                <button onClick={handlePrestige}>Add Prestige</button>
+                <button onClick={handlePrestige}  style={{backgroundColor:"#32CD32 "}}>Add Prestige</button>
               </div>
             </div>
           </div>

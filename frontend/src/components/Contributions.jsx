@@ -58,7 +58,7 @@ const Contributions = ({ nodeSelected }) => {
   }, [nodeSelected, fetchContributions]); // Only depend on `nodeSelected` and `fetchContributions`
 
   return (
-    <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+    <div style={{ maxHeight: "100%", overflowY: "auto" }}>
       <h3>Contributions</h3>
       <ul>
         {contributions.map((contribution) => (

@@ -11,7 +11,7 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 
 const app = express();
-const port = 443; //https
+const port = 442; //https
 const host = '0.0.0.0';
 console.log("Current Working Directory:", process.cwd());
 

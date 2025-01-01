@@ -1,71 +1,140 @@
+/* Background color for general layout */
 .app-container {
   display: grid;
   grid-template-columns: 1.5fr 2fr 2fr;
   grid-template-rows: auto 1fr 1fr;
   gap: 10px;
   height: 100vh;
-  overflow: hidden; /* Ensure that the container itself doesn't overflow */
+  border-top: none;
 }
 
+/* Set earthy background color for body */
+body {
+  background-color: #5e5d57; /* Slate Blue for earthy, grounded feel */
+  font-family: 'Verdana', sans-serif;
+  margin: 1px;
+}
+
+/* Header styling */
 .header {
   grid-column: 1 / 4; /* Header spans across all columns */
   grid-row: 1 / 2;
-  background-color: #f5f5f5;
-  padding: 10px;
-  border-bottom: 1px solid #ccc;
   display: flex;
   justify-content: flex-end; /* Push AccountTab to the right */
   align-items: center;
-  max-height: 100px; /* Limit the header's height */
+  max-height: 0px; /* Limit the header's height */
   overflow: hidden; /* Prevent header overflow */
 }
 
+/* Tree View Section */
 .tree-view {
   grid-column: 1 / 2;
   grid-row: 2 / 4;
   border-right: 1px solid #ccc;
   padding: 10px;
-  overflow: hidden; /* Prevent content inside from overflowing */
+  background-color: #87CEEB; /* Soft Moss Green for a fresh, natural feel */
+  max-height: 100%;
+  overflow-y: auto; /* Enable scrolling for overflow */
 }
 
+
+/* Main Content Section */
 .main-content {
   grid-column: 2 / 3;
   grid-row: 2 / 4;
   display: grid;
   grid-template-rows: 1fr 1fr;
   gap: 10px;
-  max-height: calc(100vh - 120px); /* Prevent it from growing beyond available height */
-  overflow: auto; /* Add scrollbars if content exceeds height */
+
+  overflow-y: auto; /* Add scrollbars if content exceeds height */
 }
 
+/* Node Data Section */
 .node-data {
   border-bottom: 1px solid #ccc;
   padding: 10px;
   overflow: auto; /* Prevent the content from overflowing */
+  background-color: #e7e6f0 ;
 }
 
+.transaction {
+  background-color: #C4C3D0;
+}
+
+/* Notes Section */
 .notes {
   padding: 10px;
   overflow: auto; /* Prevent overflow */
+  background-color: #eff3fa   ;
 }
 
+.schedule {
+  background-color:#f7f9ff   ;
+}
+
+/* Side Content Section */
 .side-content {
   grid-column: 3 / 4;
   grid-row: 2 / 4;
   display: grid;
   grid-template-rows: 1fr 1fr;
   gap: 10px;
-  max-height: calc(100vh - 120px); /* Limit height */
-  overflow: auto; /* Scrollbars if content exceeds the available space */
+  /* Warm Terracotta for a cozy, earthy vibe */
+  overflow-y: auto; /* Scrollbars if content exceeds the available space */
 }
 
+/* Transaction and Schedule sections */
 .transaction, .schedule {
   padding: 10px;
   overflow: hidden; /* Prevent overflow */
 }
 
-  
 h3 {
   margin: 0;
   font-weight: bolder;
+  text-decoration: underline;
+ 
+}
+
+/* Mobile Responsive Layout */
+@media (max-width: 768px) {
+  .app-container {
+    grid-template-columns: 1fr; /* Stack everything in one column */
+    grid-template-rows: auto auto auto auto; /* Each item takes its own row */
+    gap: 10px;
+    padding-left: 15px;
+  }
+
+  .header {
+    grid-column: 1 / 2;
+    grid-row: auto;
+  }
+
+  .tree-view {
+    grid-column: 1 / 2;
+    grid-row: auto;
+    border-right: none; /* Optional: Remove the right border for cleaner look */
+    height: 700px;
+    border-bottom: 1px solid #ccc; /* Add a line between sections */
+  }
+
+  .main-content {
+    grid-column: 1 / 2;
+    grid-row: auto;
+    grid-template-rows: none; /* Reset internal grid structure */
+    height: 700px; /* Increased height for mobile */
+    border-bottom: 1px solid #ccc; /* Add a line between sections */
+  }
+
+  .side-content {
+    grid-column: 1 / 2;
+    grid-row: auto;
+    grid-template-rows: none; /* Reset internal grid structure */
+    height: 700px; /* Increased height for mobile */
+    border-bottom: 1px solid #ccc; /* Add a line between sections */
+  }
+
+  .transaction, .schedule {
+    overflow: auto; /* Ensure scrolling if content exceeds the viewport */
+  }
 }
