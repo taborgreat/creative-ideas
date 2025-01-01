@@ -8,7 +8,7 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const notesEndRef = useRef(null);
-  
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   const token = Cookies.get("token");
 
@@ -18,13 +18,14 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
     setNotes([]);
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:3000/get-Notes/", {
+      const response = await fetch(`${apiUrl}/get-notes`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ nodeId: nodeSelected._id, version: nodeVersion }),
+        credentials: 'include',
       });
 
       const result = await response.json();
@@ -66,7 +67,7 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
         // Render image for supported image formats
         return (
           <img
-            src={`http://localhost:3000/uploads/${note.content}`}
+            src={`${apiUrl}/uploads/${note.content}`}
             alt="Note"
             style={{ maxWidth: "300px", display: "block", marginTop: "10px" }}
           />
@@ -79,7 +80,7 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
             style={{ maxWidth: "300px", display: "block", marginTop: "10px" }}
           >
             <source
-              src={`http://localhost:3000/uploads/${note.content}`}
+              src={`${apiUrl}/uploads/${note.content}`}
               type={`video/${fileType}`}
             />
             Your browser does not support the video tag.
@@ -106,7 +107,7 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
 
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:3000/create-Note", {
+      const response = await fetch(`${apiUrl}/create-Note`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -120,6 +121,7 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
           version: nodeVersion,
           isReflection,
         }),
+        credentials: 'include',
       });
 
       const result = await response.json();
@@ -158,12 +160,13 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
     formData.append("isReflection", isReflection);
 
     try {
-      const response = await fetch("http://localhost:3000/create-Note", {
+      const response = await fetch(`${apiUrl}/create-Note`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
         },
         body: formData,
+        credentials: 'include',
       });
 
       const result = await response.json();

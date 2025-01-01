@@ -19,6 +19,9 @@ const App = () => {
   const [nodeVersion, setNodeVersion] = useState(null);
   const [tree, setTree] = useState(null);
 
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+
   // Check cookies on load
   useEffect(() => {
     const storedUsername = Cookies.get("username");
@@ -40,7 +43,7 @@ const App = () => {
 
   const getTree = async (rootId) => {
     try {
-      const response = await fetch('http://localhost:3000/get-tree', {
+      const response = await fetch(`${apiUrl}/get-tree`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rootId }),

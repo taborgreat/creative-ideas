@@ -41,7 +41,7 @@ const Schedule = ({ nodeSelected, tree, nodeVersion, getTree, rootSelected }) =>
   const [isEditing, setIsEditing] = useState(false);  // Track whether the schedule is being edited
   const [newSchedule, setNewSchedule] = useState(scheduleSelected || '');  // Store the new schedule
   const [reeffectTime, setReeffectTime] = useState(nodeSelected?.versions?.[nodeVersion]?.reeffectTime || 0);
-
+  const apiUrl = import.meta.env.VITE_API_URL;
   useEffect(() => {
     if (nodeSelected && nodeSelected.versions?.length > 0) {
       setScheduleSelected(nodeSelected.versions[nodeVersion].schedule);
@@ -107,7 +107,7 @@ const Schedule = ({ nodeSelected, tree, nodeVersion, getTree, rootSelected }) =>
     }
 
     try {
-      const response = await fetch('http://localhost:3000/update-schedule', {
+      const response = await fetch(`${apiUrl}/update-schedule`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -119,6 +119,7 @@ const Schedule = ({ nodeSelected, tree, nodeVersion, getTree, rootSelected }) =>
           reeffectTime: reeffectTime,
           versionIndex: nodeVersion,
         }),
+        credentials: 'include',
       });
 
       const data = await response.json();

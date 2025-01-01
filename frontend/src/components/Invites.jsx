@@ -5,19 +5,20 @@ const Invites = () => {
   const [invites, setInvites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const apiUrl = import.meta.env.VITE_API_URL;
   const token = Cookies.get("token");
 
   // Fetch the pending invites from the server
   useEffect(() => {
     const fetchInvites = async () => {
       try {
-        const response = await fetch("http://localhost:3000/pending-invites", {
+        const response = await fetch(`${apiUrl}/pending-invites`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+          credentials: 'include',
         });
 
         const data = await response.json();
@@ -40,7 +41,7 @@ const Invites = () => {
   // Handle accepting or declining an invite
   const handleInviteResponse = async (inviteId, acceptInvite) => {
     try {
-      const response = await fetch("http://localhost:3000/invite/accept", {
+      const response = await fetch(`${apiUrl}/invite/accept`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -50,6 +51,7 @@ const Invites = () => {
           inviteId,
           acceptInvite,
         }),
+        credentials: 'include',
       });
 
       const data = await response.json();

@@ -6,7 +6,7 @@ const CompleteNodeForm = ({ nodeSelected, nodeVersion, onComplete }) => {
   const [status, setStatus] = useState(null); // Store the selected status
   const [loading, setLoading] = useState(false); // Indicate request in progress
   const [isInherited, setIsInherited] = useState(true); // State for checkbox (defaults to true)
-
+  const apiUrl = import.meta.env.VITE_API_URL;
   // Handle the action when a status is chosen
   const handleStatusChange = async (selectedStatus) => {
     setStatus(selectedStatus); // Store the selected status
@@ -20,7 +20,7 @@ const CompleteNodeForm = ({ nodeSelected, nodeVersion, onComplete }) => {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/edit-status', {
+      const response = await fetch(`${apiUrl}/edit-status`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -32,6 +32,7 @@ const CompleteNodeForm = ({ nodeSelected, nodeVersion, onComplete }) => {
           version: nodeVersion,
           isInherited: isInherited, // Include isInherited in the request
         }),
+        credentials: 'include',
       });
 
       const data = await response.json();

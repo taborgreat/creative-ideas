@@ -4,7 +4,7 @@ import Cookies from "js-cookie";
 const Contributions = ({ nodeSelected }) => {
   const [contributions, setContributions] = useState([]);
   const [loading, setLoading] = useState(false);
-
+  const apiUrl = import.meta.env.VITE_API_URL;
   // Fetch contributions data from the server
   const fetchContributions = useCallback(async () => {
     const token = Cookies.get("token");
@@ -21,7 +21,7 @@ const Contributions = ({ nodeSelected }) => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3000/get-contributions", {
+      const response = await fetch(`${apiUrl}/get-contributions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -30,6 +30,7 @@ const Contributions = ({ nodeSelected }) => {
         body: JSON.stringify({
           nodeId: nodeSelected._id,
         }),
+        credentials: 'include',
       });
       
 

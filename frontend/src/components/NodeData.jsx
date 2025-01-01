@@ -11,7 +11,7 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
   const [goals, setGoals] = useState({});
   const [editingGoal, setEditingGoal] = useState(null);
   const [goalInput, setGoalInput] = useState("");
-
+  const apiUrl = import.meta.env.VITE_API_URL;
   useEffect(() => {
     if (nodeSelected && nodeVersion !== null) {
       const version = nodeSelected.versions[nodeVersion];
@@ -51,7 +51,7 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
     }
 
     try {
-      const response = await fetch("http://localhost:3000/add-prestige", {
+      const response = await fetch(`${apiUrl}/add-prestige`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -60,6 +60,7 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
         body: JSON.stringify({
           nodeId: nodeSelected._id,
         }),
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -92,7 +93,7 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
 
     try {
       const goal = goalInput;
-      const response = await fetch("http://localhost:3000/edit-goal", {
+      const response = await fetch(`${apiUrl}/edit-goal`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -104,6 +105,7 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
           goal,
           version: nodeVersion,
         }),
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -129,7 +131,7 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
     }
 
     try {
-      const response = await fetch("http://localhost:3000/edit-value", {
+      const response = await fetch(`${apiUrl}/edit-value`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -141,6 +143,7 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
           value,
           version: nodeVersion,
         }),
+        credentials: 'include',
       });
 
       if (response.ok) {

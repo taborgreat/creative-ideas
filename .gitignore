@@ -2,3 +2,5 @@
 /uploads/*
 !/notes/root_notes.md
 .env
+/frontend/build
+/serverkeys

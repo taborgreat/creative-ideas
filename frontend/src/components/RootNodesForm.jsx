@@ -10,7 +10,7 @@ const RootNodesForm = ({ setRootSelected, rootSelected, rootNodes, setRootNodes,
   const [responseMessage, setResponseMessage] = useState(''); // State to hold the response message
   const [loading, setLoading] = useState(false); // Loading state for async operations
   const token = Cookies.get('token');
-
+  const apiUrl = import.meta.env.VITE_API_URL;
   // Helper function to handle errors and display messages
   const handleError = (error, actionType) => {
     setResponseMessage(`Error during ${actionType}: ${error.message || error}`);
@@ -20,12 +20,13 @@ const RootNodesForm = ({ setRootSelected, rootSelected, rootNodes, setRootNodes,
   const fetchNodeDetails = async (nodeId) => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/get-root-details', {
+      const response = await fetch(`${apiUrl}/get-root-details`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ id: nodeId }),
+        credentials: 'include',
       });
       const data = await response.json();
 
@@ -48,11 +49,12 @@ const RootNodesForm = ({ setRootSelected, rootSelected, rootNodes, setRootNodes,
     const fetchRootNodes = async () => {
       setLoading(true);
       try {
-        const response = await fetch('http://localhost:3000/get-root-nodes', {
+        const response = await fetch(`${apiUrl}/get-root-nodes`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          credentials: 'include',
         });
         const data = await response.json();
 
@@ -83,13 +85,14 @@ const RootNodesForm = ({ setRootSelected, rootSelected, rootNodes, setRootNodes,
   const handleInviteAction = async (actionType, payload) => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/invite', {
+      const response = await fetch(`${apiUrl}/invite`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
+        credentials: 'include',
       });
 
       const data = await response.json();
@@ -196,7 +199,7 @@ const RootNodesForm = ({ setRootSelected, rootSelected, rootNodes, setRootNodes,
     setLoading(true);
   
     try {
-      const response = await fetch('http://localhost:3000/add-node', {
+      const response = await fetch(`${apiUrl}/add-node`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -209,6 +212,7 @@ const RootNodesForm = ({ setRootSelected, rootSelected, rootNodes, setRootNodes,
           reeffectTime,
           isRoot: true,
         }),
+        credentials: 'include',
       });
       const data = await response.json();
   

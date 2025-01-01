@@ -6,7 +6,7 @@ const AiCreate = ({ nodeSelected }) => {
   const [planDescription, setPlanDescription] = useState('');
   const [depth, setDepth] = useState(50); // Default slider value
   const [treeBranch, setTreeBranch] = useState([]);
-
+  const apiUrl = import.meta.env.VITE_API_URL;
   const fetchFromServer = async () => {
   setLoading(true);
 
@@ -31,7 +31,7 @@ const AiCreate = ({ nodeSelected }) => {
   };
 
   try {
-    const serverResponse = await fetch('http://localhost:3000/AiResponse', {
+    const serverResponse = await fetch(`${apiUrl}/AiResponse`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ const AiCreate = ({ nodeSelected }) => {
     setTreeBranch([]); // Clear previous treeBranch data
 
     try {
-      const serverResponse = await fetch('http://localhost:3000/get-parents', {
+      const serverResponse = await fetch(`${apiUrl}/get-parents`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

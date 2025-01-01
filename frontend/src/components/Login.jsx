@@ -7,14 +7,17 @@ const Login = ({ setIsLoggedIn, setUsername, setUserId, userId }) => {
   const [username, setUsernameInput] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   // Handle login logic
   const handleLogin = async () => {
+    console.log(`${apiUrl}/get-tree`)
     try {
-      const response = await fetch("/api/login", {
+      const response = await fetch(`${apiUrl}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
+        credentials: 'include',
       });
 
       const data = await response.json();
@@ -44,10 +47,11 @@ const Login = ({ setIsLoggedIn, setUsername, setUserId, userId }) => {
   // Handle register logic
   const handleRegister = async () => {
     try {
-      const response = await fetch("/api/register", {
+      const response = await fetch(`${apiUrl}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
+        credentials: 'include',
       });
 
       const data = await response.json();

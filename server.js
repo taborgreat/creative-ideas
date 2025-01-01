@@ -1,4 +1,5 @@
 const express = require("express");
+const https = require("https");
 const bodyParser = require("body-parser");
 const fs = require("fs");
 const multer = require("multer");
@@ -10,19 +11,24 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 
 const app = express();
-const port = 3000;
+const port = 443; //https
+const host = '0.0.0.0';
+console.log("Current Working Directory:", process.cwd());
 
-const cors = require("cors");
+const privateKey = fs.readFileSync("./serverkeys/voteonsol.com-key.pem", "utf8");
+const certificate = fs.readFileSync("./serverkeys/voteonsol.com-crt.pem", "utf8");
+const credentials = { key: privateKey, cert: certificate };
 
-// Enable CORS for all routes
-app.use(
-  cors({
-    origin: "http://localhost:5173", // Allow only your frontend's origin
-    methods: ["GET", "POST", "PUT", "DELETE"], // Allow specific HTTP methods
-    credentials: true, // Allow cookies and credentials to be sent
-  })
-);
 
+
+const cors = require('cors');
+app.use(cors({
+  origin: 'https://nopoo.life',  // Allow only this origin
+  methods: ['GET', 'POST', 'OPTIONS'],    // Allow GET, POST, and OPTIONS methods
+  allowedHeaders: ['Content-Type', 'Authorization'],       // Allow Content-Type header
+  credentials: true,                      // Allow credentials if needed
+}));
+app.options('*', cors());
 app.use(express.static("public"));
 app.use(bodyParser.json({ limit: "50mb" })); // Increase the limit to 50MB
 app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
@@ -115,6 +121,7 @@ const authenticate = (req, res, next) => {
 
 // Endpoint to register a new user
 app.post("/register", async (req, res) => {
+  console.log("someone")
   try {
     const { username, password } = req.body;
 
@@ -167,8 +174,13 @@ app.post("/login", async (req, res) => {
     }
 
     // Create JWT token
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
-      expiresIn: "7d",
+    const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '7d' });
+
+    res.cookie('token', token, {
+      httpOnly: true,   // Makes cookie accessible only via HTTP(S) requests
+      secure: true,     // Only send cookie over HTTPS connections
+      sameSite: 'None', // Required for cross-site cookies
+      maxAge: 604800000, // 7 days in milliseconds
     });
 
     // Send token as a response
@@ -1716,7 +1728,7 @@ app.post("/pending-invites", authenticate, async (req, res) => {
   }
 });
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Tree app server running at http://localhost:${port}`);
+// Start the HTTP server
+https.createServer(credentials, app).listen(port, host, () => {
+  console.log(`Tree app server running at https://${host}:${port}`);
 });

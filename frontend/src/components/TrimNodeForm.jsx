@@ -4,7 +4,7 @@ import Cookies from 'js-cookie';
 const TrimNodeForm = ({ nodeSelected, nodeVersion, onComplete }) => {
   const [showMenu, setShowMenu] = useState(true); // To control the visibility of the menu
   const [confirmation, setConfirmation] = useState(null); // Store user confirmation (Yes/No)
-
+  const apiUrl = import.meta.env.VITE_API_URL;
   // Handle the action on menu confirmation
   const handleConfirmation = async (confirm) => {
     setConfirmation(confirm); // Store user confirmation (Yes/No)
@@ -17,12 +17,13 @@ const TrimNodeForm = ({ nodeSelected, nodeVersion, onComplete }) => {
       }
 
       try {
-        const response = await fetch('http://localhost:3000/edit-status', {
+        const response = await fetch(`${apiUrl}/edit-status`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
+          credentials: 'include',
       
           body: JSON.stringify({
             nodeId: nodeSelected._id, // Pass the selected node's ID
