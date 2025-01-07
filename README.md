@@ -30,17 +30,4 @@ Whether you like broad steps or every detail layed out and tracked, the amount o
 
 7. **Test New Plans**: Experiment with new strategies and plans using the power of LLMs. This allows you to generate fresh insights, helping you test and refine your approach in a data-driven manner.
 
-## Getting Started
 
-To get started with this system, clone the repository and follow these steps:
-
-Assign a mongodb uri in .env based off example.env
-
-
-
-*To make something from your mind into the present
-
-
-To switch from development to production-> change the frontend/.env to the server IP or DNS record
-switch the CORS on server from local network to front end website
-change port to 443
