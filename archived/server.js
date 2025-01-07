@@ -39,12 +39,12 @@ const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
 /*DB connection*/
 const mongooseUri = process.env.MONGODB_URI;
 
-const Node = require("./db/node");
-const Transaction = require("./db/transaction");
-const User = require("./db/user");
-const Contribution = require("./db/contribution");
-const Note = require("./db/notes");
-const Invite = require("./db/invite");
+const Node = require("./db/models/node");
+const Transaction = require("./db/models/transaction");
+const User = require("./db/models/user");
+const Contribution = require("./db/models/contribution");
+const Note = require("./db/models/notes");
+const Invite = require("./db/models/invite");
 
 mongoose
   .connect(mongooseUri, { useNewUrlParser: true, useUnifiedTopology: true })

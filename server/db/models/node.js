@@ -25,7 +25,7 @@ const NodeSchema = new mongoose.Schema({
   children: [{ type: String, ref: "Node" }],
   parent: { type: String, ref: "Node", default: null },
 
-  rootOwner: { type: String, ref: "User", default: null }, // Owner of the root, if null it is not a root
+  rootOwner: { type: String, ref: "User", default: null }, //if null it is not a root
   contributors: [{ type: String, ref: "User" }], // Users who can contribute to this node from here on and have access to it
 });
 

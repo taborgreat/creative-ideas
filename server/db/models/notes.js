@@ -27,7 +27,7 @@ const NoteSchema = new mongoose.Schema({
   },
   version: {
     type: String,
-    required: true, // This will link to the version of the node this chat is relevant to
+    required: true,
   },
   isReflection: {
     type: Boolean,
@@ -39,6 +39,5 @@ const NoteSchema = new mongoose.Schema({
   },
 });
 
-// Create the Chat model
 const Note = mongoose.model("Note", NoteSchema);
 module.exports = Note;

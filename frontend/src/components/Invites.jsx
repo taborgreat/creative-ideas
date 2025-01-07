@@ -11,6 +11,7 @@ const Invites = () => {
   // Fetch the pending invites from the server
   useEffect(() => {
     const fetchInvites = async () => {
+
       try {
         const response = await fetch(`${apiUrl}/pending-invites`, {
           method: "POST",

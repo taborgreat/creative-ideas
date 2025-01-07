@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require("uuid");
 // Define the Contribution schema
 const ContributionSchema = new mongoose.Schema({
   _id: {
-    type: String, // UUID as the ID for contributions
+    type: String, 
     default: uuidv4,
   },
   userId: {
@@ -30,22 +30,22 @@ const ContributionSchema = new mongoose.Schema({
       "editSchedule",
       "editGoal",
     ],
-    required: true, // Action taken in the contribution
+    required: true, 
   },
   statusEdited: {
     type: String,
     enum: ["completed", "active", "trimmed", "divider"],
-    default: null, // Nullable status for the contribution
+    default: null,
   },
   valueEdited: {
     type: Map,
     of: Number,
-    default: null, // Nullable map for values edited
+    default: null,
   },
   tradeId: {
     type: String,
     ref: "Transaction",
-    default: null, // Nullable tradeId for trade-related actions
+    default: null,
   },
   inviteAction: {
     type: {
@@ -58,28 +58,28 @@ const ContributionSchema = new mongoose.Schema({
           "removeContributor",
           "switchOwner",
         ],
-        default: null, // Nullable invite action
+        default: null,
       },
       receivingId: {
         type: String,
         ref: "User", // Reference to the user receiving the invite
-        default: null, // Nullable invite receiving ID
+        default: null, 
       },
     },
-    default: null, // Default the entire invite object to null
+    default: null, 
   },
   scheduleEdited: {
     type: {
       date: {
         type: Date,
-        default: null, // Nullable schedule edited date
+        default: null, 
       },
       reeffectTime: {
         type: Number,
-        default: null, // Nullable reeffect time
+        default: null, 
       },
     },
-    default: null, // Default the entire scheduleEdited object to null
+    default: null, 
   },
   goalEdited: {
     type: Map,
@@ -89,15 +89,15 @@ const ContributionSchema = new mongoose.Schema({
   
   nodeVersion: {
     type: String,
-    required: true, // Required node version for tracking
+    required: true, 
   },
   date: {
     type: Date,
-    default: Date.now, // Automatically set the date to the current time
+    default: Date.now, 
   },
 });
 
-// Create the Contribution model
+
 const Contribution = mongoose.model("Contribution", ContributionSchema);
 
 module.exports = Contribution;

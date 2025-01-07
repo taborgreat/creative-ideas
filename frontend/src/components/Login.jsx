@@ -11,7 +11,7 @@ const Login = ({ setIsLoggedIn, setUsername, setUserId, userId }) => {
 
   // Handle login logic
   const handleLogin = async () => {
-    console.log(`${apiUrl}/get-tree`)
+ 
     try {
       const response = await fetch(`${apiUrl}/login`, {
         method: "POST",
@@ -25,6 +25,7 @@ const Login = ({ setIsLoggedIn, setUsername, setUserId, userId }) => {
         // Store JWT token in a cookie
         console.log(data)
         Cookies.set("token", data.token, { expires: 7, secure: false });
+
 
         // Store additional user data in cookies if necessary
         Cookies.set("username", username, { expires: 7, secure: false });

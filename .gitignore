@@ -1,6 +1,7 @@
 /node_modules
-/uploads/*
+server/uploads/*
 !/notes/root_notes.md
 .env
 /frontend/build
-/serverkeys
+server/serverkeys
+/server/node_modules
