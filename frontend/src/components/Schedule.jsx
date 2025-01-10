@@ -24,6 +24,21 @@ const extractSchedules = (node, schedules = []) => {
   return schedules;
 };
 
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  
+  // Format the date as 'MM/DD/YYYY @ hh:mm a'
+  return date.toLocaleString('en-US', {
+    month: '2-digit',
+    day: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true, // 12-hour clock (AM/PM)
+  }).replace(',', ' @'); // Replace the comma with an @ symbol
+};
+
+
 const Schedule = ({ nodeSelected, tree, nodeVersion, getTree, rootSelected }) => {
   if (!nodeSelected) {
     return <div><h3>Schedule</h3><p>No node selected</p></div>;
@@ -164,7 +179,7 @@ const Schedule = ({ nodeSelected, tree, nodeVersion, getTree, rootSelected }) =>
       <div className="schedule-container">
         {scheduleSelected ? (
           <div>
-            <p>Scheduled for: {scheduleSelected}</p>
+            <p>Scheduled for: {formatDate(scheduleSelected)}</p>
             <p>Reeffect time: {reeffectTime} hrs</p>
           </div>
         ) : (
@@ -244,7 +259,7 @@ const Schedule = ({ nodeSelected, tree, nodeVersion, getTree, rootSelected }) =>
                   {todaySchedules.map((schedule, index) => (
                     <tr key={index}>
                       <td>{schedule.nodeName}</td>
-                      <td>{schedule.schedule}</td>
+                      <td>{formatDate(schedule.schedule)}</td>
                       <td>{schedule.status}</td>
                     </tr>
                   ))}
@@ -268,7 +283,7 @@ const Schedule = ({ nodeSelected, tree, nodeVersion, getTree, rootSelected }) =>
                   {upcomingSchedules.map((schedule, index) => (
                     <tr key={index}>
                       <td>{schedule.nodeName}</td>
-                      <td>{schedule.schedule}</td>
+                      <td>{formatDate(schedule.schedule)}</td>
                       <td>{schedule.status}</td>
                     </tr>
                   ))}

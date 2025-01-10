@@ -5,17 +5,18 @@
   position: fixed;
   top: 10px;
   right: 10px;
-  width: 60px; /* Default size */
-  height: 20px; /* Default size */
+  width: 80px; /* Default size */
+  height: 30px; /* Default size */
   background-color: #333;
   border-radius: 5px;
-  color: white;
+  color: rgb(255, 255, 255);
   text-align: center;
   display: flex;
   justify-content: center;
   align-items: center;
   transition: width 0.3s, height 0.3s, opacity 0.3s;
-  z-index: 1000; /* Ensure it appears above other elements */
+  z-index: 10000000; /* Ensure it appears above other elements */
+  overflow: visible;
 }
 
 .account-tab:hover {
@@ -33,10 +34,9 @@
   border-radius: 5px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
   padding: 10px;
-  min-width: 150px;
+  min-width: 200px;
   z-index: 1000; /* Ensure it's above other elements */
-  max-height: 300px; /* Limit the height */
-  overflow-y: auto; /* Allow scrolling */
+
 }
 
 

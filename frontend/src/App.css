@@ -4,8 +4,8 @@
   grid-template-columns: 1.5fr 2fr 2fr;
   grid-template-rows: auto 1fr 1fr;
   gap: 10px;
-  height: 100vh;
   border-top: none;
+  height: 100vh;
 }
 
 /* Set earthy background color for body */
@@ -13,6 +13,12 @@ body {
   background-color: #5e5d57; /* Slate Blue for earthy, grounded feel */
   font-family: 'Verdana', sans-serif;
   margin: 1px;
+   /* Center all text inside the body and app-container */
+  font-family: 'Courier New', Courier, monospace; /* Retro font style */
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 /* Header styling */
@@ -27,14 +33,46 @@ body {
 }
 
 /* Tree View Section */
-.tree-view {
+.tree-view, .tree-view-directory {
   grid-column: 1 / 2;
   grid-row: 2 / 4;
   border-right: 1px solid #ccc;
   padding: 10px;
-  background-color: #87CEEB; /* Soft Moss Green for a fresh, natural feel */
-  max-height: 100%;
+
   overflow-y: auto; /* Enable scrolling for overflow */
+  max-height: 100%;   /* Prevent exceeding container height */
+  
+}
+
+.tree-view {
+  background-color: #87CEEB; /* Soft Moss Green for a fresh, natural feel */;
+}
+/* Container for the filter options positioned at the bottom-right */
+.filters {
+  position: absolute; /* Position relative to its closest positioned ancestor */
+  bottom: 0; /* Pin it to the bottom of the parent container */
+  right: 0; /* Pin it to the right side */
+  display: flex;
+  flex-direction: column; /* Stack the checkboxes vertically */
+  margin: 10px; /* Optional spacing from the edges */
+  z-index: 1000; /* Ensure it's on top */
+  background-color: rgba(255, 255, 255, 0.8); /* Optional background for contrast */
+  padding: 10px; /* Padding for better spacing */
+  border-radius: 5px; /* Optional rounded corners */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Optional shadow */
+}
+
+/* Styling for the filter labels and checkboxes */
+.filters label {
+  font-family: 'Courier New', Courier, monospace; /* Retro font style */
+  font-size: 14px; /* Adjust font size */
+  padding: 5px;
+  cursor: pointer;
+}
+
+/* Optional hover effect for the labels */
+.filters label:hover {
+  background-color: #f0f0f0;
 }
 
 
@@ -45,8 +83,9 @@ body {
   display: grid;
   grid-template-rows: 1fr 1fr;
   gap: 10px;
-
   overflow-y: auto; /* Add scrollbars if content exceeds height */
+  max-height: 100%;   /* Ensure no overflow */
+
 }
 
 /* Node Data Section */
@@ -54,22 +93,22 @@ body {
   border-bottom: 1px solid #ccc;
   padding: 10px;
   overflow: auto; /* Prevent the content from overflowing */
-  background-color: #e7e6f0 ;
+  background-color: #e7e6f0;
 }
 
 .transaction {
-  background-color: #C4C3D0;
+  background-color: black;
 }
 
 /* Notes Section */
 .notes {
   padding: 10px;
   overflow: auto; /* Prevent overflow */
-  background-color: #eff3fa   ;
+  background-color: #eff3fa;
 }
 
 .schedule {
-  background-color:#f7f9ff   ;
+  background-color: #f7f9ff;
 }
 
 /* Side Content Section */
@@ -79,8 +118,8 @@ body {
   display: grid;
   grid-template-rows: 1fr 1fr;
   gap: 10px;
-  /* Warm Terracotta for a cozy, earthy vibe */
   overflow-y: auto; /* Scrollbars if content exceeds the available space */
+  max-height: 100%;   /* Prevent exceeding container height */
 }
 
 /* Transaction and Schedule sections */
@@ -93,7 +132,6 @@ h3 {
   margin: 0;
   font-weight: bolder;
   text-decoration: underline;
- 
 }
 
 /* Mobile Responsive Layout */
@@ -102,39 +140,33 @@ h3 {
     grid-template-columns: 1fr; /* Stack everything in one column */
     grid-template-rows: auto auto auto auto; /* Each item takes its own row */
     gap: 10px;
-    padding-left: 15px;
+    padding-right: 15px;
+    height: 100%;
   }
 
   .header {
     grid-column: 1 / 2;
     grid-row: auto;
   }
-
-  .tree-view {
+  .tree-view-directory {
+       height: 650px; /* Full height */
+  }
+  .tree-view, .tree-view-directory {
     grid-column: 1 / 2;
     grid-row: auto;
     border-right: none; /* Optional: Remove the right border for cleaner look */
-    height: 700px;
     border-bottom: 1px solid #ccc; /* Add a line between sections */
+    overflow-y: auto;  /* Allow scroll if needed */
+    max-height: 100%;   /* Ensure no overflow */
   }
 
-  .main-content {
+  .main-content, .side-content {
     grid-column: 1 / 2;
     grid-row: auto;
-    grid-template-rows: none; /* Reset internal grid structure */
-    height: 700px; /* Increased height for mobile */
+    max-height: 100%;   /* Ensure no overflow */
+    overflow-y: auto;   /* Enable scrolling if content exceeds the viewport */
     border-bottom: 1px solid #ccc; /* Add a line between sections */
   }
 
-  .side-content {
-    grid-column: 1 / 2;
-    grid-row: auto;
-    grid-template-rows: none; /* Reset internal grid structure */
-    height: 700px; /* Increased height for mobile */
-    border-bottom: 1px solid #ccc; /* Add a line between sections */
-  }
 
-  .transaction, .schedule {
-    overflow: auto; /* Ensure scrolling if content exceeds the viewport */
-  }
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Cookies from "js-cookie";
+import './Contributions.css';
 
 const Contributions = ({ nodeSelected }) => {
   const [contributions, setContributions] = useState([]);
@@ -58,8 +59,10 @@ const Contributions = ({ nodeSelected }) => {
   }, [nodeSelected, fetchContributions]); // Only depend on `nodeSelected` and `fetchContributions`
 
   return (
+    <div className="contributions">
     <div style={{ maxHeight: "100%", overflowY: "auto" }}>
       <h3>Contributions</h3>
+      <div className="scrollable-list">
       <ul>
         {contributions.map((contribution) => (
           <li key={contribution._id}>
@@ -102,6 +105,8 @@ const Contributions = ({ nodeSelected }) => {
           </li>
         ))}
       </ul>
+    </div>
+    </div>
     </div>
   );
 };

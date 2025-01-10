@@ -1,6 +1,6 @@
 /* Make the entire content scrollable */
 .schedule-container {
-    max-height: 400px; /* Set the height you want for the entire container */
+    max-height: 750px; /* Set the height you want for the entire container */
     overflow-y: auto;
     border-bottom: 2px solid #ccc; /* Optional: add a bottom border to the scrollable container */
   }

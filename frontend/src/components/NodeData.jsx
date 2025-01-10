@@ -62,7 +62,6 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
         }),
         credentials: 'include',
       });
-
       if (response.ok) {
         const data = await response.json();
         getTree(rootSelected);

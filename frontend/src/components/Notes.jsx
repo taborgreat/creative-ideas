@@ -1,6 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
 import Cookies from "js-cookie";
 
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  
+  // Format the date as 'MM/DD/YYYY @ hh:mm a'
+  return date.toLocaleString('en-US', {
+    month: '2-digit',
+    day: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true, // 12-hour clock (AM/PM)
+  }).replace(',', ' @'); // Replace the comma with an @ symbol
+};
+
+
+
 const Notes = ({ nodeSelected, userId, nodeVersion }) => {
   const [notes, setNotes] = useState([]);
   const [noteContent, setNoteContent] = useState("");
@@ -190,7 +206,7 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
       
      
       {/* Display Notes */}
-      <div style={{ maxHeight: "400px", maxWidth: "600px", overflowY: "scroll", border: "1px solid #ccc", marginTop: "20px" }}>
+      <div style={{ maxHeight: "400px", overflowY: "scroll", border: "1px solid #ccc", marginTop: "20px" , textAlign: 'left'}}>
         {loading ? (
           <p>Loading notes...</p>
         ) : (
@@ -204,16 +220,15 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
                       
                       {note.isReflection && <span> (Reflection)</span>}:
                     </strong>
-                    {note.createdAt}
+                    {formatDate(note.createdAt)}
                   </p>
-                  <div style={{ maxWidth: "100%" }}>
-                    {renderNoteContent(note)}
-                    
-                  </div>
+                  <p style={{ backgroundColor: "white", padding: "10px", borderRadius: "5px" }}>
+                  {renderNoteContent(note)}
+      </p>
                 </div>
               ))
             ) : (
-              <p>No notes available for this node.</p>
+              null
             )}
             <div ref={notesEndRef} />
           </div>

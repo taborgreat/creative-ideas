@@ -106,7 +106,7 @@ const invite = async (req, res) => {
 
       await node.save();
 
-      // Log invite as accepted
+
       invite.status = "accepted";
       await invite.save();
 
@@ -117,7 +117,7 @@ const invite = async (req, res) => {
         nodeId: node.id,
         action: "invite",
         inviteAction: inviteAction,
-        nodeVersion: node.prestige, // Index of the version with prestige
+        nodeVersion: node.prestige, 
       });
 
       return res.status(200).json({

@@ -31,8 +31,7 @@ const AccountTab = ({ username, userId, onLogout, rootNodes, setRootNodes, rootS
       <span className="account-info">
         {isHovered ? (
           <div>
-            <p>Account Name: {username}</p>
-            <p>User ID: {userId}</p>
+            <p>Username: {username}</p>
             <button onClick={handleLogoutClick}>Logout</button>
             <button onClick={toggleRootsForm}>
               {showRoots ? 'Hide Roots' : 'Show Roots'}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback  } from "react";
 import Cookies from "js-cookie"; // Import js-cookie
 import TreeView from "./components/TreeView.jsx";
+import TreeViewDirectory from "./components/TreeViewDirectory.jsx";
 import NodeData from "./components/NodeData.jsx";
 import Notes from "./components/Notes.jsx";
 import Contributions from "./components/Contributions.jsx";
@@ -14,10 +15,22 @@ const App = () => {
   const [username, setUsername] = useState("");
   const [userId, setUserId] = useState("");
   const [rootNodes, setRootNodes] = useState([]);
-  const [rootSelected, setRootSelected] = useState(null);
-  const [nodeSelected, setNodeSelected] = useState(null);
+  const [rootSelected, setRootSelected] = useState(Cookies.get("rootSelected") || null); // Load from cookies if available
+  const [nodeSelected, setNodeSelected] = useState(null); 
   const [nodeVersion, setNodeVersion] = useState(null);
   const [tree, setTree] = useState(null);
+
+  const [currentViewIndex, setCurrentViewIndex] = useState(0);
+
+  // Array of views
+  const views = [TreeView, TreeViewDirectory];
+
+  // Function to handle cycling through views
+  const handleToggleView = () => {
+    setCurrentViewIndex((prevIndex) => (prevIndex + 1) % views.length);
+  };
+
+  const CurrentViewComponent = views[currentViewIndex];
 
   const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -38,8 +51,13 @@ const App = () => {
   useEffect(() => {
     if (rootSelected) {
       getTree(rootSelected);
+      Cookies.set("rootSelected", rootSelected);
     }
+   
+    
   }, [rootSelected]);
+
+
 
   const getTree = async (rootId) => {
     try {
@@ -83,22 +101,36 @@ const App = () => {
         }
       }
       
+      
     } catch (error) {
       console.error("Error loading tree:", error);
     }
   };
+
+  
   
 
-  // Handle logout
   const handleLogout = () => {
-    Cookies.remove("username");
-    Cookies.remove("userId");
-    Cookies.remove("loggedIn");
+    // Clear the necessary states
     setIsLoggedIn(false);
     setUsername("");
     setUserId("");
+    setRootSelected(null);
+    setNodeSelected(null);
+    setRootNodes([]);
+  
+    // Remove cookies
+    Cookies.remove("username");
+    Cookies.remove("userId");
+    Cookies.remove("loggedIn");
     Cookies.remove("token");
+    Cookies.remove("rootSelected");
+    
+ 
+  
+    // You may also want to reset other app-related states or data, depending on your use case
   };
+  
 
   if (!isLoggedIn) {
     return (
@@ -109,6 +141,42 @@ const App = () => {
       />
     );
   }
+
+  const renderCurrentView = () => {
+    switch (currentViewIndex) {
+      case 0:
+        return (
+          <div className="tree-view">
+            <TreeView
+              rootSelected={rootSelected}
+              getTree={getTree}
+              tree={tree}
+              nodeSelected={nodeSelected}
+              setNodeSelected={setNodeSelected}
+              nodeVersion={nodeVersion}
+              setNodeVersion={setNodeVersion}
+              handleToggleView={handleToggleView} // Pass the toggle function
+            />
+          </div>
+        )
+      case 1:
+        return (
+          <div className="tree-view-directory">
+            <TreeViewDirectory
+            tree={tree}
+            nodeSelected={nodeSelected}
+            setNodeSelected={setNodeSelected}
+              handleToggleView={handleToggleView} // Pass the toggle function
+              nodeVersion= {nodeVersion}
+              getTree={getTree}
+              rootSelected={rootSelected}
+            />
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="app-container">
@@ -123,17 +191,11 @@ const App = () => {
           rootSelected={rootSelected}
         />
       </div>
-      <div className="tree-view">
-        <TreeView
-          rootSelected={rootSelected}
-          getTree={getTree}
-          tree={tree}
-          nodeSelected={nodeSelected}
-          setNodeSelected={setNodeSelected}
-          nodeVersion={nodeVersion}
-          setNodeVersion={setNodeVersion}
-        />
-      </div>
+      
+  
+  
+
+      {renderCurrentView()}
 
       <div className="main-content">
         <div className="node-data">
@@ -151,12 +213,13 @@ const App = () => {
         </div>
       </div>
       <div className="side-content">
-        <div className="transaction">
-          <Contributions nodeSelected={nodeSelected} />
-        </div>
+       
         <div className="schedule">
           <Schedule nodeSelected={nodeSelected} tree={tree} nodeVersion={nodeVersion}  getTree={getTree}
             rootSelected={rootSelected} />
+        </div>
+        <div className="transaction">
+          <Contributions nodeSelected={nodeSelected} />
         </div>
       </div>
     </div>

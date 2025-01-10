@@ -148,7 +148,7 @@ async function addPrestigeToNode(node) {
     values: newValues, // Store as Map
     status: "active",
     dateCreated: new Date().toISOString(),
-    schedule: handleSchedule(currentVersion), // Update schedule or keep floating
+    schedule: await handleSchedule(currentVersion), // Update schedule or keep floating
     reeffectTime: currentVersion.reeffectTime, // Inherit from previous version
   };
 

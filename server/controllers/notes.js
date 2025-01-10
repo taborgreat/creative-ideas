@@ -1,9 +1,7 @@
-// controllers/notesController.js
-
 const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
-const Note = require("../db/models/notes"); 
+const Note = require("../db/models/notes");
 
 const uploadsFolder = path.join(__dirname, "../uploads");
 if (!fs.existsSync(uploadsFolder)) {
@@ -32,7 +30,8 @@ const upload = multer({ storage });
 
 const createNote = async (req, res) => {
   try {
-    const { contentType, content, userId, nodeId, version, isReflection } = req.body;
+    const { contentType, content, userId, nodeId, version, isReflection } =
+      req.body;
 
     // Validation
     if (!contentType || !["file", "text"].includes(contentType)) {
@@ -82,17 +81,17 @@ const getNotes = async (req, res) => {
   try {
     const { nodeId, version } = req.body;
 
-    // Build query filter
+
     let query = { nodeId };
 
     if (version && version !== "all") {
       query.version = version; // Only fetch notes for the specific version if it's not "all"
     }
 
-    // Find notes with the constructed query, populate the userId with username
+    
     const notes = await Note.find(query)
       .populate("userId", "username") // Only populate the username field
-      .populate("nodeId"); // Optionally populate the nodeId if needed
+      .populate("nodeId");
 
     if (!notes || notes.length === 0) {
       return res.status(404).json({ message: "No notes found for this node" });
