@@ -1,9 +1,21 @@
-import React, { useState } from 'react';
-import RootNodesForm from './RootNodesForm'; // Ensure the path is correct
-import Invites from './Invites'; // Import the new Invites component
-import './AccountTab.css';
+import React, { useState } from "react";
+import RootNodesForm from "./RootNodesForm"; // Ensure the path is correct
+import Invites from "./Invites"; // Import the new Invites component
+import "./AccountTab.css";
+import Cookies from "js-cookie";
+const apiUrl = import.meta.env.VITE_API_URL;
+const token = Cookies.get("token");
 
-const AccountTab = ({ username, userId, onLogout, rootNodes, setRootNodes, rootSelected, setRootSelected }) => {
+const AccountTab = ({
+  username,
+  userId,
+  onLogout,
+  rootNodes,
+  setRootNodes,
+  rootSelected,
+  setRootSelected,
+  tree,
+}) => {
   const [isHovered, setIsHovered] = useState(false);
   const [showRoots, setShowRoots] = useState(false); // State to toggle RootNodesForm visibility
   const [showInvites, setShowInvites] = useState(false); // State to toggle Invites visibility
@@ -22,6 +34,40 @@ const AccountTab = ({ username, userId, onLogout, rootNodes, setRootNodes, rootS
     setShowInvites((prev) => !prev); // Toggle the Invites visibility
   };
 
+  const handleDownloadTree = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/get-all-data`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          rootId: rootSelected,
+        }),
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error fetching data:", errorData);
+        return;
+      }
+
+      const data = await response.json();
+      const jsonString = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const link = document.createElement("a");
+      link.download = `${rootSelected}.json`;
+      link.href = URL.createObjectURL(blob);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Error fetching data:", error.message);
+    }
+  };
+
   return (
     <div
       className="account-tab"
@@ -34,10 +80,13 @@ const AccountTab = ({ username, userId, onLogout, rootNodes, setRootNodes, rootS
             <p>Username: {username}</p>
             <button onClick={handleLogoutClick}>Logout</button>
             <button onClick={toggleRootsForm}>
-              {showRoots ? 'Hide Roots' : 'Show Roots'}
+              {showRoots ? "Hide Roots" : "Show Roots"}
             </button>
             <button onClick={toggleInvites}>
-              {showInvites ? 'Hide Invites' : 'Show Invites'}
+              {showInvites ? "Hide Invites" : "Show Invites"}
+            </button>
+            <button onClick={handleDownloadTree} disabled={!tree}>
+              Download Tree
             </button>
           </div>
         ) : (
@@ -47,8 +96,8 @@ const AccountTab = ({ username, userId, onLogout, rootNodes, setRootNodes, rootS
 
       {showRoots && (
         <div className="account-tab-content">
-          <RootNodesForm 
-            rootNodes={rootNodes} 
+          <RootNodesForm
+            rootNodes={rootNodes}
             setRootNodes={setRootNodes}
             setRootSelected={setRootSelected}
             rootSelected={rootSelected}

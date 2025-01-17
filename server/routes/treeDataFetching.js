@@ -1,6 +1,12 @@
 const express = require("express");
-const { getRootDetails, getTree, getParents, getRootNodes } = require("../controllers/treeDataFetching");
-const authenticate  = require("../middleware/authenticate");
+const {
+  getRootDetails,
+  getTree,
+  getParents,
+  getRootNodes,
+  getAllData,
+} = require("../controllers/treeDataFetching");
+const authenticate = require("../middleware/authenticate");
 const router = express.Router();
 
 // Endpoint to fetch root node IDs for user
@@ -14,5 +20,7 @@ router.post("/get-tree", getTree);
 
 // Endpoint to fetch parent nodes
 router.post("/get-parents", getParents);
+
+router.post("/get-all-data", authenticate, getAllData);
 
 module.exports = router;

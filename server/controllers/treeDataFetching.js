@@ -1,5 +1,7 @@
 const Node = require("../db/models/node");
 const User = require("../db/models/user");
+const Contribution = require("../db/models/contribution");
+const Note = require("../db/models/notes");
 
 async function getRootDetails(req, res) {
   const { id } = req.body;
@@ -117,9 +119,52 @@ async function getRootNodes(req, res) {
   }
 }
 
+async function getAllData(req, res) {
+  const { rootId } = req.body;
+
+  if (!rootId) {
+    return res.status(400).json({ message: "Root node ID is required" });
+  }
+
+  try {
+    const rootNode = await Node.findById(rootId).populate("children").exec();
+
+    if (!rootNode) {
+      return res.status(404).json({ message: "Node not found" });
+    }
+
+    const populateNodeDetailsRecursive = async (node) => {
+      const [notes, contributions] = await Promise.all([
+        Note.find({ nodeId: node._id }),
+        Contribution.find({ nodeId: node._id }),
+      ]);
+
+      node.notes = notes;
+      node.contributions = contributions;
+
+      if (node.children && node.children.length > 0) {
+        node.children = await Node.populate(node.children, {
+          path: "children",
+        });
+        for (const child of node.children) {
+          await populateNodeDetailsRecursive(child);
+        }
+      }
+    };
+
+    await populateNodeDetailsRecursive(rootNode);
+
+    res.json(rootNode);
+  } catch (error) {
+    console.error("Error fetching node details with contributions:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+}
+
 module.exports = {
   getRootNodes,
   getRootDetails,
   getTree,
   getParents,
+  getAllData,
 };

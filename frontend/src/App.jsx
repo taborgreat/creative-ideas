@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback  } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Cookies from "js-cookie"; // Import js-cookie
 import TreeView from "./components/TreeView.jsx";
 import TreeViewDirectory from "./components/TreeViewDirectory.jsx";
@@ -15,8 +15,10 @@ const App = () => {
   const [username, setUsername] = useState("");
   const [userId, setUserId] = useState("");
   const [rootNodes, setRootNodes] = useState([]);
-  const [rootSelected, setRootSelected] = useState(Cookies.get("rootSelected") || null); // Load from cookies if available
-  const [nodeSelected, setNodeSelected] = useState(null); 
+  const [rootSelected, setRootSelected] = useState(
+    Cookies.get("rootSelected") || null
+  ); // Load from cookies if available
+  const [nodeSelected, setNodeSelected] = useState(null);
   const [nodeVersion, setNodeVersion] = useState(null);
   const [tree, setTree] = useState(null);
 
@@ -34,7 +36,6 @@ const App = () => {
 
   const apiUrl = import.meta.env.VITE_API_URL;
 
-
   // Check cookies on load
   useEffect(() => {
     const storedUsername = Cookies.get("username");
@@ -49,38 +50,34 @@ const App = () => {
   }, []);
 
   useEffect(() => {
+    setNodeSelected(null);
+
     if (rootSelected) {
       getTree(rootSelected);
       Cookies.set("rootSelected", rootSelected);
     }
-   
-    
   }, [rootSelected]);
-
-
 
   const getTree = async (rootId) => {
     try {
       const response = await fetch(`${apiUrl}/get-tree`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rootId }),
       });
       if (!response.ok) throw new Error("Failed to fetch tree");
-  
+
       const data = await response.json();
       setTree(data); // Update the tree state
-      
+
       if (nodeSelected) {
         // Find the updated node from the fetched tree data using a recursive search
-    
-      
-        const findNodeById = (node, id) => {
 
+        const findNodeById = (node, id) => {
           if (node._id === id) {
             return node;
           }
-        
+
           // Check children recursively
           for (let child of node.children || []) {
             const foundNode = findNodeById(child, id);
@@ -88,27 +85,25 @@ const App = () => {
               return foundNode;
             }
           }
-        
+
           // Return null if not found
           return null;
         };
-        
-      
+
         const updatedNode = findNodeById(data, nodeSelected._id);
-        
+
         if (updatedNode) {
-          setNodeSelected(updatedNode);  // Ensure nodeSelected is updated
+          setNodeSelected(updatedNode); // Ensure nodeSelected is updated
         }
+      } else {
+        //default to root node
+        setNodeSelected(data);
+        setNodeVersion(data.prestige);
       }
-      
-      
     } catch (error) {
       console.error("Error loading tree:", error);
     }
   };
-
-  
-  
 
   const handleLogout = () => {
     // Clear the necessary states
@@ -118,19 +113,16 @@ const App = () => {
     setRootSelected(null);
     setNodeSelected(null);
     setRootNodes([]);
-  
+
     // Remove cookies
     Cookies.remove("username");
     Cookies.remove("userId");
     Cookies.remove("loggedIn");
     Cookies.remove("token");
     Cookies.remove("rootSelected");
-    
- 
-  
+
     // You may also want to reset other app-related states or data, depending on your use case
   };
-  
 
   if (!isLoggedIn) {
     return (
@@ -158,16 +150,16 @@ const App = () => {
               handleToggleView={handleToggleView} // Pass the toggle function
             />
           </div>
-        )
+        );
       case 1:
         return (
           <div className="tree-view-directory">
             <TreeViewDirectory
-            tree={tree}
-            nodeSelected={nodeSelected}
-            setNodeSelected={setNodeSelected}
+              tree={tree}
+              nodeSelected={nodeSelected}
+              setNodeSelected={setNodeSelected}
               handleToggleView={handleToggleView} // Pass the toggle function
-              nodeVersion= {nodeVersion}
+              nodeVersion={nodeVersion}
               getTree={getTree}
               rootSelected={rootSelected}
             />
@@ -189,11 +181,9 @@ const App = () => {
           rootNodes={rootNodes}
           setRootSelected={setRootSelected}
           rootSelected={rootSelected}
+          tree={tree}
         />
       </div>
-      
-  
-  
 
       {renderCurrentView()}
 
@@ -209,14 +199,22 @@ const App = () => {
           />
         </div>
         <div className="notes">
-          <Notes nodeSelected={nodeSelected} userId={userId}   nodeVersion={nodeVersion}/>
+          <Notes
+            nodeSelected={nodeSelected}
+            userId={userId}
+            nodeVersion={nodeVersion}
+          />
         </div>
       </div>
       <div className="side-content">
-       
         <div className="schedule">
-          <Schedule nodeSelected={nodeSelected} tree={tree} nodeVersion={nodeVersion}  getTree={getTree}
-            rootSelected={rootSelected} />
+          <Schedule
+            nodeSelected={nodeSelected}
+            tree={tree}
+            nodeVersion={nodeVersion}
+            getTree={getTree}
+            rootSelected={rootSelected}
+          />
         </div>
         <div className="transaction">
           <Contributions nodeSelected={nodeSelected} />

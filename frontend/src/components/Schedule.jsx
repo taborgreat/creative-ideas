@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import './Schedule.css';
+import React, { useState, useEffect } from "react";
+import "./Schedule.css";
 import Cookies from "js-cookie";
 
 const extractSchedules = (node, schedules = []) => {
@@ -26,24 +26,27 @@ const extractSchedules = (node, schedules = []) => {
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
-  
+
   // Format the date as 'MM/DD/YYYY @ hh:mm a'
-  return date.toLocaleString('en-US', {
-    month: '2-digit',
-    day: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true, // 12-hour clock (AM/PM)
-  }).replace(',', ' @'); // Replace the comma with an @ symbol
+  return date
+    .toLocaleString("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true, // 12-hour clock (AM/PM)
+    })
+    .replace(",", " @"); // Replace the comma with an @ symbol
 };
 
-
-const Schedule = ({ nodeSelected, tree, nodeVersion, getTree, rootSelected }) => {
-  if (!nodeSelected) {
-    return <div><h3>Schedule</h3><p>No node selected</p></div>;
-  }
-
+const Schedule = ({
+  nodeSelected,
+  tree,
+  nodeVersion,
+  getTree,
+  rootSelected,
+}) => {
   const [statusFilter, setStatusFilter] = useState({
     active: true,
     trimmed: false,
@@ -52,21 +55,25 @@ const Schedule = ({ nodeSelected, tree, nodeVersion, getTree, rootSelected }) =>
 
   const [filteredSchedules, setFilteredSchedules] = useState([]);
   const [choppedTree, setChoppedTree] = useState(null);
-  const [scheduleSelected, setScheduleSelected] = useState(nodeSelected?.versions?.[nodeVersion]?.schedule);
-  const [isEditing, setIsEditing] = useState(false);  // Track whether the schedule is being edited
-  const [newSchedule, setNewSchedule] = useState(scheduleSelected || '');  // Store the new schedule
-  const [reeffectTime, setReeffectTime] = useState(nodeSelected?.versions?.[nodeVersion]?.reeffectTime || 0);
+  const [scheduleSelected, setScheduleSelected] = useState(
+    nodeSelected?.versions?.[nodeVersion]?.schedule
+  );
+  const [isEditing, setIsEditing] = useState(false); // Track whether the schedule is being edited
+  const [newSchedule, setNewSchedule] = useState(scheduleSelected || ""); // Store the new schedule
+  const [reeffectTime, setReeffectTime] = useState(
+    nodeSelected?.versions?.[nodeVersion]?.reeffectTime || 0
+  );
   const apiUrl = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     if (nodeSelected && nodeSelected.versions?.length > 0) {
       setScheduleSelected(nodeSelected.versions[nodeVersion].schedule);
-      setReeffectTime(nodeSelected.versions[nodeVersion]?.reeffectTime || 0);  // Set initial reeffectTime
+      setReeffectTime(nodeSelected.versions[nodeVersion]?.reeffectTime || 0); // Set initial reeffectTime
     }
   }, [nodeSelected, nodeVersion]);
 
   const chopTree = (node, nodeId) => {
     if (node._id === nodeId._id) {
-   
       return { ...node };
     }
 
@@ -92,7 +99,9 @@ const Schedule = ({ nodeSelected, tree, nodeVersion, getTree, rootSelected }) =>
   useEffect(() => {
     if (choppedTree) {
       const schedules = extractSchedules(choppedTree);
-      const filtered = schedules.filter((schedule) => statusFilter[schedule.status]);
+      const filtered = schedules.filter(
+        (schedule) => statusFilter[schedule.status]
+      );
       setFilteredSchedules(filtered);
     }
   }, [statusFilter, choppedTree]);
@@ -117,15 +126,15 @@ const Schedule = ({ nodeSelected, tree, nodeVersion, getTree, rootSelected }) =>
 
     const token = Cookies.get("token");
     if (!token) {
-      console.error('No JWT token found!');
+      console.error("No JWT token found!");
       return;
     }
 
     try {
       const response = await fetch(`${apiUrl}/update-schedule`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
@@ -134,22 +143,21 @@ const Schedule = ({ nodeSelected, tree, nodeVersion, getTree, rootSelected }) =>
           reeffectTime: reeffectTime,
           versionIndex: nodeVersion,
         }),
-        credentials: 'include',
+        credentials: "include",
       });
 
       const data = await response.json();
       getTree(rootSelected);
 
       if (!response.ok) {
-        console.error('error changing schedule', data);
-        throw new Error('Failed to create node');
+        console.error("error changing schedule", data);
+        throw new Error("Failed to create node");
       }
 
-      getTree(rootSelected);
       setScheduleSelected(newSchedule);
       setIsEditing(false);
     } catch (error) {
-      console.error('Error setting schedule:', error.message);
+      console.error("Error setting schedule:", error.message);
     }
   };
 
@@ -164,13 +172,13 @@ const Schedule = ({ nodeSelected, tree, nodeVersion, getTree, rootSelected }) =>
     if (!schedule.schedule) {
       floatingSchedules.push(schedule); // Add to floating if no schedule
     } else {
-      
-        upcomingSchedules.push(schedule); // Add to upcoming schedules
-      }
+      upcomingSchedules.push(schedule); // Add to upcoming schedules
     }
-  );
+  });
 
   todaySchedules.sort((a, b) => new Date(a.schedule) - new Date(b.schedule));
+
+  if (!nodeSelected) return null; // Move this after all hooks and logic
 
   return (
     <div>
@@ -187,7 +195,7 @@ const Schedule = ({ nodeSelected, tree, nodeVersion, getTree, rootSelected }) =>
         )}
 
         <button onClick={() => setIsEditing(!isEditing)}>
-          {isEditing ? 'Cancel' : 'Edit Schedule'}
+          {isEditing ? "Cancel" : "Edit Schedule"}
         </button>
 
         {isEditing && (
@@ -221,7 +229,7 @@ const Schedule = ({ nodeSelected, tree, nodeVersion, getTree, rootSelected }) =>
             <input
               type="checkbox"
               checked={statusFilter.active}
-              onChange={() => handleStatusChange('active')}
+              onChange={() => handleStatusChange("active")}
             />
             Active
           </label>
@@ -229,7 +237,7 @@ const Schedule = ({ nodeSelected, tree, nodeVersion, getTree, rootSelected }) =>
             <input
               type="checkbox"
               checked={statusFilter.trimmed}
-              onChange={() => handleStatusChange('trimmed')}
+              onChange={() => handleStatusChange("trimmed")}
             />
             Trimmed
           </label>
@@ -237,7 +245,7 @@ const Schedule = ({ nodeSelected, tree, nodeVersion, getTree, rootSelected }) =>
             <input
               type="checkbox"
               checked={statusFilter.completed}
-              onChange={() => handleStatusChange('completed')}
+              onChange={() => handleStatusChange("completed")}
             />
             Completed
           </label>

@@ -28,7 +28,7 @@ const TreeView = ({
   nodeVersion,
   tree,
   getTree,
-  handleToggleView
+  handleToggleView,
 }) => {
   const [filters, setFilters] = useState({
     active: true,
@@ -49,33 +49,25 @@ const TreeView = ({
 
   useEffect(() => {
     if (!cyRef.current || !tree) return;
-  
+
     // Remove old event listeners before adding new ones
-    cyRef.current.off('tap', 'node');
-  
+    cyRef.current.off("tap", "node");
+
     // Attach the event listener after the div switch
-    cyRef.current.on('tap', 'node', (event) => {
+    cyRef.current.on("tap", "node", (event) => {
       const nodeId = event.target.id();
       const tappedNode = cyRef.current.getElementById(nodeId).data();
-  
+
       // Remove the 'selected' class from all nodes
-      cyRef.current.nodes().removeClass('selected');
-  
+      cyRef.current.nodes().removeClass("selected");
+
       // Add the 'selected' class to the tapped node
-      event.target.addClass('selected');
-  
+      event.target.addClass("selected");
+
       selectNodeById(tappedNode.id);
       setNodeVersion(tappedNode.prestige);
     });
   }, [tree]); // Re-run effect when tree changes or div is updated
-  
-
-    
-
-    
-
-  
-
 
   const addTreeToCytoscape = (node, cyInstance, parentId = null) => {
     let bgColor;
@@ -125,7 +117,6 @@ const TreeView = ({
         });
       }
 
-      
       (node.children || []).forEach((child) =>
         addTreeToCytoscape(child, cyInstance, node._id)
       );
@@ -234,16 +225,14 @@ const TreeView = ({
   }, [nodeSelected]);
 
   return (
-    
     <div>
-      
-      <div style={{ height: "100%" }}>  {/* Make the parent container 100% of the viewport height */}
-  <div id="cy" style={{ width: "100%", height: "700px" }} />  {/* Child takes 80% of parent height */}
-</div>
-    
+      <div style={{ height: "100%" }}>
+        {" "}
+        {/* Make the parent container 100% of the viewport height */}
+        <div id="cy" style={{ width: "100%", height: "700px" }} />{" "}
+        {/* Child takes 80% of parent height */}
+      </div>
 
-    
-   
       {/* Filter checkboxes */}
       <div className="filters">
         <label>
@@ -285,7 +274,5 @@ const TreeView = ({
     </div>
   );
 };
-
-
 
 export default TreeView;

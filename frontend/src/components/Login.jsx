@@ -11,21 +11,19 @@ const Login = ({ setIsLoggedIn, setUsername, setUserId, userId }) => {
 
   // Handle login logic
   const handleLogin = async () => {
- 
     try {
       const response = await fetch(`${apiUrl}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
-        credentials: 'include',
+        credentials: "include",
       });
 
       const data = await response.json();
       if (response.ok) {
         // Store JWT token in a cookie
-        console.log(data)
+        console.log(data);
         Cookies.set("token", data.token, { expires: 7, secure: false });
-
 
         // Store additional user data in cookies if necessary
         Cookies.set("username", username, { expires: 7, secure: false });
@@ -52,7 +50,7 @@ const Login = ({ setIsLoggedIn, setUsername, setUserId, userId }) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
-        credentials: 'include',
+        credentials: "include",
       });
 
       const data = await response.json();
@@ -79,6 +77,9 @@ const Login = ({ setIsLoggedIn, setUsername, setUserId, userId }) => {
 
   return (
     <div className="login-container">
+      <div className="logo-container">
+        <img src="../../tree.png" alt="Logo" className="logo" />
+      </div>
       <h2>{isRegistering ? "Register" : "Login"}</h2>
       <form onSubmit={handleSubmit}>
         <div>

@@ -3,19 +3,19 @@ import Cookies from "js-cookie";
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
-  
+
   // Format the date as 'MM/DD/YYYY @ hh:mm a'
-  return date.toLocaleString('en-US', {
-    month: '2-digit',
-    day: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true, // 12-hour clock (AM/PM)
-  }).replace(',', ' @'); // Replace the comma with an @ symbol
+  return date
+    .toLocaleString("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true, // 12-hour clock (AM/PM)
+    })
+    .replace(",", " @"); // Replace the comma with an @ symbol
 };
-
-
 
 const Notes = ({ nodeSelected, userId, nodeVersion }) => {
   const [notes, setNotes] = useState([]);
@@ -40,8 +40,11 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ nodeId: nodeSelected._id, version: nodeVersion }),
-        credentials: 'include',
+        body: JSON.stringify({
+          nodeId: nodeSelected._id,
+          version: nodeVersion,
+        }),
+        credentials: "include",
       });
 
       const result = await response.json();
@@ -71,14 +74,14 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
   // Function to render note content (either text or file)
   const renderNoteContent = (note) => {
     if (note.contentType === "text") {
-      return <p>{note.content}</p>;
+      return <div>{note.content}</div>; // Changed to div to avoid nested <p>
     } else if (note.contentType === "file") {
       // Check if it's an image or video based on the file type
-      const videoExtensions = ['mp4', 'mov', 'avi']; // Add other video types if needed
-      const imageExtensions = ['jpg', 'jpeg', 'png', 'gif']; // Add other image types if needed
-  
-      const fileType = note.content.split('.').pop().toLowerCase();
-  
+      const videoExtensions = ["mp4", "mov", "avi"]; // Add other video types if needed
+      const imageExtensions = ["jpg", "jpeg", "png", "gif"]; // Add other image types if needed
+
+      const fileType = note.content.split(".").pop().toLowerCase();
+
       if (imageExtensions.includes(fileType)) {
         // Render image for supported image formats
         return (
@@ -107,7 +110,7 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
     }
     return null;
   };
-  
+
   const handleTextSubmit = async (e) => {
     e.preventDefault();
 
@@ -137,7 +140,7 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
           version: nodeVersion,
           isReflection,
         }),
-        credentials: 'include',
+        credentials: "include",
       });
 
       const result = await response.json();
@@ -182,7 +185,7 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
           Authorization: `Bearer ${token}`,
         },
         body: formData,
-        credentials: 'include',
+        credentials: "include",
       });
 
       const result = await response.json();
@@ -203,33 +206,45 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
   return (
     <div>
       <h3>Notes and Reflections</h3>
-      
-     
+
       {/* Display Notes */}
-      <div style={{ maxHeight: "400px", overflowY: "scroll", border: "1px solid #ccc", marginTop: "20px" , textAlign: 'left'}}>
+      <div
+        style={{
+          maxHeight: "400px",
+          overflowY: "scroll",
+          border: "1px solid #ccc",
+          marginTop: "20px",
+          textAlign: "left",
+        }}
+      >
         {loading ? (
           <p>Loading notes...</p>
         ) : (
           <div>
-            {notes.length > 0 ? (
-              notes.map((note) => (
-                <div key={note._id} style={{ marginBottom: "5px" }}>
-                  <p>
-                  <strong>
-                      {note.username}
-                      
-                      {note.isReflection && <span> (Reflection)</span>}:
-                    </strong>
-                    {formatDate(note.createdAt)}
-                  </p>
-                  <p style={{ backgroundColor: "white", padding: "10px", borderRadius: "5px" }}>
-                  {renderNoteContent(note)}
-      </p>
-                </div>
-              ))
-            ) : (
-              null
-            )}
+            {notes.length > 0
+              ? notes.map((note) => (
+                  <div key={note._id} style={{ marginBottom: "5px" }}>
+                    <div>
+                      <strong>
+                        {note.username}
+                        {note.isReflection && <span> (Reflection)</span>}:
+                      </strong>
+                      {formatDate(note.createdAt)}
+                    </div>
+                    <div
+                      style={{
+                        backgroundColor: note.isReflection
+                          ? "#98FB98"
+                          : "white",
+                        padding: "10px",
+                        borderRadius: "5px",
+                      }}
+                    >
+                      {renderNoteContent(note)}
+                    </div>
+                  </div>
+                ))
+              : null}
             <div ref={notesEndRef} />
           </div>
         )}
@@ -278,13 +293,11 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
               disabled={loading}
             />
           </div>
-          
-      {/* Status Message */}
-      {message && <p>{message}</p>}
+
+          {/* Status Message */}
+          {message && <p>{message}</p>}
         </>
       )}
-
-
     </div>
   );
 };
