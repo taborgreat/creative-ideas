@@ -8,7 +8,9 @@ async function createNewNode(
   reeffectTime,
   parentNodeID,
   isRoot = false,
-  userId
+  userId,
+  values = {}, // Optional, defaults to an empty object
+  goals = {}    // Optional, defaults to an empty array
 ) {
   const newNode = new Node({
     name,
@@ -16,12 +18,12 @@ async function createNewNode(
     versions: [
       {
         prestige: 0,
-        values: {},
+        values: values || {}, // Use provided values or default to an empty object
         status: "active",
         dateCreated: new Date(),
         schedule: schedule ? new Date(schedule) : null,
         reeffectTime: reeffectTime || 0,
-        goals: [],
+        goals: goals || [],   // Use provided goals or default to an empty array
       },
     ],
     children: [],
@@ -33,6 +35,7 @@ async function createNewNode(
   await newNode.save();
   return newNode;
 }
+
 
 async function addNode(req, res) {
   const { parentId, name, schedule, reeffectTime, isRoot } = req.body;
@@ -113,16 +116,54 @@ async function addNodesTree(req, res) {
         .json({ success: false, message: "Parent node not found" });
     }
 
-    async function createNodesRecursive(nodeData, parentId) {
-      const { name, schedule, reeffectTime, children = [] } = nodeData;
+      // Validate nodeTree structure
+  const isValidNode = (node) => {
+    return (
+      typeof node.name === "string" &&
+      typeof node.schedule === "string" &&
+      !isNaN(Date.parse(node.schedule)) && // Ensure schedule is a valid date string
+      (typeof node.reeffectTime === "number" || typeof node.effectTime === "number") && // At least one time field should exist
+      typeof node.values === "object" &&
+      typeof node.goals === "object" &&
+      Array.isArray(node.children)
+    );
+  };
 
+  if (!isValidNode(nodeTree)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid nodeTree structure. Ensure it contains name, schedule, at least one of reeffectTime/effectTime, values, goals, and children."
+    });
+  }
+
+    async function createNodesRecursive(nodeData, parentId) {
+      const { 
+        name, 
+        schedule, 
+        values, 
+        goals, 
+        children = [], 
+        reeffectTime, 
+        effectTime 
+      } = nodeData;
+      
+      // Use reeffectTime if it's available, otherwise fall back to effectTime
+      const timeToUse = reeffectTime !== undefined ? reeffectTime : effectTime;
+      
+      
+      // Create the new node and link it to the parent
       const newNode = await createNewNode(
         name,
         schedule,
-        reeffectTime,
-        parentId
+        timeToUse,
+        parentId,  // Pass the correct parentId
+        false,     // isRoot should always be false for recursive children
+        req.userId,
+        values || {},
+        goals || []
       );
 
+      // Recursively create child nodes and link them
       for (const childData of children) {
         const childId = await createNodesRecursive(childData, newNode._id);
         newNode.children.push(childId);
@@ -132,21 +173,23 @@ async function addNodesTree(req, res) {
       return newNode._id;
     }
 
+    // Start recursion with the root of the new subtree
     const newChildId = await createNodesRecursive(nodeTree, parentId);
+    
+    // Add the newly created child node to the parent's children
     parentNode.children.push(newChildId);
     await parentNode.save();
 
     res.json({ success: true, message: "Nodes added successfully" });
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error adding nodes tree",
-        error: err.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error adding nodes tree",
+      error: err.message,
+    });
   }
 }
+
 
 async function deleteNode(req, res) {
   const { nodeId } = req.body;
@@ -172,5 +215,6 @@ async function deleteNode(req, res) {
 
 module.exports = {
   addNode,
+  addNodesTree,
   deleteNode,
 };

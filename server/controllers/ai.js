@@ -3,7 +3,7 @@ const getAiResponse = async (req, res) => {
 
   const payload = {
     messages,
-    model: model || "llama3-8b-8192", // Default values
+    model: model || "deepseek-r1-distill-llama-70b", // Default values
     temperature: temperature || 1,
     max_tokens: max_tokens || 1024,
     top_p: top_p || 1,
