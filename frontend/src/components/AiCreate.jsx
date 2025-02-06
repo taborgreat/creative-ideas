@@ -165,7 +165,7 @@ const AiCreate = ({ nodeSelected }) => {
         </button>
 
         {/* Show the AiTreeView only after loading is done */}
-        {!loading && jsonObject && <AiTreeView jsonObject={jsonObject} nodeSelected={nodeSelected}  fetchFromServer={fetchFromServer}/>}
+        {!loading && jsonObject && <AiTreeView jsonObject={jsonObject} nodeSelected={nodeSelected} fetchFromServer={fetchFromServer}/>}
       </div>
     </div>
   );

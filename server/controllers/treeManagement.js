@@ -117,17 +117,19 @@ async function addNodesTree(req, res) {
     }
 
       // Validate nodeTree structure
-  const isValidNode = (node) => {
-    return (
-      typeof node.name === "string" &&
-      typeof node.schedule === "string" &&
-      !isNaN(Date.parse(node.schedule)) && // Ensure schedule is a valid date string
-      (typeof node.reeffectTime === "number" || typeof node.effectTime === "number") && // At least one time field should exist
-      typeof node.values === "object" &&
-      typeof node.goals === "object" &&
-      Array.isArray(node.children)
-    );
-  };
+      const isValidNode = (node) => {
+        return (
+          (typeof node.name === "string" || node.name === null) &&
+          (typeof node.schedule === "string" || node.schedule === null) &&
+          (node.schedule === null || !isNaN(Date.parse(node.schedule))) && // Allow null but ensure valid date string
+          (typeof node.reeffectTime === "number" || node.reeffectTime === null || 
+           typeof node.effectTime === "number" || node.effectTime === null) && // Allow null time values
+          (typeof node.values === "object" || node.values === null) &&
+          (typeof node.goals === "object" || node.goals === null) &&
+          (Array.isArray(node.children) || node.children === null)
+        );
+      };
+      
 
   if (!isValidNode(nodeTree)) {
     return res.status(400).json({
