@@ -11,7 +11,11 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
   const [goals, setGoals] = useState({});
   const [editingGoal, setEditingGoal] = useState(null);
   const [goalInput, setGoalInput] = useState("");
+  const [isEditingName, setIsEditingName] = useState(false);  // New state to handle name editing
+  const [newName, setNewName] = useState("");  // New state to store the new name
+
   const apiUrl = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     if (nodeSelected && nodeVersion !== null) {
       const version = nodeSelected.versions[nodeVersion];
@@ -65,7 +69,6 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
       if (response.ok) {
         const data = await response.json();
         getTree(rootSelected);
-       
       } else {
         console.error("Failed to add prestige:", await response.text());
       }
@@ -113,7 +116,6 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
         setEditingGoal(null);
         setGoalInput("");
         getTree(rootSelected);
-      
       } else {
         console.error("Failed to save goal:", await response.text());
       }
@@ -169,16 +171,79 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
     setEditingValue(e.target.value);
   };
 
+  // New functions for editing the name
+  const handleNameClick = () => {
+    setIsEditingName(true);
+    setNewName(nodeSelected.name);  // Set the current name as the initial value
+  };
+
+  const handleNameChange = (e) => {
+    setNewName(e.target.value);
+  };
+
+  const handleNameSave = async () => {
+    if(newName.trim() == ""){
+      setNewName(nodeSelected.name)
+      setIsEditingName(false);
+      return
+    }
+    const token = Cookies.get("token");
+    if (!token) {
+      console.error("No JWT token found!");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${apiUrl}/edit-name`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          nodeId: nodeSelected._id,
+          newName,
+        }),
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        nodeSelected.name = newName;  // Update the node name locally
+        setIsEditingName(false);
+        getTree(rootSelected);  // Refresh the tree
+      } else {
+        console.error("Failed to save name:", await response.text());
+      }
+    } catch (error) {
+      console.error("Error saving name:", error);
+    }
+  };
+
   return (
     <div className="node-data-container">
       <h3>Node Data</h3>
-  
+
       {nodeSelected ? (
         <>
           {/* Top Left Section */}
           <div className="topLeft">
             <p>
-              <strong>Name:</strong> {nodeSelected.name}
+              <strong>Name:</strong> 
+              {isEditingName ? (
+                <div>
+                  <input
+                    type="text"
+                    value={newName}
+                    onChange={handleNameChange}
+                    autoFocus
+                  />
+                  <button onClick={handleNameSave}>Save</button>
+                </div>
+              ) : (
+                <span onClick={handleNameClick} style={{ cursor: "pointer", textDecoration: "underline" }}>
+                  {nodeSelected.name}
+                </span>
+              )}
             </p>
 
             <p>
@@ -191,7 +256,6 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
                 value={nodeVersion}
                 onChange={handleGenerationChange}
                 style={{ padding: "5px" }}
-                
               >
                 {nodeSelected.versions.map((version, index) => (
                   <option key={version._id} value={index}>
@@ -201,7 +265,9 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
               </select>
               {/* Prestige Button */}
               <div style={{ marginTop: "10px" }}>
-                <button onClick={handlePrestige}  style={{backgroundColor:"#32CD32 "}}>Add Prestige</button>
+                <button onClick={handlePrestige} style={{ backgroundColor: "#32CD32 " }}>
+                  Add Prestige
+                </button>
               </div>
             </div>
           </div>
@@ -235,7 +301,7 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
               </tbody>
             </table>
           </div>
-  
+
           {/* Bottom Half Section */}
           <div className="bottomHalf">
             <h5>Version Values and Goals</h5>
@@ -311,7 +377,6 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
                       placeholder="New Key"
                       value={newKey}
                       onChange={(e) => setNewKey(e.target.value)}
-                      
                     />
                   </td>
                   <td>
@@ -336,7 +401,7 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
         <p>No node selected</p>
       )}
     </div>
-  );}
-  
+  );
+};
 
 export default NodeData;

@@ -105,10 +105,15 @@ const Transactions = ({
 
   const extractNodes = (node) => {
     if (!tree) return [];
-    let nodes = [node];
+    let nodes = [];
+    if(node._id != nodeSelected._id){
+        nodes.push(node)
+    }
     if (node.children) {
       node.children.forEach((child) => {
+        if(child._id != nodeSelected._id){
         nodes = nodes.concat(extractNodes(child));
+        }
       });
     }
     return nodes;

@@ -215,8 +215,49 @@ async function deleteNode(req, res) {
   }
 }
 
+async function editNodeName(req, res) {
+  const { nodeId, newName } = req.body;
+
+  if (!newName || newName.trim() === "") {
+    return res.status(400).json({
+      success: false,
+      message: "Node name cannot be empty or just spaces",
+    });
+  }
+  try {
+    // Find the node by ID
+    const node = await Node.findById(nodeId);
+
+    if (!node) {
+      return res.status(404).json({
+        success: false,
+        message: "Node not found",
+      });
+    }
+
+    // Update the node's name
+    node.name = newName;
+    await node.save();
+
+    res.json({
+      success: true,
+      message: "Node name updated successfully",
+      updatedNode: node,
+    });
+  } catch (error) {
+    console.error("Error updating node name:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating node name",
+      error: error.message,
+    });
+  }
+}
+
+
 module.exports = {
   addNode,
   addNodesTree,
   deleteNode,
+  editNodeName
 };
