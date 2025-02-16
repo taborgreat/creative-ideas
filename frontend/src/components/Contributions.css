@@ -52,23 +52,3 @@
     color: #00ff00;
   }
   
-  /* Matrix-like flowing animation */
-  @keyframes matrixFlow {
-    0% {
-      transform: translateY(100%); /* Start just below the container */
-    }
-    100% {
-      transform: translateY(-100%); /* Move upwards to just above the container */
-    }
-  }
-
-  @keyframes fadeGlow {
-    0%, 100% {
-      box-shadow: 0 0 10px #00ff00;
-      opacity: 1;
-    }
-    50% {
-      box-shadow: 0 0 5px #00ff00;
-      opacity: 0.5;
-    }
-  }

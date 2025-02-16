@@ -177,14 +177,14 @@ NodeSchema.methods.deleteWithChildrenBottomUp = async function () {
   const Node = mongoose.model("Node");
 
   try {
-    console.log(`Deleting node: ${this._id} along with its children.`);
+
 
     // Step 1: Collect all child nodes of the current node
     const children = await Node.find({ parent: this._id });
 
     // Step 2: Delete all child nodes (separately in a loop)
     for (const child of children) {
-      console.log(`Deleting child node: ${child._id}`);
+
       await child.deleteOne();
     }
 
@@ -192,9 +192,7 @@ NodeSchema.methods.deleteWithChildrenBottomUp = async function () {
     if (this.parent) {
       const parentNode = await Node.findById(this.parent);
       if (parentNode) {
-        console.log(
-          `Removing reference to ${this._id} from parent ${parentNode._id}`
-        );
+    
         parentNode.children = parentNode.children.filter(
           (childId) => childId !== this._id
         );
@@ -203,16 +201,14 @@ NodeSchema.methods.deleteWithChildrenBottomUp = async function () {
     }
 
     // Step 3: Delete the current node
-    console.log(`Deleting current node: ${this._id}`);
+
     await this.deleteOne();
 
     // Step 4: Update global values on the parent node (after all deletions)
     if (this.parent) {
       const parentNode = await Node.findById(this.parent);
       if (parentNode) {
-        console.log(
-          `Updating global values for parent node: ${parentNode._id}`
-        );
+      
         await parentNode.updateGlobalValues();
 
         await parentNode.save(); // Persist the changes

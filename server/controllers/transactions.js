@@ -72,12 +72,22 @@ const tradeValuesBetweenNodes = async (nodeAId, versionAIndex, valuesA, nodeBId,
 
   await transaction.save();
 
+  //log for the node sending
   await logContribution({
     userId: userId,
     nodeId: nodeAId,
     action: "transaction",
     tradeId: transaction._id,
     nodeVersion: versionAIndex
+  });
+
+  //log for the node receiving
+  await logContribution({
+    userId: userId,
+    nodeId: nodeBId,
+    action: "transaction",
+    tradeId: transaction._id,
+    nodeVersion: versionBIndex
   });
 };
 

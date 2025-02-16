@@ -132,4 +132,39 @@ const getFile = (req, res) => {
   }
 };
 
-module.exports = { upload, createNote, getNotes, getFile };
+const deleteNoteAndFile = async (req, res) => {
+  try {
+    const { noteId } = req.body;  // Retrieve the noteId from the request parameters
+
+    // Find the note by its ID
+    const note = await Note.findById(noteId);
+
+    if (!note) {
+      return res.status(404).json({ message: "Note not found" });
+    }
+
+    // If the note has a file, delete it from the file system
+    if (note.contentType === "file" && note.content) {
+      const filePath = path.join(uploadsFolder, note.content);  // Get the full path to the file
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);  // Delete the file from the filesystem
+        console.log(`Deleted file: ${filePath}`);
+      } else {
+        console.log(`File not found: ${filePath}`);
+      }
+    }
+
+    // Delete the note from the database
+    await Note.findByIdAndDelete(noteId);
+
+    res.status(200).json({
+      message: "Note and associated file deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error deleting note and file" });
+  }
+};
+
+
+module.exports = { upload, createNote, getNotes, getFile, deleteNoteAndFile };

@@ -34,6 +34,7 @@ const Transactions = ({
 
   useEffect(() => {
     setIsTrading(false);
+    setNodeTrading(null);
   }, [nodeSelected, nodeVersion]);
 
   const handleNodeSelect = (node) => {
@@ -104,7 +105,7 @@ const Transactions = ({
   };
 
   const extractNodes = (node) => {
-    if (!tree) return [];
+    if (!tree || !nodeSelected) return [];
     let nodes = [];
     if(node._id != nodeSelected._id){
         nodes.push(node)

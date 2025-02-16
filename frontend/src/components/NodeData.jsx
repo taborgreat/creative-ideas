@@ -40,7 +40,13 @@ const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSele
       setKeyValuePairs([]);
       setGoals({});
     }
+   
   }, [nodeVersion, nodeSelected]);
+
+  useEffect(()=>{
+    setNewKey("")
+    setNewValue("")
+  }, [nodeSelected])
 
   const handleGenerationChange = (e) => {
     const selectedIndex = e.target.value;

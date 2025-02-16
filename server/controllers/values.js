@@ -6,7 +6,7 @@ async function setValueForNode(req, res) {
   const versionIndex = version.toString();
   const numericValue = Number(value);
 
-  if (isNaN(numericValue)) {
+  if (isNaN(numericValue) || numericValue==="e") {
     return res.status(400).json({ error: "Value must be a valid number" });
   }
 

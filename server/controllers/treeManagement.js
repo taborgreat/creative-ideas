@@ -192,11 +192,11 @@ async function addNodesTree(req, res) {
   }
 }
 
-
 async function deleteNode(req, res) {
   const { nodeId } = req.body;
 
   try {
+    // Find the node to be deleted
     const nodeToDelete = await Node.findById(nodeId);
 
     if (!nodeToDelete) {
@@ -205,15 +205,28 @@ async function deleteNode(req, res) {
         .json({ success: false, message: "Node not found" });
     }
 
-    await Node.findByIdAndDelete(nodeId);
+    // Set the parent of the node being deleted to "deleted"
+    nodeToDelete.parent = "deleted";
+    await nodeToDelete.save();
 
-    res.json({ success: true, message: "Node deleted successfully" });
+    // Now find all nodes that have the deleted node in their children array
+    const allNodes = await Node.find();
+
+    // Filter out the node from the children arrays of any nodes that have it as a child
+    for (let node of allNodes) {
+      if (node.children && node.children.includes(nodeId)) {
+        node.children = node.children.filter(childId => childId.toString() !== nodeId.toString());
+        await node.save(); // Save the updated parent node
+      }
+    }
+
+    res.json({ success: true, message: "Node shadow deleted and removed from parent children" });
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, message: "Server error", error: error.message });
+    console.error("Error:", error);
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
   }
 }
+
 
 async function editNodeName(req, res) {
   const { nodeId, newName } = req.body;
@@ -254,10 +267,84 @@ async function editNodeName(req, res) {
   }
 }
 
+async function updateNodeParent(req, res) {
+  const { nodeChildId, nodeNewParentId } = req.body;
+
+  try {
+    // Find the child node by its ID
+    const nodeChild = await Node.findById(nodeChildId);
+    if (!nodeChild) {
+      return res.status(404).json({
+        success: false,
+        message: "Child node not found",
+      });
+    }
+
+    if (nodeChild.parent == null) {
+      return res.status(443).json({
+        success: false,
+        message: "Cannot change root's parent",
+      });
+    }
+
+
+    // Find the new parent node by its ID
+    const nodeNewParent = await Node.findById(nodeNewParentId);
+    if (!nodeNewParent) {
+      return res.status(404).json({
+        success: false,
+        message: "New parent node not found",
+      });
+    }
+
+    // If the child node already has a parent, remove it from the old parent's children array
+    if (nodeChild.parent) {
+      const oldParent = await Node.findById(nodeChild.parent);
+      if (oldParent) {
+        oldParent.children = oldParent.children.filter(
+          (childId) => childId.toString() !== nodeChildId
+        );
+        await oldParent.save();
+      }
+    }
+
+    // Update the child's parent to the new parent
+    nodeChild.parent = nodeNewParentId;
+    await nodeChild.save();
+
+    // Add the child node to the new parent's children array
+    nodeNewParent.children.push(nodeChildId);
+    await nodeNewParent.save();
+
+    // Optionally, log the contribution if needed
+    // await logContribution({
+    //   userId: req.userId, // Ensure this userId is available in the request (could be added through authentication middleware)
+    //   nodeId: nodeChildId,
+    //   action: "parent-update",
+    // });
+
+    res.json({
+      success: true,
+      message: "Node parent updated successfully",
+      updatedNodeChild: nodeChild,
+      updatedNodeNewParent: nodeNewParent,
+    });
+  } catch (error) {
+    console.error("Error updating node parent:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating node parent",
+      error: error.message,
+    });
+  }
+}
+
+
 
 module.exports = {
   addNode,
   addNodesTree,
   deleteNode,
-  editNodeName
+  editNodeName,
+  updateNodeParent
 };

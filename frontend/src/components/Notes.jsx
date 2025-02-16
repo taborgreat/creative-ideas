@@ -160,6 +160,42 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
     }
   };
 
+  const handleDeleteNote = async (noteId) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this note? This action cannot be undone.");
+  
+  if (!confirmDelete) {
+    return;  // If the user cancels, do nothing
+  }
+    setLoading(true);
+    try {
+      const response = await fetch(`${apiUrl}/delete-note`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          noteId: noteId
+        }),
+        credentials: "include",
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        setMessage(result.message);
+        fetchNotes(); // Refetch notes after successful deletion
+      } else {
+        setMessage(result.message || "Error deleting the note.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setMessage("An error occurred while deleting the note.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   const handleFileUpload = async (e) => {
     if (!nodeSelected) {
       setMessage("No Node Selected.");
@@ -230,6 +266,23 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
                         {note.isReflection && <span> (Reflection)</span>}:
                       </strong>
                       {formatDate(note.createdAt)}
+                      {/* X Button to Delete the Note */}
+                      <button
+                        onClick={() => handleDeleteNote(note._id)}
+                        style={{
+                          float: "right",
+                          backgroundColor: "red",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "50%",
+                          padding: "5px 10px",
+                          cursor: "pointer",
+                          opacity:"0.6",
+                        }}
+                      >
+                        X
+                      </button>
+                  
                     </div>
                     <div
                       style={{
