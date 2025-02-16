@@ -138,6 +138,71 @@ notes/editing notes
 //mumble
 
 
+App
+
+Account tab
+
+Tree view
+
+
+Add phone number to user db and menu to add (check its phone number format)
+
+In account view, check if number added
+If so set number otherwise leave null
+If phone number show add phone number on schedule and remove if added
+
+Backend endpoint checks every 1 minute schedules in db and if is now and has phone number, sends a text to every number 
+
+If schedule has phone n
+
+Make edit notes save notes ✅ 
+
+Make prestige add lines and date in markup 
+With reflection area
+
+Add goal properties based off stored values/goal setting per prestige generation 
+
+Store and retrieve nodes from mongo database
+
+Decide how to propagate values 
+
+
+Nodes zoom in and words get bigger snd can see more detail in section,
+
+Or you zoom out and words get smaller but you can see more of tree
+
+Folders: group nodes that have more than 2 children into groups that are end nodes with name of node and then number which shows children (10 children) and once you select it the branch shows 
+
+
+
+
+
+
+
+
+
+
+
+
+Organize everything into react (make root node have special diary/time properties)
+
+
+Insert nodes in between
+
+Move node (and branch) to new parent
+
+Divider nodes - no schedule
+
+
+Directory view -like file with list and keys to navigate . Get parent and children of nodeselected and navigate with that
+
+First person view- nodeselected at bottom, all nodes above in grid with key to navigate
+
+
+Node separated by comma
+
+Loop to seperate them and run endpoint 
+
 custom predefined branxh systems with widgets
 ex: self-mind-emotions : track values (happiness, fatigue, etc)
 then build custom widgets in react to view the data
