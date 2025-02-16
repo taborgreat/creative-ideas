@@ -83,11 +83,23 @@ const Transactions = ({
       });
 
       const data = await response.json();
-      console.log("Trade successful:", data);
-      setIsTrading(false);
-      getTree(rootSelected);
+     
+      if (data) {
+        // Ensure the cancellation happens after the trade is successful
+       
+       
+        
+        alert(data.message);
+
+        getTree(rootSelected);  // Refresh the tree or data after the trade
+
+        handleCancelTrade();
+        
+        // Optionally show an error popup or message
+      }
     } catch (error) {
-      console.error("Trade failed:", error);
+      alert("Error during trade: " + error.message);
+      // Handle fetch errors or network issues
     }
   };
 
