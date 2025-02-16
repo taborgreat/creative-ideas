@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Cookies from "js-cookie";
 import './NodeData.css'; 
 
-const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSelected, }) => {
+const NodeData = ({ nodeSelected, nodeVersion, setNodeVersion, getTree, rootSelected}) => {
   const [keyValuePairs, setKeyValuePairs] = useState([]);
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");

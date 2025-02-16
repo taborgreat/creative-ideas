@@ -126,7 +126,7 @@ async function addNodesTree(req, res) {
            typeof node.effectTime === "number" || node.effectTime === null) && // Allow null time values
           (typeof node.values === "object" || node.values === null) &&
           (typeof node.goals === "object" || node.goals === null) &&
-          (Array.isArray(node.children) || node.children === null)
+          (Array.isArray(node.children) || node.children === null)  
         );
       };
       

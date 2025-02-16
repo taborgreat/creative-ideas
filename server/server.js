@@ -28,7 +28,7 @@ app.use("/", require("./routes/treeManagement"));
 app.use("/", require("./routes/notes"));
 app.use("/", require("./routes/schedules"));
 app.use("/", require("./routes/statuses"));
-//app.use("/", require("./routes/transactions"));
+app.use("/", require("./routes/transactions"));
 app.use("/", require("./routes/treeDataFetching"));
 app.use("/", require("./routes/users"));
 app.use("/", require("./routes/values"));

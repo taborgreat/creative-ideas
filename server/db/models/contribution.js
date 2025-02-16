@@ -29,6 +29,7 @@ const ContributionSchema = new mongoose.Schema({
       "invite",
       "editSchedule",
       "editGoal",
+      "transaction"
     ],
     required: true, 
   },

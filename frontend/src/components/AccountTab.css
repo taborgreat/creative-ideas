@@ -80,3 +80,8 @@
 .account-tab-content button:hover {
   background-color: #ff2222;
 }
+
+.rootNodeForm{
+  max-height: 400px;
+  overflow-y: scroll;
+}

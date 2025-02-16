@@ -49,6 +49,7 @@ const logContribution = async ({
     "invite",
     "editSchedule",
     "editGoal",
+    "transaction",
   ];
 
   if (!validActions.includes(action)) {

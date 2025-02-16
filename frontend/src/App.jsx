@@ -8,6 +8,7 @@ import Contributions from "./components/Contributions.jsx";
 import Schedule from "./components/Schedule.jsx";
 import AccountTab from "./components/AccountTab.jsx";
 import Login from "./components/Login.jsx";
+import Transactions from "./components/Transactions.jsx"
 import "./App.css";
 
 const App = () => {
@@ -197,6 +198,7 @@ const App = () => {
             rootSelected={rootSelected}
             tree={tree}
           />
+          <Transactions nodeSelected={nodeSelected} tree={tree} nodeVersion={nodeVersion} getTree = {getTree} rootSelected={rootSelected}/>
         </div>
         <div className="notes">
           <Notes

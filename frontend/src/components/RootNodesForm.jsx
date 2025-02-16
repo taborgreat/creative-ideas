@@ -240,7 +240,7 @@ const RootNodesForm = ({ setRootSelected, rootSelected, rootNodes, setRootNodes,
   
 
   return (
-    <div>
+    <div className='rootNodeForm'>
       <div>
         <h3>Existing Root Nodes</h3>
         <select

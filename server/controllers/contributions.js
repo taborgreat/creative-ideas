@@ -1,6 +1,5 @@
 const Contribution = require("../db/models/contribution");
-
-//log contribution is in db/utils
+const Transaction = require("../db/models/transaction");
 
 const getContributions = async (req, res) => {
   const { nodeId } = req.body;
@@ -10,6 +9,10 @@ const getContributions = async (req, res) => {
       .populate("userId", "username")
       .populate("nodeId")
       .populate("inviteAction.receivingId", "username")
+      .populate({
+        path: "tradeId",
+        populate: { path: "nodeAId nodeBId", select: "name" }, // Populate both node names
+      })
       .sort({ date: -1 });
 
     const enhancedContributions = contributions.map((contribution) => {
@@ -42,6 +45,22 @@ const getContributions = async (req, res) => {
           break;
         case "editGoal":
           additionalInfo = { goalEdited: contribution.goalEdited };
+          break;
+        case "transaction":
+          additionalInfo = contribution.tradeId
+            ? {
+                nodeA: {
+                  name: contribution.tradeId.nodeAId.name, // Node A's name
+                  versionIndex: contribution.tradeId.versionAIndex, // Node A's version
+                  valuesSent: contribution.tradeId.valuesTraded.nodeA, // Values sent by Node A
+                },
+                nodeB: {
+                  name: contribution.tradeId.nodeBId.name, // Node B's name
+                  versionIndex: contribution.tradeId.versionBIndex, // Node B's version
+                  valuesSent: contribution.tradeId.valuesTraded.nodeB, // Values sent by Node B
+                },
+              }
+            : null;
           break;
         default:
           additionalInfo = null;
