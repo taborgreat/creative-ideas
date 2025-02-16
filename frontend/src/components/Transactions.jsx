@@ -119,7 +119,7 @@ const Transactions = ({
   return (
     <div>
       {!isTrading ? (
-        <button onClick={handleTradeClick}>Trade Values</button>
+        <button onClick={handleTradeClick}>Trade Values To Another Node</button>
       ) : (
         <div className="trade-window">
           {showNodeList && (
@@ -144,7 +144,7 @@ const Transactions = ({
               </h3>
 
               <div>
-                <h4>{nodeSelected.name} Values</h4>
+                <h4>This Node ({nodeSelected.name})</h4>
                 {nodeSelected.versions[nodeVersion].values &&
                 Object.keys(nodeSelected.versions[nodeVersion].values).length >
                   0 ? (
@@ -154,6 +154,7 @@ const Transactions = ({
                         <label>
                           {key}: {value}
                         </label>
+                        <br></br>
                         <input
                           type="number"
                           value={valuesA[key] || 0}
@@ -170,7 +171,7 @@ const Transactions = ({
               </div>
 
               <div>
-                <h4>{nodeTrading.name} Values   <div>
+                <h4>{nodeTrading.name}<div>
              
                   <select value={nodeBVersion} onChange={handleVersionChange}>
                     {nodeTrading.versions &&
@@ -191,6 +192,7 @@ const Transactions = ({
                         <label>
                           {key}: {value}
                         </label>
+                        <br></br>
                         <input
                           type="number"
                           value={valuesB[key] || 0}

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import CreateNodeForm from "./CreateNodeForm";
 import TrimNodeForm from "./TrimNodeForm"; // Assuming you have a TrimNodeForm
 import CompleteNodeForm from "./CompleteNodeForm"; // Assuming you have a CompleteNodeForm
+import DeleteNodeForm from "./DeleteNodeForm"; // Assuming you have a CompleteNodeForm
 import "./TreeViewMenu.css";
 
 const TreeViewMenu = ({
@@ -10,6 +11,8 @@ const TreeViewMenu = ({
   getTree,
   rootSelected,
   handleToggleView,
+  tree,
+  setNodeSelected
 }) => {
   // State to track which component to show
   const [currentForm, setCurrentForm] = useState(null);
@@ -18,6 +21,8 @@ const TreeViewMenu = ({
     setCurrentForm(null);
     getTree(rootSelected);
   };
+
+  
 
   // Handle button actions
   const handleCreateChild = () => {
@@ -31,6 +36,13 @@ const TreeViewMenu = ({
     if (nodeSelected) {
       // Show the TrimNodeForm
       setCurrentForm("trimNode");
+    }
+  };
+
+  const handleDelete = () => {
+    if (nodeSelected) {
+      // Show the TrimNodeForm
+      setCurrentForm("deleteNode");
     }
   };
 
@@ -49,6 +61,7 @@ const TreeViewMenu = ({
     <div className="tree-view-menu">
       {/* Buttons */}
       <button onClick={handleCreateChild}>Create Child</button>
+      <button onClick={handleDelete}>Delete</button>
       <button onClick={handleTrim}>Trim</button>
       <button onClick={handleComplete}>Manage Status</button>
       <button onClick={handleToggleView}>Switch View</button>
@@ -74,6 +87,15 @@ const TreeViewMenu = ({
             nodeSelected={nodeSelected}
             nodeVersion={nodeVersion}
             onComplete={handleFormCompletion}
+          />
+        )}
+         {currentForm === "deleteNode" && (
+          <DeleteNodeForm
+            nodeSelected={nodeSelected}
+            onComplete={handleFormCompletion}
+            tree={tree}
+            setNodeSelected={setNodeSelected}
+            rootSelected={rootSelected}
           />
         )}
       </div>

@@ -43,7 +43,7 @@ const tradeValuesBetweenNodes = async (nodeAId, versionAIndex, valuesA, nodeBId,
 
   for (const [key, value] of Object.entries(valuesA)) {
     if ((versionA.values.get(key) || 0) < value) {
-      throw new Error(`Node A's version ${versionAIndex} has insufficient ${key}.`);
+      throw new Error(`This node's version ${versionAIndex} has insufficient ${key}.`);
     }
 
     versionA.values.set(key, (versionA.values.get(key) || 0) - value);
@@ -52,7 +52,7 @@ const tradeValuesBetweenNodes = async (nodeAId, versionAIndex, valuesA, nodeBId,
 
   for (const [key, value] of Object.entries(valuesB)) {
     if ((versionB.values.get(key) || 0) < value) {
-      throw new Error(`Node B's version ${versionBIndex} has insufficient ${key}.`);
+      throw new Error(`The partnering node (version ${versionBIndex}) has insufficient ${key}.`);
     }
 
     versionB.values.set(key, (versionB.values.get(key) || 0) - value);

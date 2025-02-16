@@ -152,6 +152,8 @@ const TreeViewDirectory = ({
         getTree={getTree}
         rootSelected={rootSelected}
         handleToggleView={handleToggleView}
+        tree={tree}
+        setNodeSelected={setNodeSelected}
       />
     </div>
   );
