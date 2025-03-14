@@ -3,7 +3,6 @@
   display: grid;
   grid-template-columns: 1.5fr 2fr 2fr;
   grid-template-rows: auto 1fr 1fr;
-  gap: 10px;
   border-top: none;
   height: 100vh;
   /* Full height on desktop */
@@ -11,7 +10,7 @@
 
 /* Background color for body */
 body {
-  background-color: rgb(113, 113, 113);
+  background-color: #E5E7EB;
   /* Slate Blue for earthy, grounded feel */
   font-family: 'Courier New', Courier, monospace;
   /* Retro font style */
@@ -38,19 +37,20 @@ html {
   /* Prevent overflow */
 }
 
+
+
 /* Tree View Section */
 .tree-view,
 .tree-view-directory {
   grid-column: 1 / 2;
   grid-row: 2 / 4;
   border-right: 1px solid #ccc;
-  padding: 10px;
   max-height: 100vh;
   /* Ensures it stretches to fill available height */
 }
 
 .tree-view {
-  background-color: #87CEEB;
+  background-color: #A3BFFA;
   /* Soft Moss Green for a fresh, natural feel */
 }
 
@@ -86,7 +86,7 @@ html {
   grid-row: 2 / 4;
   display: grid;
   grid-template-rows: 1fr 1fr;
-  gap: 10px;
+  gap: 1px;
   overflow-y: auto;
   max-height: 100%;
 }
@@ -96,7 +96,7 @@ html {
   border-bottom: 1px solid #ccc;
   padding: 10px;
   overflow: auto;
-  background-color: #e7e6f0;
+  background-color: #EDE9FE;
 }
 
 .transaction {
@@ -107,12 +107,12 @@ html {
 .notes {
   padding: 10px;
   overflow: auto;
-  background-color: #eff3fa;
+  background-color: #F3F4F6;
 }
 
 /* Schedule Section */
 .schedule {
-  background-color: #f7f9ff;
+  background-color: #F9FAFB;
   overflow: auto;
 }
 
@@ -122,7 +122,7 @@ html {
   grid-row: 2 / 4;
   display: grid;
   grid-template-rows: 1fr 1fr;
-  gap: 10px;
+  gap: 1px;
   overflow-y: auto;
   max-height: 100%;
 }
@@ -141,45 +141,59 @@ h3 {
 }
 
 /* Mobile Responsive Layout */
-@media (max-width: 768px) {
+@media (max-width: 1190px),
+(max-height: 500px) {
   .app-container {
     grid-template-columns: 1fr;
-    /* Single column on mobile */
     grid-template-rows: auto auto auto auto;
-    /* Allow rows to expand as needed */
-    gap: 10px;
-    padding-right: 15px;
+    /* Header, tree view, main content, side content */
     height: auto;
-    /* Allow height to adjust for mobile */
+    /* Allow container to grow with content */
+    min-height: 100vh;
+    /* Ensure it at least fills viewport */
+    overflow-y: auto;
+    /* Scroll the entire container */
   }
 
   .header {
-    grid-column: 1 / 2;
-    grid-row: auto;
-  }
-
-  .tree-view-directory {
-    height: 650px;
+    grid-row: 1 / 2;
+    max-height: 50px;
   }
 
   .tree-view,
   .tree-view-directory {
-    grid-column: 1 / 2;
-    grid-row: auto;
+    grid-row: 2 / 3;
     border-right: none;
-    border-bottom: 1px solid #ccc;
     overflow-y: auto;
-    max-height: 100%;
-    /* Ensure tree view stays contained */
+    max-height: none;
+    /* Remove height restriction */
   }
 
-  .main-content,
-  .side-content {
+  .main-content {
+    grid-row: 3 / 4;
+    /* Explicit row assignment */
     grid-column: 1 / 2;
-    grid-row: auto;
-    max-height: auto;
-    /* Allow content to adjust for mobile */
     overflow-y: auto;
-    border-bottom: 1px solid #ccc;
+    max-height: none;
+    /* Let it expand naturally */
+    border-bottom: 5px solid #ccc;
+  }
+
+  .side-content {
+    grid-row: 4 / 5;
+    /* Explicit row assignment */
+    grid-column: 1 / 2;
+    overflow-y: auto;
+    max-height: none;
+    /* Let it expand naturally */
+    border-bottom: 5px solid #ccc;
+  }
+
+  .tree-view-toggle-btn {
+    position: fixed;
+    top: 5px;
+    left: 150px;
+    background-color: gold;
+    z-index: 1000;
   }
 }

@@ -1,7 +1,9 @@
 .contributions {
     height: 100vh; /* Ensure the container takes up full viewport height */
     overflow: hidden; /* Prevent the entire contributions area from scrolling */
- 
+  background-color: #2C4F56 
+
+;
   }
   
   .contributions h3 {

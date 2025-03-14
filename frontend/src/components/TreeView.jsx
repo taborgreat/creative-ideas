@@ -181,7 +181,7 @@ const TreeView = ({
       const nodeSelect = cyInstance.getElementById(nodeSelected._id);
       updateButtonVisibility(nodeSelect);
     }
-  }, [tree, statusFilter, rootSelected]);
+  }, [tree, rootSelected]);
 
   useEffect(() => {
     const cyInstance = cyRef.current;
@@ -374,7 +374,7 @@ const TreeView = ({
         <div
           ref={cyContainerRef}
           id="cy"
-          style={{ width: "100%", height: "90vh" }}
+          style={{ width: "100%", height: "100vh" }}
         />
       </div>
       {/* Arrow buttons */}

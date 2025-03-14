@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import RootNodesForm from "./RootNodesForm"; // Ensure the path is correct
 import Invites from "./Invites"; // Import the new Invites component
 import "./AccountTab.css";
@@ -19,6 +19,11 @@ const AccountTab = ({
   const [isHovered, setIsHovered] = useState(false);
   const [showRoots, setShowRoots] = useState(false); // State to toggle RootNodesForm visibility
   const [showInvites, setShowInvites] = useState(false); // State to toggle Invites visibility
+
+  useEffect(() => {
+    setIsHovered(false);
+    setShowRoots((prev) => !prev);
+  }, [rootSelected]);
 
   const handleLogoutClick = () => {
     if (onLogout) {
