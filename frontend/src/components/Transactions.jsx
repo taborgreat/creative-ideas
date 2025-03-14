@@ -84,18 +84,16 @@ const Transactions = ({
       });
 
       const data = await response.json();
-     
+
       if (data) {
         // Ensure the cancellation happens after the trade is successful
-       
-       
-        
+
         alert(data.message);
 
-        getTree(rootSelected);  // Refresh the tree or data after the trade
+        getTree(rootSelected); // Refresh the tree or data after the trade
 
         handleCancelTrade();
-        
+
         // Optionally show an error popup or message
       }
     } catch (error) {
@@ -106,17 +104,19 @@ const Transactions = ({
 
   const extractNodes = (node) => {
     if (!tree || !nodeSelected) return [];
+
     let nodes = [];
-    if(node._id != nodeSelected._id){
-        nodes.push(node)
+
+    if (node._id !== nodeSelected._id) {
+      nodes.push(node);
     }
+
     if (node.children) {
       node.children.forEach((child) => {
-        if(child._id != nodeSelected._id){
         nodes = nodes.concat(extractNodes(child));
-        }
       });
     }
+
     return nodes;
   };
 
@@ -177,18 +177,20 @@ const Transactions = ({
               </div>
 
               <div>
-                <h4>{nodeTrading.name}<div>
-             
-                  <select value={nodeBVersion} onChange={handleVersionChange}>
-                    {nodeTrading.versions &&
-                      nodeTrading.versions.map((_, index) => (
-                        <option key={index} value={index}>
-                          Prestige {index}
-                        </option>
-                      ))}
-                  </select>
-                </div></h4> 
-              
+                <h4>
+                  {nodeTrading.name}
+                  <div>
+                    <select value={nodeBVersion} onChange={handleVersionChange}>
+                      {nodeTrading.versions &&
+                        nodeTrading.versions.map((_, index) => (
+                          <option key={index} value={index}>
+                            Prestige {index}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </h4>
+
                 {nodeTrading.versions[nodeBVersion]?.values &&
                 Object.keys(nodeTrading.versions[nodeBVersion]?.values || {})
                   .length > 0 ? (
