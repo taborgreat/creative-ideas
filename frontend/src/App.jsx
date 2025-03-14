@@ -8,7 +8,7 @@ import Contributions from "./components/Contributions.jsx";
 import Schedule from "./components/Schedule.jsx";
 import AccountTab from "./components/AccountTab.jsx";
 import Login from "./components/Login.jsx";
-import Transactions from "./components/Transactions.jsx"
+import Transactions from "./components/Transactions.jsx";
 import "./App.css";
 
 const App = () => {
@@ -22,6 +22,12 @@ const App = () => {
   const [nodeSelected, setNodeSelected] = useState(null);
   const [nodeVersion, setNodeVersion] = useState(null);
   const [tree, setTree] = useState(null);
+  // Status Filter State
+  const [statusFilter, setStatusFilter] = useState({
+    active: true,
+    trimmed: false,
+    completed: false,
+  });
 
   const [currentViewIndex, setCurrentViewIndex] = useState(0);
 
@@ -59,6 +65,13 @@ const App = () => {
     }
   }, [rootSelected]);
 
+  // Use Effect to reload the tree whenever the statusFilter changes
+  useEffect(() => {
+    if (rootSelected) {
+      getTree(rootSelected); // Re-fetch tree with current filters applied
+    }
+  }, [statusFilter]); // This triggers the effect when the statusFilter changes
+
   const getTree = async (rootId) => {
     try {
       const response = await fetch(`${apiUrl}/get-tree`, {
@@ -69,10 +82,34 @@ const App = () => {
       if (!response.ok) throw new Error("Failed to fetch tree");
 
       const data = await response.json();
-      setTree(data); // Update the tree state
+
+      // Function to recursively filter nodes based on statusFilter
+      const filterNodes = (node) => {
+        if (
+          (statusFilter.active &&
+            node.versions[node.prestige].status === "active") ||
+          (statusFilter.trimmed &&
+            node.versions[node.prestige].status === "trimmed") ||
+          (statusFilter.completed &&
+            node.versions[node.prestige].status === "completed")
+        ) {
+          // If the current node matches the filter, include it
+          if (node.children) {
+            // Recursively filter the children if they exist
+            node.children = node.children.filter(filterNodes);
+          }
+          return true; // Keep this node
+        }
+        return false; // Remove this node
+      };
+
+      // Apply the filter function to the root node and its children
+      const filteredTree = filterNodes(data) ? data : null;
+
+      setTree(filteredTree); // Update the tree state with the filtered tree
 
       if (nodeSelected) {
-        // Find the updated node from the fetched tree data using a recursive search
+        // Find the updated node from the filtered tree data using a recursive search
 
         const findNodeById = (node, id) => {
           if (node._id === id) {
@@ -91,15 +128,15 @@ const App = () => {
           return null;
         };
 
-        const updatedNode = findNodeById(data, nodeSelected._id);
+        const updatedNode = findNodeById(filteredTree, nodeSelected._id);
 
         if (updatedNode) {
           setNodeSelected(updatedNode); // Ensure nodeSelected is updated
         }
       } else {
-        //default to root node
-        setNodeSelected(data);
-        setNodeVersion(data.prestige);
+        // Default to the root node
+        setNodeSelected(filteredTree);
+        setNodeVersion(filteredTree.prestige);
       }
     } catch (error) {
       console.error("Error loading tree:", error);
@@ -149,6 +186,8 @@ const App = () => {
               nodeVersion={nodeVersion}
               setNodeVersion={setNodeVersion}
               handleToggleView={handleToggleView} // Pass the toggle function
+              statusFilter={statusFilter} // Pass status filter
+              setStatusFilter={setStatusFilter}
             />
           </div>
         );
@@ -163,6 +202,8 @@ const App = () => {
               nodeVersion={nodeVersion}
               getTree={getTree}
               rootSelected={rootSelected}
+              statusFilter={statusFilter} // Pass status filter
+              setStatusFilter={setStatusFilter}
             />
           </div>
         );
@@ -198,7 +239,13 @@ const App = () => {
             rootSelected={rootSelected}
             tree={tree}
           />
-          <Transactions nodeSelected={nodeSelected} tree={tree} nodeVersion={nodeVersion} getTree = {getTree} rootSelected={rootSelected}/>
+          <Transactions
+            nodeSelected={nodeSelected}
+            tree={tree}
+            nodeVersion={nodeVersion}
+            getTree={getTree}
+            rootSelected={rootSelected}
+          />
         </div>
         <div className="notes">
           <Notes
