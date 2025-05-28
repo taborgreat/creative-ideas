@@ -161,11 +161,13 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
   };
 
   const handleDeleteNote = async (noteId) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this note? This action cannot be undone.");
-  
-  if (!confirmDelete) {
-    return;  // If the user cancels, do nothing
-  }
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this note? This action cannot be undone."
+    );
+
+    if (!confirmDelete) {
+      return; // If the user cancels, do nothing
+    }
     setLoading(true);
     try {
       const response = await fetch(`${apiUrl}/delete-note`, {
@@ -175,7 +177,7 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          noteId: noteId
+          noteId: noteId,
         }),
         credentials: "include",
       });
@@ -194,7 +196,6 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
       setLoading(false);
     }
   };
-
 
   const handleFileUpload = async (e) => {
     if (!nodeSelected) {
@@ -251,6 +252,8 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
           border: "1px solid #ccc",
           marginTop: "20px",
           textAlign: "left",
+
+          marginBottom: "5px",
         }}
       >
         {loading ? (
@@ -259,7 +262,14 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
           <div>
             {notes.length > 0
               ? notes.map((note) => (
-                  <div key={note._id} style={{ marginBottom: "5px" }}>
+                  <div
+                    key={note._id}
+                    style={{
+                      marginBottom: "11px",
+                      border: "1px solid black",
+                      backgroundColor: "white",
+                    }}
+                  >
                     <div>
                       <strong>
                         {note.username}
@@ -277,12 +287,11 @@ const Notes = ({ nodeSelected, userId, nodeVersion }) => {
                           borderRadius: "50%",
                           padding: "5px 10px",
                           cursor: "pointer",
-                          opacity:"0.6",
+                          opacity: "0.6",
                         }}
                       >
                         X
                       </button>
-                  
                     </div>
                     <div
                       style={{

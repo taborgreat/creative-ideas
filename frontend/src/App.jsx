@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
-import Cookies from "js-cookie"; // Import js-cookie
+import React, { useState, useEffect } from "react";
+import Cookies from "js-cookie";
 import TreeView from "./components/TreeView.jsx";
 import TreeViewDirectory from "./components/TreeViewDirectory.jsx";
 import NodeData from "./components/NodeData.jsx";
@@ -8,36 +8,32 @@ import Contributions from "./components/Contributions.jsx";
 import Schedule from "./components/Schedule.jsx";
 import AccountTab from "./components/AccountTab.jsx";
 import Login from "./components/Login.jsx";
-import Transactions from "./components/Transactions.jsx"
+import Transactions from "./components/Transactions.jsx";
 import "./App.css";
 
 const App = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // User login state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState("");
   const [userId, setUserId] = useState("");
   const [rootNodes, setRootNodes] = useState([]);
   const [rootSelected, setRootSelected] = useState(
     Cookies.get("rootSelected") || null
-  ); // Load from cookies if available
+  );
   const [nodeSelected, setNodeSelected] = useState(null);
   const [nodeVersion, setNodeVersion] = useState(null);
   const [tree, setTree] = useState(null);
-
+  const [statusFilter, setStatusFilter] = useState({
+    active: true,
+    trimmed: false,
+    completed: false,
+  });
   const [currentViewIndex, setCurrentViewIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const [treeViewModeMobile, setTreeViewModeMobile] = useState(true);
 
-  // Array of views
   const views = [TreeView, TreeViewDirectory];
-
-  // Function to handle cycling through views
-  const handleToggleView = () => {
-    setCurrentViewIndex((prevIndex) => (prevIndex + 1) % views.length);
-  };
-
-  const CurrentViewComponent = views[currentViewIndex];
-
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  // Check cookies on load
   useEffect(() => {
     const storedUsername = Cookies.get("username");
     const storedUserId = Cookies.get("userId");
@@ -45,19 +41,24 @@ const App = () => {
 
     if (loggedIn) {
       setIsLoggedIn(true);
-      setUsername(storedUsername);
-      setUserId(storedUserId);
+      setUsername(storedUsername || "");
+      setUserId(storedUserId || "");
     }
   }, []);
 
   useEffect(() => {
     setNodeSelected(null);
-
     if (rootSelected) {
       getTree(rootSelected);
       Cookies.set("rootSelected", rootSelected);
     }
   }, [rootSelected]);
+
+  useEffect(() => {
+    if (statusFilter && rootSelected) {
+      getTree(rootSelected);
+    }
+  }, [statusFilter, rootSelected]);
 
   const getTree = async (rootId) => {
     try {
@@ -67,39 +68,42 @@ const App = () => {
         body: JSON.stringify({ rootId }),
       });
       if (!response.ok) throw new Error("Failed to fetch tree");
-
       const data = await response.json();
-      setTree(data); // Update the tree state
+
+      const filterNodes = (node) => {
+        if (
+          (statusFilter.active &&
+            node.versions[node.prestige].status === "active") ||
+          (statusFilter.trimmed &&
+            node.versions[node.prestige].status === "trimmed") ||
+          (statusFilter.completed &&
+            node.versions[node.prestige].status === "completed")
+        ) {
+          if (node.children) {
+            node.children = node.children.filter(filterNodes);
+          }
+          return true;
+        }
+        return false;
+      };
+
+      const filteredTree = filterNodes(data) ? data : null;
+      setTree(filteredTree);
 
       if (nodeSelected) {
-        // Find the updated node from the fetched tree data using a recursive search
-
         const findNodeById = (node, id) => {
-          if (node._id === id) {
-            return node;
-          }
-
-          // Check children recursively
+          if (node._id === id) return node;
           for (let child of node.children || []) {
             const foundNode = findNodeById(child, id);
-            if (foundNode) {
-              return foundNode;
-            }
+            if (foundNode) return foundNode;
           }
-
-          // Return null if not found
           return null;
         };
-
-        const updatedNode = findNodeById(data, nodeSelected._id);
-
-        if (updatedNode) {
-          setNodeSelected(updatedNode); // Ensure nodeSelected is updated
-        }
+        const updatedNode = findNodeById(filteredTree, nodeSelected._id);
+        if (updatedNode) setNodeSelected(updatedNode);
       } else {
-        //default to root node
-        setNodeSelected(data);
-        setNodeVersion(data.prestige);
+        setNodeSelected(filteredTree);
+        setNodeVersion(filteredTree?.prestige);
       }
     } catch (error) {
       console.error("Error loading tree:", error);
@@ -107,37 +111,36 @@ const App = () => {
   };
 
   const handleLogout = () => {
-    // Clear the necessary states
     setIsLoggedIn(false);
     setUsername("");
     setUserId("");
     setRootSelected(null);
     setNodeSelected(null);
     setRootNodes([]);
-
-    // Remove cookies
     Cookies.remove("username");
     Cookies.remove("userId");
     Cookies.remove("loggedIn");
     Cookies.remove("token");
     Cookies.remove("rootSelected");
-
-    // You may also want to reset other app-related states or data, depending on your use case
   };
 
-  if (!isLoggedIn) {
-    return (
-      <Login
-        setIsLoggedIn={setIsLoggedIn}
-        setUsername={setUsername}
-        setUserId={setUserId}
-      />
-    );
-  }
+  const handleResize = () => {
+    setIsMobile(window.innerWidth <= 1190 || window.innerHeight <= 500);
+  };
+
+  useEffect(() => {
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const handleToggleView = () => {
+    setCurrentViewIndex((prevIndex) => (prevIndex + 1) % views.length);
+  };
 
   const renderCurrentView = () => {
-    switch (currentViewIndex) {
-      case 0:
+    if (isMobile && treeViewModeMobile) {
+      if (currentViewIndex === 0) {
         return (
           <div className="tree-view">
             <TreeView
@@ -148,80 +151,189 @@ const App = () => {
               setNodeSelected={setNodeSelected}
               nodeVersion={nodeVersion}
               setNodeVersion={setNodeVersion}
-              handleToggleView={handleToggleView} // Pass the toggle function
+              handleToggleView={handleToggleView}
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
             />
           </div>
         );
-      case 1:
+      } else if (currentViewIndex === 1) {
         return (
           <div className="tree-view-directory">
             <TreeViewDirectory
               tree={tree}
               nodeSelected={nodeSelected}
               setNodeSelected={setNodeSelected}
-              handleToggleView={handleToggleView} // Pass the toggle function
+              handleToggleView={handleToggleView}
               nodeVersion={nodeVersion}
               getTree={getTree}
               rootSelected={rootSelected}
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
             />
           </div>
         );
-      default:
-        return null;
+      }
+      return null;
     }
+
+    if (!isMobile) {
+      return (
+        <>
+          <div className="tree-view">
+            {currentViewIndex === 0 ? (
+              <TreeView
+                rootSelected={rootSelected}
+                getTree={getTree}
+                tree={tree}
+                nodeSelected={nodeSelected}
+                setNodeSelected={setNodeSelected}
+                nodeVersion={nodeVersion}
+                setNodeVersion={setNodeVersion}
+                handleToggleView={handleToggleView}
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+              />
+            ) : (
+              <TreeViewDirectory
+                tree={tree}
+                nodeSelected={nodeSelected}
+                setNodeSelected={setNodeSelected}
+                handleToggleView={handleToggleView}
+                nodeVersion={nodeVersion}
+                getTree={getTree}
+                rootSelected={rootSelected}
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+              />
+            )}
+          </div>
+          <div className="main-content">
+            <div className="node-data">
+              <NodeData
+                nodeSelected={nodeSelected}
+                nodeVersion={nodeVersion}
+                setNodeVersion={setNodeVersion}
+                getTree={getTree}
+                rootSelected={rootSelected}
+                tree={tree}
+              />
+              <Transactions
+                nodeSelected={nodeSelected}
+                tree={tree}
+                nodeVersion={nodeVersion}
+                getTree={getTree}
+                rootSelected={rootSelected}
+              />
+            </div>
+            <div className="notes">
+              <Notes
+                nodeSelected={nodeSelected}
+                userId={userId}
+                nodeVersion={nodeVersion}
+              />
+            </div>
+          </div>
+          <div className="side-content">
+            <div className="schedule">
+              <Schedule
+                nodeSelected={nodeSelected}
+                tree={tree}
+                nodeVersion={nodeVersion}
+                getTree={getTree}
+                rootSelected={rootSelected}
+              />
+            </div>
+            <div className="transaction">
+              <Contributions nodeSelected={nodeSelected} />
+            </div>
+          </div>
+        </>
+      );
+    }
+    return null;
   };
 
+  // Render everything in the return statement
   return (
     <div className="app-container">
-      <div className="header">
-        <AccountTab
-          username={username}
-          userId={userId}
-          onLogout={handleLogout} // Pass logout function to AccountTab
-          setRootNodes={setRootNodes}
-          rootNodes={rootNodes}
-          setRootSelected={setRootSelected}
-          rootSelected={rootSelected}
-          tree={tree}
+      {!isLoggedIn ? (
+        <Login
+          setIsLoggedIn={setIsLoggedIn}
+          setUsername={setUsername}
+          setUserId={setUserId}
         />
-      </div>
-
-      {renderCurrentView()}
-
-      <div className="main-content">
-        <div className="node-data">
-          <NodeData
-            nodeSelected={nodeSelected}
-            nodeVersion={nodeVersion}
-            setNodeVersion={setNodeVersion}
-            getTree={getTree}
-            rootSelected={rootSelected}
-            tree={tree}
-          />
-          <Transactions nodeSelected={nodeSelected} tree={tree} nodeVersion={nodeVersion} getTree = {getTree} rootSelected={rootSelected}/>
-        </div>
-        <div className="notes">
-          <Notes
-            nodeSelected={nodeSelected}
-            userId={userId}
-            nodeVersion={nodeVersion}
-          />
-        </div>
-      </div>
-      <div className="side-content">
-        <div className="schedule">
-          <Schedule
-            nodeSelected={nodeSelected}
-            tree={tree}
-            nodeVersion={nodeVersion}
-            getTree={getTree}
-            rootSelected={rootSelected}
-          />
-        </div>
-        <div className="transaction">
-          <Contributions nodeSelected={nodeSelected} />
-        </div>
-      </div>
+      ) : (
+        <>
+          <div className="header">
+            <AccountTab
+              username={username}
+              userId={userId}
+              onLogout={handleLogout}
+              setRootNodes={setRootNodes}
+              rootNodes={rootNodes}
+              setRootSelected={setRootSelected}
+              rootSelected={rootSelected}
+              tree={tree}
+            />
+          </div>
+          {isMobile && treeViewModeMobile ? (
+            renderCurrentView()
+          ) : (
+            <>
+              {renderCurrentView()}
+              <div className="main-content">
+                <div className="node-data">
+                  <NodeData
+                    nodeSelected={nodeSelected}
+                    nodeVersion={nodeVersion}
+                    setNodeVersion={setNodeVersion}
+                    getTree={getTree}
+                    rootSelected={rootSelected}
+                    tree={tree}
+                  />
+                  <Transactions
+                    nodeSelected={nodeSelected}
+                    tree={tree}
+                    nodeVersion={nodeVersion}
+                    getTree={getTree}
+                    rootSelected={rootSelected}
+                  />
+                </div>
+                <div className="notes">
+                  <Notes
+                    nodeSelected={nodeSelected}
+                    userId={userId}
+                    nodeVersion={nodeVersion}
+                  />
+                </div>
+              </div>
+              <div className="side-content">
+                <div className="schedule">
+                  <Schedule
+                    nodeSelected={nodeSelected}
+                    tree={tree}
+                    nodeVersion={nodeVersion}
+                    getTree={getTree}
+                    rootSelected={rootSelected}
+                  />
+                </div>
+                <div className="transaction">
+                  <Contributions nodeSelected={nodeSelected} />
+                </div>
+              </div>
+            </>
+          )}
+          {isMobile && (
+            <button
+              className="tree-view-toggle-btn"
+              onClick={() => setTreeViewModeMobile((prev) => !prev)}
+            >
+              {treeViewModeMobile ? "Show Details" : "Show Tree"}
+            </button>
+          )}
+        </>
+      )}
     </div>
   );
 };

@@ -46,13 +46,9 @@ const TreeView = ({
   tree,
   getTree,
   handleToggleView,
+  statusFilter,
+  setStatusFilter,
 }) => {
-  const [filters, setFilters] = useState({
-    active: true,
-    trimmed: false,
-    completed: false,
-  });
-
   const [canMoveUp, setCanMoveUp] = useState(false);
   const [canMoveDown, setCanMoveDown] = useState(false);
   const [canMoveSide, setCanMoveSide] = useState(false);
@@ -135,34 +131,26 @@ const TreeView = ({
           bgColor = "#DAA520";
           break;
       }
-      if (
-        (filters.active && node.versions[node.prestige].status === "active") ||
-        (filters.trimmed &&
-          node.versions[node.prestige].status === "trimmed") ||
-        (filters.completed &&
-          node.versions[node.prestige].status === "completed")
-      ) {
-        // Add the current node to Cytoscape
-        cyInstance.add({
-          data: {
-            id: node._id,
-            name: `${node.name} `,
-            status: node.versions[node.prestige].status,
-            prestige: node.prestige,
-            bgColor,
-          },
-        });
 
-        // Add the edge for this node
-        if (parentId) {
-          cyInstance.add({ data: { source: parentId, target: node._id } });
-        }
+      cyInstance.add({
+        data: {
+          id: node._id,
+          name: `${node.name} `,
+          status: node.versions[node.prestige].status,
+          prestige: node.prestige,
+          bgColor,
+        },
+      });
 
-        // Process children (they're already sorted)
-        (node.children || []).forEach((child) =>
-          addTreeToCytoscape(child, node._id)
-        );
+      // Add the edge for this node
+      if (parentId) {
+        cyInstance.add({ data: { source: parentId, target: node._id } });
       }
+
+      // Process children (they're already sorted)
+      (node.children || []).forEach((child) =>
+        addTreeToCytoscape(child, node._id)
+      );
     };
 
     // Start with the sorted tree
@@ -193,7 +181,7 @@ const TreeView = ({
       const nodeSelect = cyInstance.getElementById(nodeSelected._id);
       updateButtonVisibility(nodeSelect);
     }
-  }, [tree, filters, rootSelected]);
+  }, [tree, rootSelected]);
 
   useEffect(() => {
     const cyInstance = cyRef.current;
@@ -374,7 +362,7 @@ const TreeView = ({
 
   const handleFilterChange = (e) => {
     const { name, checked } = e.target;
-    setFilters((prevFilters) => ({
+    setStatusFilter((prevFilters) => ({
       ...prevFilters,
       [name]: checked,
     }));
@@ -386,7 +374,7 @@ const TreeView = ({
         <div
           ref={cyContainerRef}
           id="cy"
-          style={{ width: "100%", height: "700px" }}
+          style={{ width: "100%", height: "100vh" }}
         />
       </div>
       {/* Arrow buttons */}
@@ -431,7 +419,7 @@ const TreeView = ({
           <input
             type="checkbox"
             name="active"
-            checked={filters.active}
+            checked={statusFilter.active}
             onChange={handleFilterChange}
           />
           Active
@@ -440,7 +428,7 @@ const TreeView = ({
           <input
             type="checkbox"
             name="trimmed"
-            checked={filters.trimmed}
+            checked={statusFilter.trimmed}
             onChange={handleFilterChange}
           />
           Trimmed
@@ -449,7 +437,7 @@ const TreeView = ({
           <input
             type="checkbox"
             name="completed"
-            checked={filters.completed}
+            checked={statusFilter.completed}
             onChange={handleFilterChange}
           />
           Completed

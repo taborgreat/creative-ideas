@@ -47,12 +47,6 @@ const Schedule = ({
   getTree,
   rootSelected,
 }) => {
-  const [statusFilter, setStatusFilter] = useState({
-    active: true,
-    trimmed: false,
-    completed: false,
-  });
-
   const [filteredSchedules, setFilteredSchedules] = useState([]);
   const [choppedTree, setChoppedTree] = useState(null);
   const [scheduleSelected, setScheduleSelected] = useState(
@@ -99,19 +93,9 @@ const Schedule = ({
   useEffect(() => {
     if (choppedTree) {
       const schedules = extractSchedules(choppedTree);
-      const filtered = schedules.filter(
-        (schedule) => statusFilter[schedule.status]
-      );
-      setFilteredSchedules(filtered);
+      setFilteredSchedules(schedules); // No status filtering applied
     }
-  }, [statusFilter, choppedTree]);
-
-  const handleStatusChange = (status) => {
-    setStatusFilter((prevState) => ({
-      ...prevState,
-      [status]: !prevState[status],
-    }));
-  };
+  }, [choppedTree]);
 
   const handleScheduleChange = (event) => {
     setNewSchedule(event.target.value);
@@ -161,7 +145,6 @@ const Schedule = ({
     }
   };
 
-  const today = new Date();
   const todaySchedules = [];
   const upcomingSchedules = [];
   const floatingSchedules = [];
@@ -225,40 +208,13 @@ const Schedule = ({
         )}
 
         <div>
-          <label>
-            <input
-              type="checkbox"
-              checked={statusFilter.active}
-              onChange={() => handleStatusChange("active")}
-            />
-            Active
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={statusFilter.trimmed}
-              onChange={() => handleStatusChange("trimmed")}
-            />
-            Trimmed
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={statusFilter.completed}
-              onChange={() => handleStatusChange("completed")}
-            />
-            Completed
-          </label>
-        </div>
-
-        <div>
           {todaySchedules.length > 0 && (
             <div>
               <h4>Today</h4>
               <table>
                 <thead>
                   <tr>
-                    <th>Node Name</th>
+                    <th>Name</th>
                     <th>Scheduled</th>
                     <th>Status</th>
                   </tr>
@@ -282,7 +238,7 @@ const Schedule = ({
               <table>
                 <thead>
                   <tr>
-                    <th>Node Name</th>
+                    <th>Name</th>
                     <th>Scheduled</th>
                     <th>Status</th>
                   </tr>
@@ -306,7 +262,7 @@ const Schedule = ({
               <table>
                 <thead>
                   <tr>
-                    <th>Node Name</th>
+                    <th>Name</th>
                     <th>Status</th>
                     <th>Date Created</th>
                   </tr>
