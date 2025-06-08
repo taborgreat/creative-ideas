@@ -132,6 +132,8 @@ Treefficiency compares data over time and gives tailored advice:
 3. Schedule, reflect, refine.
 4. Watch your tree grow — and with it, your clarity.
 
+---
+
 ### 🔢 Plan
 
 1. **LLM Integration on Personal Level (Tree) with Natural Language Only**
@@ -139,13 +141,14 @@ Treefficiency compares data over time and gives tailored advice:
    - Talk to your Tree to add branches, edit, reflect, and receive suggestions entirely through conversation.
 
 2. **Send/Receive Phone Notifications**
-   - Nudges and alerts aligned with your Tree’s views — via SMS or mobile app.
+   - Nudges and alerts aligned with your Tree’s views — via web app.
 
 2.1. **Web Interface Control**
 
 - Guide or block browsing based on context
 - Auto-open relevant tabs
 - One-click View switching
+- via Chrome extension (or ultimately custom browser)
 
   2.2. **OS Control**
 
@@ -171,7 +174,7 @@ Treefficiency compares data over time and gives tailored advice:
 
 #### 2.1 Forest Awareness: Summarize & Suggest
 
-- Mycelium gathers, summarizes, stores, and analyzes data across the Forest.
+- Mycelium gathers, summarizes, stores, and analyzes data across a Forest.
 - It identifies patterns such as plans others have completed that relate to your current goals.
 - Provides suggestions to update, adapt, or branch your Tree based on collective progress.
 - Helps you overcome blocks by offering insights and plans derived from the broader user network.
