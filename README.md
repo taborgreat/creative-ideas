@@ -111,20 +111,6 @@ Treefficiency compares data over time and gives tailored advice:
 
 ---
 
-## 🌐 Future Scope
-
-### 🔒 Tree-Based Browser Control (v3.0+)
-
-- Treefficiency as a **value-aligned web browser layer**
-
-### 🧬 OS-Level Motivation Layer (v4.0+)
-
-- Turn Treefficiency into a **goal-driven operating environment**
-- Control computer use based on goals/motivation
-- Agent acts as a bridge between your intentions and your machine
-
----
-
 ### Compared to Existing Systems:
 
 | System Type                            | Limitations                                                | Treefficiency Advantage                                                 |
@@ -145,6 +131,64 @@ Treefficiency compares data over time and gives tailored advice:
    `“How should I manage time today to write more?”`
 3. Schedule, reflect, refine.
 4. Watch your tree grow — and with it, your clarity.
+
+### 🔢 Plan
+
+1. **LLM Integration on Personal Level (Tree) with Natural Language Only**
+
+   - Talk to your Tree to add branches, edit, reflect, and receive suggestions entirely through conversation.
+
+2. **Send/Receive Phone Notifications**
+   - Nudges and alerts aligned with your Tree’s views — via SMS or mobile app.
+
+2.1. **Web Interface Control**
+
+- Guide or block browsing based on context
+- Auto-open relevant tabs
+- One-click View switching
+
+  2.2. **OS Control**
+
+- Launch apps, restrict distractions, and sync the OS to your Tree View
+- e.g. _“Deep Work” launches VSCode, disables Discord_
+
+2. **Forest & Mycelium System**
+   - See below.
+
+---
+
+## 🌌 The Forest & Mycelium Intelligence System
+
+### 🌐 Forest
+
+- A **Forest** is a collective grouping of multiple user Trees.
+- It represents a network of individual growth systems connected for shared insight.
+- Technically, a Forest consists of several root nodes linked together, with each node corresponding to a unique user.
+
+---
+
+### 🍄 Mycelium
+
+#### 2.1 Forest Awareness: Summarize & Suggest
+
+- Mycelium gathers, summarizes, stores, and analyzes data across the Forest.
+- It identifies patterns such as plans others have completed that relate to your current goals.
+- Provides suggestions to update, adapt, or branch your Tree based on collective progress.
+- Helps you overcome blocks by offering insights and plans derived from the broader user network.
+- By analyzing many Trees over time, the Mycelium network enables the LLM to better understand which plans succeed or fail, filtering out ineffective strategies to improve long-term decision-making.
+
+#### 2.2 Archetype Generation: Practical Growth Blueprints
+
+- Mycelium generates **adaptive archetypes**—logical, goal-oriented templates based on common user objectives and successful growth paths.
+- These archetypes guide users with actionable, focused plans tailored to specific ambitions.
+
+**Examples:**
+
+- 📈 **Stock Trader** — Market analysis, daily review routines, risk management strategies
+- 💪 **Bodybuilder** — Structured training cycles, nutrition plans, recovery protocols
+- 👨‍💻 **High-Salary Programmer** — Skill acquisition, project management, code review habits
+
+- Archetypes are **dynamic templates** evolving from real user data, enabling personalized yet data-driven growth. When a user chooses an archetype, their Tree-Builder helps organize and build their Tree in that direction—guiding people toward specific lifestyles.
 
 ---
 
