@@ -40,6 +40,7 @@ app.options("*", cors());
 app.use(express.static("public"));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));
+app.set('trust proxy', 1);
 
 // Routes
 app.use("/", require("./routes/ai"));
