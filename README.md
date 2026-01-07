@@ -1,4 +1,4 @@
-note: since late 2025, i converted this repository to a private one. this is all very old now, but where it started
+note: since late 2025, i converted this code to a private repository and have changed almost everything. this is all very old now, but where it started
 
 # Root Goal-Based Creating System - Treeffiency
 
