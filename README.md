@@ -1,3 +1,5 @@
+note: since late 2025, i converted this repository to a private one. this is all very old now, but where it started
+
 # Root Goal-Based Creating System - Treeffiency
 
 ![Project Logo](https://github.com/user-attachments/assets/16816540-88a3-40af-9072-11bc94f0dc5a)
